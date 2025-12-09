@@ -1,0 +1,11 @@
+{
+  "name": "@ordering-intelligence/config",
+  "version": "0.1.0",
+  "description": "Shared configuration loader for Ordering Intelligence Node.js services.",
+  "main": "index.js",
+  "types": "index.d.ts",
+  "scripts": {
+    "prepare": "node ./scripts/sync-schema.js"
+  },
+  "license": "UNLICENSED"
+}

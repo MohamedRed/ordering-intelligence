@@ -1,0 +1,22 @@
+Metadata-Version: 2.4
+Name: ordering-intelligence-config
+Version: 0.1.0
+Summary: Shared configuration loader for Ordering Intelligence Python services.
+Author: Ordering Intelligence Team
+Requires-Python: >=3.11
+Description-Content-Type: text/markdown
+
+# Ordering Intelligence Config (Python)
+
+Lightweight configuration loader shared across Ordering Intelligence Python services. It validates environment variables against the canonical schema located in `backend/libs/shared/config/schema.json` and performs basic type coercion.
+
+## Usage
+
+```python
+from config_loader import load_config
+
+config = load_config("order-service")
+print(config["ASR_PROVIDER"])
+```
+
+The loader raises `ValueError` when required variables are missing or incorrectly typed.

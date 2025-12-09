@@ -1,0 +1,90 @@
+{
+  "presetName": "oi-staging-voice-agent",
+  "description": "Staging preset mirroring production French male persona with environment-specific endpoints.",
+  "llm": {
+    "provider": "openai",
+    "model": "gpt-4o-mini",
+    "temperature": 0.3,
+    "systemPrompt": "Tu es Pierre, un agent de prise de commandes pour des restaurants fran\u00E7ais. Agis comme en production mais annonce que la conversation est un test si on te le demande."
+  },
+  "stt": {
+    "provider": "deepgram",
+    "model": "nova-2-phonecall",
+    "language": "fr-FR"
+  },
+  "tts": {
+    "provider": "elevenlabs",
+    "voiceId": "antoine",
+    "language": "fr-FR",
+    "gender": "male"
+  },
+  "vad": {
+    "mode": "aggressive",
+    "silenceTimeoutMs": 700,
+    "maxSilenceMs": 1600
+  },
+  "tools": [
+    {
+      "name": "order_service.lookup_menu",
+      "description": "Retrieve current menu items in staging.",
+      "invoke": {
+        "method": "POST",
+        "url": "${STAGING_ORDER_SERVICE_URL}/voice/menu"
+      }
+    },
+    {
+      "name": "order_service.submit_order",
+      "description": "Submit an order to the staging order service.",
+      "invoke": {
+        "method": "POST",
+        "url": "${STAGING_ORDER_SERVICE_URL}/voice/orders"
+      }
+    },
+    {
+      "name": "handoff.request_human",
+      "description": "Alert the staging Business app for manual takeover.",
+      "invoke": {
+        "method": "POST",
+        "url": "${STAGING_HANDOFF_SERVICE_URL}/handoff"
+      }
+    }
+  ],
+  "safety": {
+    "lowConfidenceEscalation": {
+      "enabled": true,
+      "threshold": 0.6,
+      "maxConsecutiveTurns": 2
+    },
+    "confirmationPolicy": {
+      "requireExplicitConfirm": true,
+      "confirmationTemplate": "R\u00E9capitulons: {orderSummary}. C\u2019est bien cela?"
+    },
+    "blockedTopics": [
+      "paiements",
+      "informations confidentielles"
+    ]
+  },
+  "locationOverrides": {
+    "fr-paris": {
+      "tts": {
+        "voiceId": "antoine",
+        "style": "parisien"
+      }
+    },
+    "fr-marseille": {
+      "tts": {
+        "voiceId": "remy",
+        "style": "sud"
+      }
+    },
+    "ca-quebec": {
+      "tts": {
+        "voiceId": "marc",
+        "language": "fr-CA"
+      },
+      "stt": {
+        "language": "fr-CA"
+      }
+    }
+  }
+}

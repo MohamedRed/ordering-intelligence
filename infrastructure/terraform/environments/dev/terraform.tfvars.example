@@ -1,0 +1,13 @@
+project_id      = "ordering-intelligence"
+region          = "us-central1"
+billing_account = ""
+
+# Optional Cloud Run tuning (per service)
+# cloud_run_overrides = {
+#   order_service = {
+#     min_scale = 1
+#     env_overrides = {
+#       PUBSUB_TOPIC_ORDERS = "custom-topic"
+#     }
+#   }
+# }

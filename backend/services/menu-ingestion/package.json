@@ -1,0 +1,40 @@
+{
+  "name": "@ordering-intelligence/menu-ingestion",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Menu ingestion service (upload -> OCR -> LLM -> review) on GCP",
+  "scripts": {
+    "dev": "tsx src/index.ts",
+    "start": "node dist/index.js",
+    "build": "tsc -p tsconfig.json",
+    "test": "jest --coverage"
+  },
+  "dependencies": {
+    "@google-cloud/firestore": "^7.10.0",
+    "@google-cloud/pubsub": "^4.7.5",
+    "@google-cloud/storage": "^7.12.0",
+    "@google-cloud/vertexai": "^1.9.0",
+    "@google-cloud/vision": "^4.3.2",
+    "@google/genai": "^0.7.0",
+    "@gradio/client": "^2.0.0",
+    "cors": "^2.8.5",
+    "express": "^4.19.2",
+    "firebase-admin": "^13.0.0",
+    "sharp": "^0.33.3",
+    "uuid": "^11.0.0"
+  },
+  "devDependencies": {
+    "@types/cors": "^2.8.17",
+    "@types/express": "^4.17.21",
+    "@types/jest": "^30.0.0",
+    "@types/node": "^24.10.0",
+    "@types/supertest": "^6.0.3",
+    "@types/uuid": "^10.0.0",
+    "jest": "^30.2.0",
+    "supertest": "^7.1.4",
+    "ts-jest": "^29.4.5",
+    "tsx": "^4.7.3",
+    "typescript": "^5.6.3"
+  }
+}

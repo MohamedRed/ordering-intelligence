@@ -1,0 +1,17 @@
+project_id      = "ordering-intelligence-ENV"
+region          = "us-central1"
+billing_account = ""
+
+# Optional Cloud Run tuning (per service)
+# cloud_run_overrides = {
+#   order_service = {
+#     min_scale = 1
+#     env_overrides = {
+#       PUBSUB_TOPIC_ORDERS = "custom-topic"
+#     }
+#   }
+# }
+
+order_service_lb_hostname = "staging-order-service.liive.app"
+order_service_lb_certificate_mode = "MANAGED"
+order_service_lb_managed_domains = ["staging-order-service.liive.app"]

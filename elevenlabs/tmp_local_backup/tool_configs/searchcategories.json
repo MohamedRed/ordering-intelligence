@@ -1,0 +1,48 @@
+{
+    "type": "webhook",
+    "name": "TecDoc_SearchCategories",
+    "description": "Search categories by description.",
+    "response_timeout_secs": 30,
+    "disable_interruptions": false,
+    "force_pre_tool_speech": false,
+    "assignments": [],
+    "tool_call_sound_behavior": "auto",
+    "dynamic_variables": {
+        "dynamic_variable_placeholders": {}
+    },
+    "execution_mode": "immediate",
+    "api_schema": {
+        "request_headers": {
+            "X-RapidAPI-Key": {
+                "secret_id": "RAPIDAPI_KEY"
+            },
+            "x-rapidapi-host": "tecdoc-catalog.p.rapidapi.com"
+        },
+        "url": "https://tecdoc-catalog.p.rapidapi.com/category/search-for-the-commodity-group-tree-by-description/type-id/{typeId}/lang-id/{langId}/search-text/{searchText}",
+        "method": "GET",
+        "path_params_schema": {
+            "typeId": {
+                "type": "string",
+                "description": "typeId",
+                "is_system_provided": false,
+                "dynamic_variable": "",
+                "constant_value": ""
+            },
+            "langId": {
+                "type": "string",
+                "description": "langId",
+                "is_system_provided": false,
+                "dynamic_variable": "",
+                "constant_value": ""
+            },
+            "searchText": {
+                "type": "string",
+                "description": "searchText",
+                "is_system_provided": false,
+                "dynamic_variable": "",
+                "constant_value": ""
+            }
+        },
+        "content_type": "application/json"
+    }
+}

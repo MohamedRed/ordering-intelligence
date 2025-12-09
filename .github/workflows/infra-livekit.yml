@@ -1,0 +1,75 @@
+name: infra-livekit
+
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: "Target environment (dev/staging/prod)"
+        type: choice
+        options:
+          - dev
+          - staging
+          - prod
+        default: dev
+      livekit_rotate:
+        description: "Rotate hosted agent instead of deploy"
+        type: boolean
+        default: false
+
+  pull_request:
+    paths:
+      - "infrastructure/twilio/**"
+      - "scripts/livekit-agent-apply.sh"
+      - ".github/workflows/infra-livekit.yml"
+
+jobs:
+  twilio-plan:
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request' || github.event_name == 'workflow_dispatch'
+    defaults:
+      run:
+        working-directory: infrastructure/twilio
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.6.6
+
+      - name: Terraform init
+        run: terraform init
+
+      - name: Terraform plan
+        env:
+          TF_VAR_environment: ${{ inputs.environment || 'dev' }}
+          TF_VAR_twilio_account_sid: ${{ secrets.TWILIO_ACCOUNT_SID }}
+          TF_VAR_twilio_auth_token: ${{ secrets.TWILIO_AUTH_TOKEN }}
+        run: terraform plan -input=false
+
+  livekit:
+    runs-on: ubuntu-latest
+    if: github.event_name == 'workflow_dispatch'
+    needs: twilio-plan
+    env:
+      LIVEKIT_PROJECT: ${{ inputs.environment == 'prod' && 'ordering-intelligence' || format('ordering-intelligence-{0}', inputs.environment) }}
+      LIVEKIT_URL: ${{ secrets.LIVEKIT_URL }}
+      LIVEKIT_API_KEY: ${{ secrets.LIVEKIT_API_KEY }}
+      LIVEKIT_API_SECRET: ${{ secrets.LIVEKIT_API_SECRET }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install LiveKit CLI
+        run: |
+          curl -sSL https://raw.githubusercontent.com/livekit/cli/main/install.sh | bash
+          echo "${HOME}/.livekit/bin" >> "$GITHUB_PATH"
+
+      - name: Deploy/rotate hosted agent
+        run: |
+          chmod +x scripts/livekit-agent-apply.sh
+          if [[ "${{ inputs.livekit_rotate }}" == 'true' ]]; then
+            ./scripts/livekit-agent-apply.sh "${{ inputs.environment }}" --rotate
+          else
+            ./scripts/livekit-agent-apply.sh "${{ inputs.environment }}"
+          fi
+

@@ -1,0 +1,26 @@
+{
+    "type": "webhook",
+    "name": "TecDoc_ListSuppliers",
+    "description": "List all suppliers.",
+    "response_timeout_secs": 30,
+    "disable_interruptions": false,
+    "force_pre_tool_speech": false,
+    "assignments": [],
+    "tool_call_sound_behavior": "auto",
+    "dynamic_variables": {
+        "dynamic_variable_placeholders": {}
+    },
+    "execution_mode": "immediate",
+    "api_schema": {
+        "request_headers": {
+            "X-RapidAPI-Key": {
+                "secret_id": "RAPIDAPI_KEY"
+            },
+            "x-rapidapi-host": "tecdoc-catalog.p.rapidapi.com"
+        },
+        "url": "https://tecdoc-catalog.p.rapidapi.com/suppliers/list",
+        "method": "GET",
+        "path_params_schema": {},
+        "content_type": "application/json"
+    }
+}

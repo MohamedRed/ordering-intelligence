@@ -1,0 +1,15 @@
+[build-system]
+requires = ["setuptools>=68.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "ordering-intelligence-config"
+version = "0.1.0"
+description = "Shared configuration loader for Ordering Intelligence Python services."
+authors = [{ name = "Ordering Intelligence Team" }]
+readme = "README.md"
+requires-python = ">=3.11"
+
+[tool.setuptools]
+packages = ["config_loader"]
+include-package-data = true

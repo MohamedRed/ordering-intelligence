@@ -1,0 +1,47 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Orders: only service accounts or verified callers with matching storeIds claim.
+    match /orders/{orderId} {
+      allow read, write: if isServiceAccount() || (isAuthenticated() && hasStore(request.resource.data.storeId));
+    }
+
+    // Menus: readable by agents; writes only by service accounts or staff for store.
+    match /menus/{storeId} {
+      allow read: if true; // public snapshot access; tighten if needed
+      allow write: if isServiceAccount() || (isAuthenticated() && hasStore(storeId));
+    }
+
+    // Idempotency keys: service only.
+    match /idempotency_keys/{key} {
+      allow read, write: if isServiceAccount();
+    }
+
+    // Device tokens: user must own token or service account.
+    match /deviceTokens/{token} {
+      allow read, write: if isServiceAccount() || (isAuthenticated() && request.resource.data.userId == request.auth.uid);
+    }
+
+    // Alerts: read by admins; write by services.
+    match /alerts/{alertId} {
+      allow read: if isAdmin();
+      allow write: if isServiceAccount();
+    }
+
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isAdmin() {
+      return isAuthenticated() && request.auth.token.role == 'admin';
+    }
+
+    function hasStore(storeId) {
+      return isAuthenticated() && (storeId in request.auth.token.storeIds || !('storeIds' in request.auth.token));
+    }
+
+    function isServiceAccount() {
+      return request.auth != null && request.auth.token.firebase != null && request.auth.token.firebase.sign_in_provider == 'custom';
+    }
+  }
+}

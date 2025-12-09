@@ -1,0 +1,10 @@
+[project]
+  subdomain = "ordering-intelligence-dev-mssaglxd"
+
+[agent]
+  id = "CA_T4JaTNiCVWEY"
+
+[env]
+  ORDER_SERVICE_URL = "https://order-service-dev"
+  STORE_ID = "demo-store"
+  MENU_UPDATES_SUBSCRIPTION = "menu-updates-to-voice-worker-dev"

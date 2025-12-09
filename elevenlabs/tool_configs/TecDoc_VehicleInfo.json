@@ -1,0 +1,55 @@
+{
+    "type": "webhook",
+    "name": "TecDoc_VehicleInfo",
+    "description": "Vehicle details by vehicleId.",
+    "response_timeout_secs": 30,
+    "disable_interruptions": false,
+    "force_pre_tool_speech": false,
+    "assignments": [],
+    "tool_call_sound_behavior": "auto",
+    "dynamic_variables": {
+        "dynamic_variable_placeholders": {}
+    },
+    "execution_mode": "immediate",
+    "api_schema": {
+        "request_headers": {
+            "X-RapidAPI-Key": {
+                "secret_id": "RAPIDAPI_KEY"
+            },
+            "x-rapidapi-host": "tecdoc-catalog.p.rapidapi.com"
+        },
+        "url": "https://tecdoc-catalog.p.rapidapi.com/types/type-id/{typeId}/vehicle-type-details/{vehicleId}/lang-id/{langId}/country-filter-id/{countryFilterId}",
+        "method": "GET",
+        "path_params_schema": {
+            "country_filter_id": {
+                "type": "string",
+                "description": "countryFilterId",
+                "is_system_provided": false,
+                "dynamic_variable": "",
+                "constant_value": ""
+            },
+            "type_id": {
+                "type": "string",
+                "description": "typeId",
+                "is_system_provided": false,
+                "dynamic_variable": "",
+                "constant_value": ""
+            },
+            "lang_id": {
+                "type": "string",
+                "description": "langId",
+                "is_system_provided": false,
+                "dynamic_variable": "",
+                "constant_value": ""
+            },
+            "vehicle_id": {
+                "type": "string",
+                "description": "vehicleId",
+                "is_system_provided": false,
+                "dynamic_variable": "",
+                "constant_value": ""
+            }
+        },
+        "content_type": "application/json"
+    }
+}

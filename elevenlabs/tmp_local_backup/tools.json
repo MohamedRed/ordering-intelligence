@@ -1,0 +1,132 @@
+{
+    "tools": [
+        {
+            "type": "webhook",
+            "config": "tool_configs/analogspareparts.json"
+        },
+        {
+            "type": "webhook",
+            "config": "tool_configs/categoriesbyvehicle.json"
+        },
+        {
+            "type": "webhook",
+            "config": "tool_configs/compatiblevehicles.json"
+        },
+        {
+            "type": "webhook",
+            "config": "tool_configs/compatiblevehicleswithsupplier.json"
+        },
+        {
+            "type": "webhook",
+            "config": "tool_configs/crossreferences.json"
+        },
+        {
+            "type": "webhook",
+            "config": "tool_configs/enginedetails.json"
+        },
+        {
+            "type": "webhook",
+            "config": "tool_configs/enginetypesbymodel.json"
+        },
+        {
+            "type": "webhook",
+            "config": "tool_configs/getcountry.json"
+        },
+        {
+            "type": "webhook",
+            "config": "tool_configs/getlanguage.json"
+        },
+        {
+            "type": "webhook",
+            "config": "tool_configs/listcategorytree.json"
+        },
+        {
+            "type": "webhook",
+            "config": "tool_configs/listcountries.json"
+        },
+        {
+            "type": "webhook",
+            "config": "tool_configs/listcountriesbylang.json"
+        },
+        {
+            "type": "webhook",
+            "config": "tool_configs/listlanguages.json"
+        },
+        {
+            "type": "webhook",
+            "config": "tool_configs/listmanufacturers.json"
+        },
+        {
+            "type": "webhook",
+            "config": "tool_configs/listmodels.json"
+        },
+        {
+            "type": "webhook",
+            "config": "tool_configs/listproductnames.json"
+        },
+        {
+            "type": "webhook",
+            "config": "tool_configs/listsuppliers.json"
+        },
+        {
+            "type": "webhook",
+            "config": "tool_configs/listvehicleids.json"
+        },
+        {
+            "type": "webhook",
+            "config": "tool_configs/listvehicletypes.json"
+        },
+        {
+            "type": "webhook",
+            "config": "tool_configs/manufacturerdetails.json"
+        },
+        {
+            "type": "webhook",
+            "config": "tool_configs/modeldetails.json"
+        },
+        {
+            "type": "webhook",
+            "config": "tool_configs/modeldetailsbyvehicle.json"
+        },
+        {
+            "type": "webhook",
+            "config": "tool_configs/partcriteria.json"
+        },
+        {
+            "type": "webhook",
+            "config": "tool_configs/searcharticle.json"
+        },
+        {
+            "type": "webhook",
+            "config": "tool_configs/searcharticlev2.json"
+        },
+        {
+            "type": "webhook",
+            "config": "tool_configs/searchcategories.json"
+        },
+        {
+            "type": "webhook",
+            "config": "tool_configs/searchvehiclebynumber.json"
+        },
+        {
+            "type": "webhook",
+            "config": "tool_configs/vehicleinfo.json"
+        },
+        {
+            "type": "webhook",
+            "config": "tool_configs/vincheck.json"
+        },
+        {
+            "type": "webhook",
+            "config": "tool_configs/vindecoderv1.json"
+        },
+        {
+            "type": "webhook",
+            "config": "tool_configs/vindecoderv2.json"
+        },
+        {
+            "type": "webhook",
+            "config": "tool_configs/vindecoderv3.json"
+        }
+    ]
+}

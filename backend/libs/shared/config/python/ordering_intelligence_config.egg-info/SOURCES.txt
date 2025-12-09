@@ -1,0 +1,9 @@
+MANIFEST.in
+README.md
+pyproject.toml
+../schema/schema.json
+config_loader/__init__.py
+ordering_intelligence_config.egg-info/PKG-INFO
+ordering_intelligence_config.egg-info/SOURCES.txt
+ordering_intelligence_config.egg-info/dependency_links.txt
+ordering_intelligence_config.egg-info/top_level.txt

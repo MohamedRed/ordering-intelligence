@@ -1,0 +1,99 @@
+{
+  "presetName": "oi-dev-voice-agent",
+  "description": "Dev preset for Ordering Intelligence – French male persona \"Pierre\"",
+  "llm": {
+    "provider": "openai",
+    "model": "gpt-4o-mini",
+    "temperature": 0.3,
+    "systemPrompt": "Tu es Pierre, un agent de prise de commandes pour des restaurants en France. Sois chaleureux, efficace, confirme toujours la commande, respecte les allergies et propose d\u2019aider davantage. Si une information manque (taille, sauce, boisson, options obligatoires), pose une seule question cibl\u00e9e avant de poursuivre. Quand la commande est r\u00e9capitul\u00e9e, demande simplement \u00ab Autre chose ? \u00bb ; si la r\u00e9ponse est n\u00e9gative ou silence, conclue poliment et termine l'appel."
+  },
+  "stt": {
+    "provider": "deepgram",
+    "model": "nova-2-phonecall",
+    "language": "fr-FR"
+  },
+  "tts": {
+    "provider": "elevenlabs",
+    "voiceId": "antoine",
+    "language": "fr-FR",
+    "gender": "male"
+  },
+  "vad": {
+    "mode": "aggressive",
+    "silenceTimeoutMs": 700,
+    "maxSilenceMs": 1600
+  },
+  "tools": [
+    {
+      "name": "order_service.lookup_menu",
+      "description": "Retrieve current menu items, modifiers, and availability for a store.",
+      "invoke": {
+        "method": "POST",
+        "url": "${ORDER_SERVICE_URL}/voice/menu"
+      }
+    },
+    {
+      "name": "order_service.submit_order",
+      "description": "Create or update an order in Firestore based on confirmed items.",
+      "invoke": {
+        "method": "POST",
+        "url": "${ORDER_SERVICE_URL}/voice/orders"
+      }
+    },
+    {
+      "name": "handoff.request_human",
+      "description": "Notify the Business app to take over the call.",
+      "invoke": {
+        "method": "POST",
+        "url": "${HANDOFF_SERVICE_URL}/handoff"
+      }
+    }
+  ],
+  "safety": {
+    "lowConfidenceEscalation": {
+      "enabled": true,
+      "threshold": 0.6,
+      "maxConsecutiveTurns": 2
+    },
+    "confirmationPolicy": {
+      "requireExplicitConfirm": true,
+      "confirmationTemplate": "Je r\u00E9capitule: {orderSummary}. Souhaitez-vous confirmer?"
+    },
+    "blockedTopics": [
+      "paiements",
+      "informations confidentielles"
+    ]
+  },
+  "locationOverrides": {
+    "fr-paris": {
+      "tts": {
+        "voiceId": "antoine",
+        "style": "parisien"
+      },
+      "llm": {
+        "systemPrompt": "Tu es Pierre, un agent parisien ... adapte tes expressions aux clients franciliens."
+      }
+    },
+    "fr-marseille": {
+      "tts": {
+        "voiceId": "remy",
+        "style": "sud"
+      },
+      "llm": {
+        "systemPrompt": "Tu es Pierre, originaire du sud de la France ... conserve un ton chaleureux."
+      }
+    },
+    "ca-quebec": {
+      "tts": {
+        "voiceId": "marc",
+        "language": "fr-CA"
+      },
+      "stt": {
+        "language": "fr-CA"
+      },
+      "llm": {
+        "systemPrompt": "Tu es Pierre, parlant fran\u00E7ais canadien ... emploie les tournures locales."
+      }
+    }
+  }
+}

@@ -1,0 +1,409 @@
+{
+    "tools": [
+        {
+            "type": "webhook",
+            "config": "tool_configs/analogspareparts.json",
+            "id": "tool_1764986297525"
+        },
+        {
+            "type": "webhook",
+            "config": "tool_configs/categoriesbyvehicle.json",
+            "id": "tool_1764986298187"
+        },
+        {
+            "type": "webhook",
+            "config": "tool_configs/compatiblevehicles.json",
+            "id": "tool_1764986299239"
+        },
+        {
+            "type": "webhook",
+            "config": "tool_configs/compatiblevehicleswithsupplier.json",
+            "id": "tool_1764986300943"
+        },
+        {
+            "type": "webhook",
+            "config": "tool_configs/crossreferences.json",
+            "id": "tool_1764986302445"
+        },
+        {
+            "type": "webhook",
+            "config": "tool_configs/enginedetails.json",
+            "id": "tool_1764986303708"
+        },
+        {
+            "type": "webhook",
+            "config": "tool_configs/enginetypesbymodel.json",
+            "id": "tool_1764986304825"
+        },
+        {
+            "type": "webhook",
+            "config": "tool_configs/getcountry.json",
+            "id": "tool_1764986306162"
+        },
+        {
+            "type": "webhook",
+            "config": "tool_configs/getlanguage.json",
+            "id": "tool_1764986307658"
+        },
+        {
+            "type": "webhook",
+            "config": "tool_configs/listcategorytree.json",
+            "id": "tool_1764986308932"
+        },
+        {
+            "type": "webhook",
+            "config": "tool_configs/listcountries.json",
+            "id": "tool_1764986310451"
+        },
+        {
+            "type": "webhook",
+            "config": "tool_configs/listcountriesbylang.json",
+            "id": "tool_1764986310911"
+        },
+        {
+            "type": "webhook",
+            "config": "tool_configs/listlanguages.json",
+            "id": "tool_1764986312450"
+        },
+        {
+            "type": "webhook",
+            "config": "tool_configs/listmanufacturers.json",
+            "id": "tool_1764986313812"
+        },
+        {
+            "type": "webhook",
+            "config": "tool_configs/listmodels.json",
+            "id": "tool_1764986314271"
+        },
+        {
+            "type": "webhook",
+            "config": "tool_configs/listproductnames.json",
+            "id": "tool_1764986314764"
+        },
+        {
+            "type": "webhook",
+            "config": "tool_configs/listsuppliers.json",
+            "id": "tool_1764986315829"
+        },
+        {
+            "type": "webhook",
+            "config": "tool_configs/listvehicleids.json",
+            "id": "tool_1764986316904"
+        },
+        {
+            "type": "webhook",
+            "config": "tool_configs/listvehicletypes.json",
+            "id": "tool_1764986317350"
+        },
+        {
+            "type": "webhook",
+            "config": "tool_configs/manufacturerdetails.json",
+            "id": "tool_1764986317829"
+        },
+        {
+            "type": "webhook",
+            "config": "tool_configs/modeldetails.json",
+            "id": "tool_1764986318861"
+        },
+        {
+            "type": "webhook",
+            "config": "tool_configs/modeldetailsbyvehicle.json",
+            "id": "tool_1764986319974"
+        },
+        {
+            "type": "webhook",
+            "config": "tool_configs/partcriteria.json",
+            "id": "tool_1764986320590"
+        },
+        {
+            "type": "webhook",
+            "config": "tool_configs/searcharticle.json",
+            "id": "tool_1764986321201"
+        },
+        {
+            "type": "webhook",
+            "config": "tool_configs/searcharticlev2.json",
+            "id": "tool_1764986321666"
+        },
+        {
+            "type": "webhook",
+            "config": "tool_configs/searchcategories.json",
+            "id": "tool_1764986322123"
+        },
+        {
+            "type": "webhook",
+            "config": "tool_configs/searchvehiclebynumber.json",
+            "id": "tool_1764986323179"
+        },
+        {
+            "type": "webhook",
+            "config": "tool_configs/vehicleinfo.json",
+            "id": "tool_1764986323755"
+        },
+        {
+            "type": "webhook",
+            "config": "tool_configs/vincheck.json",
+            "id": "tool_1764986324882"
+        },
+        {
+            "type": "webhook",
+            "config": "tool_configs/vindecoderv1.json",
+            "id": "tool_1764986325945"
+        },
+        {
+            "type": "webhook",
+            "config": "tool_configs/vindecoderv2.json",
+            "id": "tool_1764986326416"
+        },
+        {
+            "type": "webhook",
+            "config": "tool_configs/vindecoderv3.json",
+            "id": "tool_1764986327469"
+        },
+        {
+            "type": "webhook",
+            "config": "tool_configs/TecDoc_EngineDetails.json",
+            "id": "tool_0101kbrnmhpmemfavyk87xkdnk19"
+        },
+        {
+            "type": "webhook",
+            "config": "tool_configs/TecDoc_EngineDetails-1.json",
+            "id": "tool_0301kbrnj1ftf4ytgvmw59y6rd3x"
+        },
+        {
+            "type": "webhook",
+            "config": "tool_configs/TecDoc_VinDecoderV3.json",
+            "id": "tool_0401kbrnn83wem6b2zkj6tfx4c2f"
+        },
+        {
+            "type": "webhook",
+            "config": "tool_configs/TecDoc_SearchArticle.json",
+            "id": "tool_0501kbrnjf89fv2rpkdypr43nxsv"
+        },
+        {
+            "type": "webhook",
+            "config": "tool_configs/TecDoc_EngineDetails-2.json",
+            "id": "tool_0501kbrp3c3vegvt9kkntpr3bmr3"
+        },
+        {
+            "type": "webhook",
+            "config": "tool_configs/TecDoc_CompatibleVehiclesWithSupplier.json",
+            "id": "tool_0801kbrnmfp2ey5t0k730z00gr7j"
+        },
+        {
+            "type": "webhook",
+            "config": "tool_configs/TecDoc_CategoriesByVehicle.json",
+            "id": "tool_0801kbrnyb8pfjnatg5sswvpvmdb"
+        },
+        {
+            "type": "webhook",
+            "config": "tool_configs/TecDoc_EngineDetails-3.json",
+            "id": "tool_0801kbrnyysnem4vev9d1kgpftqr"
+        },
+        {
+            "type": "webhook",
+            "config": "tool_configs/TecDoc_ListCountries.json",
+            "id": "tool_0901kbrnmpj8eaaa1cgmrcfv0b43"
+        },
+        {
+            "type": "webhook",
+            "config": "tool_configs/TecDoc_SearchArticleV2.json",
+            "id": "tool_1001kbrnn280f9m8967x1efqgkbc"
+        },
+        {
+            "type": "webhook",
+            "config": "tool_configs/TecDoc_GetLanguage.json",
+            "id": "tool_1001kbrnz1t8f9rb3fsttxtbn38h"
+        },
+        {
+            "type": "webhook",
+            "config": "tool_configs/TecDoc_ListManufacturers.json",
+            "id": "tool_1001kbrnz61qev3smx63w5e0cmjb"
+        },
+        {
+            "type": "webhook",
+            "config": "tool_configs/TecDoc_CrossReferences.json",
+            "id": "tool_1001kbrp3anpe89vheexw7dxhsax"
+        },
+        {
+            "type": "webhook",
+            "config": "tool_configs/TecDoc_ListVehicleIds.json",
+            "id": "tool_1101kbrnza7fe519zeb81tkvkpp3"
+        },
+        {
+            "type": "webhook",
+            "config": "tool_configs/TecDoc_CategoriesByVehicle-1.json",
+            "id": "tool_1401kbrnmcs9en4s8ks5jqqjcsa8"
+        },
+        {
+            "type": "webhook",
+            "config": "tool_configs/TecDoc_ModelDetailsByVehicle.json",
+            "id": "tool_1401kbrnzeewexnb67t36jw89p1v"
+        },
+        {
+            "type": "webhook",
+            "config": "tool_configs/TecDoc_PartCriteria.json",
+            "id": "tool_1501kbrnjerxfna9t6f0y512sdat"
+        },
+        {
+            "type": "webhook",
+            "config": "tool_configs/TecDoc_GetCountry.json",
+            "id": "tool_1501kbrnygqnfcysh11h6dzk1rx8"
+        },
+        {
+            "type": "webhook",
+            "config": "tool_configs/TecDoc_ListSuppliers.json",
+            "id": "tool_1601kbrnjbn8e9sr0cpx449remya"
+        },
+        {
+            "type": "webhook",
+            "config": "tool_configs/TecDoc_EngineTypesByModel.json",
+            "id": "tool_1701kbrnmjr3eptaxxz8wz52awk7"
+        },
+        {
+            "type": "webhook",
+            "config": "tool_configs/TecDoc_ModelDetails.json",
+            "id": "tool_1801kbrnjds6fcab9v43rmr2ej3n"
+        },
+        {
+            "type": "webhook",
+            "config": "tool_configs/TecDoc_ModelDetails-1.json",
+            "id": "tool_1801kbrnzd2xf25tgbafmh0mg1gp"
+        },
+        {
+            "type": "webhook",
+            "config": "tool_configs/TecDoc_VehicleInfo.json",
+            "id": "tool_1801kbrnzmf6eph81ej88t35es0g"
+        },
+        {
+            "type": "webhook",
+            "config": "tool_configs/TecDoc_ListVehicleTypes.json",
+            "id": "tool_1801kbrp3t82ff0s2424hy80w4g8"
+        },
+        {
+            "type": "webhook",
+            "config": "tool_configs/TecDoc_AnalogSpareParts.json",
+            "id": "tool_1901kbrny9sse6ma004harqykrmg"
+        },
+        {
+            "type": "webhook",
+            "config": "tool_configs/TecDoc_ListCategoryTree.json",
+            "id": "tool_2001kbrnz32aejzr6q72khkxjpr3"
+        },
+        {
+            "type": "webhook",
+            "config": "tool_configs/TecDoc_SearchVehicleByNumber.json",
+            "id": "tool_2401kbrnn44te91sbkz6derhpdcr"
+        },
+        {
+            "type": "webhook",
+            "config": "tool_configs/TecDoc_ListLanguages.json",
+            "id": "tool_2401kbrp3mcef04ahj4v5kjj0hzh"
+        },
+        {
+            "type": "webhook",
+            "config": "tool_configs/TecDoc_ListModels.json",
+            "id": "tool_2501kbrnj9bsf5psy7sa7vn1k219"
+        },
+        {
+            "type": "webhook",
+            "config": "tool_configs/TecDoc_ListModels-1.json",
+            "id": "tool_2501kbrnz7j4eszbb4jnhfsab9ve"
+        },
+        {
+            "type": "webhook",
+            "config": "tool_configs/TecDoc_SearchVehicleByNumber-1.json",
+            "id": "tool_2701kbrnjhmwexm9taye5j67kxrq"
+        },
+        {
+            "type": "webhook",
+            "config": "tool_configs/TecDoc_ListVehicleIds-1.json",
+            "id": "tool_2701kbrnmwbqfbfs3dksvqs04hcs"
+        },
+        {
+            "type": "webhook",
+            "config": "tool_configs/TecDoc_SearchArticle-1.json",
+            "id": "tool_2701kbrnzg88fpprqarj78e0qv1s"
+        },
+        {
+            "type": "webhook",
+            "config": "tool_configs/TecDoc_CompatibleVehicles.json",
+            "id": "tool_2701kbrp37z9fh7v755dry4dhgnb"
+        },
+        {
+            "type": "webhook",
+            "config": "tool_configs/TecDoc_SearchArticle-2.json",
+            "id": "tool_2701kbrp3xvjers9xt927v698vqn"
+        },
+        {
+            "type": "webhook",
+            "config": "tool_configs/TecDoc_CompatibleVehicles-1.json",
+            "id": "tool_2801kbrnhzz5ftqt7c2hzaxmvv53"
+        },
+        {
+            "type": "webhook",
+            "config": "tool_configs/TecDoc_CrossReferences-1.json",
+            "id": "tool_2801kbrnye2jeqys5h06v2grkm7n"
+        },
+        {
+            "type": "webhook",
+            "config": "tool_configs/TecDoc_ManufacturerDetails.json",
+            "id": "tool_3001kbrp3tnxe2z8etaapc27q68t"
+        },
+        {
+            "type": "webhook",
+            "config": "tool_configs/TecDoc_ModelDetails-2.json",
+            "id": "tool_3001kbrp3v50f7fvh5xj01em9qz7"
+        },
+        {
+            "type": "webhook",
+            "config": "tool_configs/TecDoc_EngineDetails-4.json",
+            "id": "tool_3101kbrnyf8jejytbw9cn43r6hr0"
+        },
+        {
+            "type": "webhook",
+            "config": "tool_configs/TecDoc_ListVehicleTypes-1.json",
+            "id": "tool_3101kbrnzbepf0jr59v6tk0wcm2t"
+        },
+        {
+            "type": "webhook",
+            "config": "tool_configs/TecDoc_AnalogSpareParts-1.json",
+            "id": "tool_3301kbrnmbm0f988qm5j01m1zspk"
+        },
+        {
+            "type": "webhook",
+            "config": "tool_configs/TecDoc_ListCategoryTree-1.json",
+            "id": "tool_3401kbrnj5nmesp8qncw7gkws21t"
+        },
+        {
+            "type": "webhook",
+            "config": "tool_configs/TecDoc_VinDecoderV2.json",
+            "id": "tool_3401kbrnn7njfpbbs8nzxwjpdnp8"
+        },
+        {
+            "type": "webhook",
+            "config": "tool_configs/TecDoc_ManufacturerDetails-1.json",
+            "id": "tool_3501kbrnzc2pevds45pzmdb37swb"
+        },
+        {
+            "type": "webhook",
+            "config": "tool_configs/TecDoc_CategoriesByVehicle-2.json",
+            "id": "tool_3601kbrnyswwfmfbb74egv2hgdse"
+        },
+        {
+            "type": "webhook",
+            "config": "tool_configs/TecDoc_ListLanguages-1.json",
+            "id": "tool_3601kbrnz501f8xsxr0wxj0yg2rv"
+        },
+        {
+            "type": "webhook",
+            "config": "tool_configs/TecDoc_VinCheck.json",
+            "id": "tool_3601kbrnzngpfzqsxq3j89hcjz9f"
+        },
+        {
+            "type": "webhook",
+            "config": "tool_configs/TecDoc_VinDecoderV2-1.json",
+            "id": "tool_3601kbrnzqrke48svfyq7nrn3gvh"
+        }
+    ]
+}

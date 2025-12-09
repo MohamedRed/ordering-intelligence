@@ -1,0 +1,495 @@
+{
+    "name": "Auto Parts Ordering",
+    "conversation_config": {
+        "asr": {
+            "quality": "high",
+            "provider": "elevenlabs",
+            "user_input_audio_format": "pcm_16000",
+            "keywords": []
+        },
+        "turn": {
+            "turn_timeout": 7,
+            "silence_end_call_timeout": -1,
+            "soft_timeout_config": {
+                "timeout_seconds": -1,
+                "message": "Hhmmmm...yeah give me a second..."
+            },
+            "mode": "turn",
+            "turn_eagerness": "normal"
+        },
+        "tts": {
+            "model_id": "eleven_turbo_v2_5",
+            "voice_id": "cjVigY5qzO86Huf0OWal",
+            "supported_voices": [],
+            "suggested_audio_tags": [],
+            "agent_output_audio_format": "pcm_16000",
+            "optimize_streaming_latency": 3,
+            "stability": 0.5,
+            "speed": 1,
+            "similarity_boost": 0.8,
+            "text_normalisation_type": "system_prompt",
+            "pronunciation_dictionary_locators": []
+        },
+        "conversation": {
+            "text_only": false,
+            "max_duration_seconds": 600,
+            "client_events": [
+                "audio",
+                "interruption",
+                "agent_response",
+                "user_transcript",
+                "agent_response_correction",
+                "agent_tool_response"
+            ]
+        },
+        "language_presets": {},
+        "vad": {
+            "background_voice_detection": false
+        },
+        "agent": {
+            "first_message": "Welcome to Auto Pi\u00e8ces Service, how can I help you find the right auto part today?",
+            "language": "fr",
+            "dynamic_variables": {
+                "dynamic_variable_placeholders": {}
+            },
+            "disable_first_message_interruptions": false,
+            "prompt": {
+                "prompt": "# Personality\n\nYou are a helpful and knowledgeable AI assistant representing Auto Pi\u00e8ces Service (APS - Groupe NPA) in Avignon, a specialist in new automotive spare parts for all makes and models. You have 20 years of experience in the Vaucluse region. You are an automotive parts specialist, ready to provide expert advice.\n\n# Environment\n\nYou are engaged in a live, spoken dialogue with a customer who is potentially looking to purchase automotive spare parts. The customer may be an individual or a business. You have access to information about the company's inventory and services.\n\n# Tone\n\nYour responses are friendly, professional, and efficient. You aim to provide accurate information and helpful advice in a clear and concise manner. You use technical terms when appropriate but always ensure the customer understands the information provided.\n\n# Goal\n\nYour primary goal is to assist customers in identifying and ordering the correct automotive spare parts to meet their needs.\n\n1.  **Identify Customer Needs:**\n    *   Determine the make, model, and year of the vehicle.\n    *   Identify the specific part(s) the customer requires.\n    *   Clarify whether the customer needs original manufacturer or equivalent parts.\n    *   Assess the customer's technical knowledge to tailor your explanations.\n\n2.  **Inventory Check:**\n    *   Use the inventory management software (tec-doc) to check the availability of the requested parts.\n    *   Inform the customer about the availability and pricing of the parts.\n    *   If the exact part is unavailable, suggest suitable alternatives.\n\n3.  **Provide Advice and Recommendations:**\n    *   Offer expert advice on the selection of parts based on the customer's needs and vehicle specifications.\n    *   Highlight the benefits of choosing original manufacturer parts versus equivalent parts.\n    *   Explain any relevant technical information or installation tips.\n\n4.  **Order Processing:**\n    *   Guide the customer through the ordering process, including providing part numbers, quantities, and pricing.\n    *   Confirm the order details with the customer before finalizing the order.\n    *   Provide information about payment options and delivery times.\n\nSuccess is measured by the accuracy of part identification, customer satisfaction with the advice provided, and the successful completion of the order.\n\n# Guardrails\n\nRefrain from providing advice on vehicle repairs or modifications. Focus solely on part identification and ordering. Never provide pricing or availability information that is not confirmed in the inventory management system. Maintain a professional and courteous demeanor at all times. If you are unable to identify the correct part, offer to connect the customer with a human expert.\n\n# Operational workflow (single agent)\n- Language & country: use listlanguages, listcountries, getlanguage, getcountry, listcountriesbylang to localize requests.\n- Manufacturers: listvehicletypes, listmanufacturers, manufacturerdetails to identify make/type.\n- Models: listmodels, modeldetails, listvehicleids to select model.\n- Vehicles: searchvehiclebynumber, vehicleinfo, enginetypesbymodel, enginedetails to pin vehicle/engine.\n- VIN: vincheck, vindecoderv1/2/3 for VIN resolution.\n- Parts: searcharticle, searcharticlev2, searchcategories, categoriesbyvehicle, listcategorytree, compatiblevehicles, compatiblevehicleswithsupplier, crossreferences, analogspareparts, partcriteria to recommend parts.\nAlways confirm IDs (langId, countryFilterId, typeId, manufacturerId, modelId, vehicleId, engineId) before fetching parts.",
+                "llm": "gemini-2.5-flash",
+                "temperature": 0,
+                "max_tokens": -1,
+                "tool_ids": [
+                    "tool_1764986297525",
+                    "tool_1764986298187",
+                    "tool_1764986299239",
+                    "tool_1764986300943",
+                    "tool_1764986302445",
+                    "tool_1764986303708",
+                    "tool_1764986304825",
+                    "tool_1764986306162",
+                    "tool_1764986307658",
+                    "tool_1764986308932",
+                    "tool_1764986310451",
+                    "tool_1764986310911",
+                    "tool_1764986312450",
+                    "tool_1764986313812",
+                    "tool_1764986314271",
+                    "tool_1764986314764",
+                    "tool_1764986315829",
+                    "tool_1764986316904",
+                    "tool_1764986317350",
+                    "tool_1764986317829",
+                    "tool_1764986318861",
+                    "tool_1764986319974",
+                    "tool_1764986320590",
+                    "tool_1764986321201",
+                    "tool_1764986321666",
+                    "tool_1764986322123",
+                    "tool_1764986323179",
+                    "tool_1764986323755",
+                    "tool_1764986324882",
+                    "tool_1764986325945",
+                    "tool_1764986326416",
+                    "tool_1764986327469"
+                ],
+                "built_in_tools": {
+                    "end_call": {
+                        "type": "system",
+                        "name": "end_call",
+                        "description": "",
+                        "response_timeout_secs": 20,
+                        "disable_interruptions": false,
+                        "force_pre_tool_speech": false,
+                        "assignments": [],
+                        "tool_call_sound_behavior": "auto",
+                        "params": {
+                            "system_tool_type": "end_call"
+                        }
+                    },
+                    "language_detection": {
+                        "type": "system",
+                        "name": "language_detection",
+                        "description": "",
+                        "response_timeout_secs": 20,
+                        "disable_interruptions": false,
+                        "force_pre_tool_speech": false,
+                        "assignments": [],
+                        "tool_call_sound_behavior": "auto",
+                        "params": {
+                            "system_tool_type": "language_detection"
+                        }
+                    },
+                    "skip_turn": {
+                        "type": "system",
+                        "name": "skip_turn",
+                        "description": "",
+                        "response_timeout_secs": 20,
+                        "disable_interruptions": false,
+                        "force_pre_tool_speech": false,
+                        "assignments": [],
+                        "tool_call_sound_behavior": "auto",
+                        "params": {
+                            "system_tool_type": "skip_turn"
+                        }
+                    },
+                    "play_keypad_touch_tone": {
+                        "type": "system",
+                        "name": "play_keypad_touch_tone",
+                        "description": "",
+                        "response_timeout_secs": 20,
+                        "disable_interruptions": false,
+                        "force_pre_tool_speech": false,
+                        "assignments": [],
+                        "tool_call_sound_behavior": "auto",
+                        "params": {
+                            "system_tool_type": "play_keypad_touch_tone",
+                            "use_out_of_band_dtmf": false
+                        }
+                    }
+                },
+                "mcp_server_ids": [],
+                "native_mcp_server_ids": [],
+                "knowledge_base": [],
+                "ignore_default_personality": false,
+                "rag": {
+                    "enabled": false,
+                    "embedding_model": "e5_mistral_7b_instruct",
+                    "max_vector_distance": 0.6,
+                    "max_documents_length": 50000,
+                    "max_retrieved_rag_chunks_count": 20
+                },
+                "backup_llm_config": {
+                    "preference": "default"
+                },
+                "tools": []
+            }
+        }
+    },
+    "platform_settings": {
+        "evaluation": {
+            "criteria": []
+        },
+        "widget": {
+            "variant": "full",
+            "placement": "bottom-right",
+            "expandable": "never",
+            "avatar": {
+                "type": "orb",
+                "color1": "#2792dc",
+                "color2": "#9ce6e6"
+            },
+            "feedback_mode": "during",
+            "end_feedback": {
+                "type": "rating"
+            },
+            "bg_color": "#ffffff",
+            "text_color": "#000000",
+            "btn_color": "#000000",
+            "btn_text_color": "#ffffff",
+            "border_color": "#e1e1e1",
+            "focus_color": "#000000",
+            "shareable_page_show_terms": true,
+            "terms_text": "#### Terms and conditions\n\nBy clicking \"Agree,\" and each time I interact with this AI agent, I consent to the recording, storage, and sharing of my communications with third-party service providers, and as described in the Privacy Policy.\nIf you do not wish to have your conversations recorded, please refrain from using this service.",
+            "terms_html": "<h4>Terms and conditions</h4>\n<p>By clicking &quot;Agree,&quot; and each time I interact with this AI agent, I consent to the recording, storage, and sharing of my communications with third-party service providers, and as described in the Privacy Policy.\nIf you do not wish to have your conversations recorded, please refrain from using this service.</p>\n",
+            "show_avatar_when_collapsed": false,
+            "disable_banner": false,
+            "mic_muting_enabled": false,
+            "transcript_enabled": false,
+            "text_input_enabled": true,
+            "default_expanded": false,
+            "always_expanded": false,
+            "text_contents": {},
+            "styles": {},
+            "language_selector": false,
+            "supports_text_only": true,
+            "language_presets": {}
+        },
+        "data_collection": {},
+        "overrides": {
+            "conversation_config_override": {
+                "turn": {
+                    "soft_timeout_config": {
+                        "message": false
+                    }
+                },
+                "tts": {
+                    "voice_id": false,
+                    "stability": false,
+                    "speed": false,
+                    "similarity_boost": false
+                },
+                "conversation": {
+                    "text_only": true
+                },
+                "agent": {
+                    "first_message": false,
+                    "language": false,
+                    "prompt": {
+                        "prompt": false,
+                        "llm": false,
+                        "native_mcp_server_ids": false
+                    }
+                }
+            },
+            "custom_llm_extra_body": false,
+            "enable_conversation_initiation_client_data_from_webhook": false
+        },
+        "workspace_overrides": {
+            "webhooks": {
+                "events": [
+                    "transcript"
+                ],
+                "send_audio": false
+            }
+        },
+        "testing": {
+            "attached_tests": [],
+            "referenced_tests_ids": []
+        },
+        "archived": false,
+        "guardrails": {
+            "version": "1",
+            "moderation": {
+                "config": {
+                    "sexual": {
+                        "is_enabled": false,
+                        "threshold": 0.3
+                    },
+                    "violence": {
+                        "is_enabled": false,
+                        "threshold": 0.3
+                    },
+                    "violence_graphic": {
+                        "is_enabled": false,
+                        "threshold": 0.3
+                    },
+                    "harassment": {
+                        "is_enabled": false,
+                        "threshold": 0.3
+                    },
+                    "harassment_threatening": {
+                        "is_enabled": false,
+                        "threshold": 0.3
+                    },
+                    "hate": {
+                        "is_enabled": false,
+                        "threshold": 0.3
+                    },
+                    "hate_threatening": {
+                        "is_enabled": false,
+                        "threshold": 0.3
+                    },
+                    "self_harm_instructions": {
+                        "is_enabled": false,
+                        "threshold": 0.3
+                    },
+                    "self_harm": {
+                        "is_enabled": false,
+                        "threshold": 0.3
+                    },
+                    "self_harm_intent": {
+                        "is_enabled": false,
+                        "threshold": 0.3
+                    },
+                    "sexual_minors": {
+                        "is_enabled": false,
+                        "threshold": 0.3
+                    }
+                }
+            }
+        },
+        "auth": {
+            "enable_auth": false,
+            "allowlist": []
+        },
+        "call_limits": {
+            "agent_concurrency_limit": -1,
+            "daily_limit": 100000,
+            "bursting_enabled": true
+        },
+        "ban": null,
+        "privacy": {
+            "record_voice": true,
+            "retention_days": -1,
+            "delete_transcript_and_pii": false,
+            "delete_audio": false,
+            "apply_to_existing_conversations": false,
+            "zero_retention_mode": false
+        },
+        "safety": {
+            "is_blocked_ivc": false,
+            "is_blocked_non_ivc": false,
+            "ignore_safety_evaluation": false
+        }
+    },
+    "tags": [],
+    "workflow": {
+        "edges": {
+            "edge_01kbk9n4e0fevsgjrzb2rka1bw": {
+                "source": "start_node",
+                "target": "node_01kbk9xv8wfew85xdzma4zwb6y",
+                "forward_condition": {
+                    "type": "unconditional"
+                },
+                "forward_conditions": [
+                    {
+                        "type": "unconditional"
+                    }
+                ],
+                "forwardCondition": {
+                    "type": "unconditional"
+                },
+                "forwardConditions": [
+                    {
+                        "type": "unconditional"
+                    }
+                ],
+                "conditions": [
+                    {
+                        "type": "unconditional"
+                    }
+                ]
+            }
+        },
+        "nodes": {
+            "start_node": {
+                "type": "start",
+                "position": {
+                    "x": 133.90073289647276,
+                    "y": -565.5860455785986
+                },
+                "edge_order": [
+                    "edge_01kbk9n4e0fevsgjrzb2rka1bw"
+                ],
+                "additional_tool_ids": []
+            },
+            "node_01kbk9n4dnfevsgjrkdj4ydydq": {
+                "type": "override_agent",
+                "conversation_config": {
+                    "turn": {},
+                    "tts": {},
+                    "agent": {
+                        "prompt": {
+                            "built_in_tools": {}
+                        }
+                    }
+                },
+                "additional_prompt": "Confirm the caller\u2019s language and country filter (langId, countryFilterId) to localize all subsequent lookups; resolve ambiguities by repeating back the values.",
+                "additional_knowledge_base": [],
+                "additional_tool_ids": [],
+                "position": {
+                    "x": -68.26203198890187,
+                    "y": -406.9296494204958
+                },
+                "edge_order": [],
+                "label": "Languages & Countries"
+            },
+            "node_01kbk9vxcsfevsgjs3wgp259z9": {
+                "type": "override_agent",
+                "conversation_config": {
+                    "turn": {},
+                    "tts": {},
+                    "agent": {
+                        "prompt": {
+                            "built_in_tools": {}
+                        }
+                    }
+                },
+                "additional_prompt": "Identify the correct vehicle type and manufacturer ID for the caller\u2019s vehicle; verify spelling and narrow by region if multiple hits return.",
+                "additional_knowledge_base": [],
+                "additional_tool_ids": [],
+                "position": {
+                    "x": -65.32138057515365,
+                    "y": -239.92214322121458
+                },
+                "edge_order": [],
+                "label": "Manufacturers"
+            },
+            "node_01kbk9wskcfew85xd64nrpcmhz": {
+                "type": "override_agent",
+                "conversation_config": {
+                    "turn": {},
+                    "tts": {},
+                    "agent": {
+                        "prompt": {
+                            "built_in_tools": {}
+                        }
+                    }
+                },
+                "additional_prompt": "Select the exact model ID for the chosen make/type using langId and countryFilterId; surface close matches and ask clarifying questions (year/trim) if needed.",
+                "additional_knowledge_base": [],
+                "additional_tool_ids": [],
+                "position": {
+                    "x": -69.64220275665033,
+                    "y": 111.656053268612
+                },
+                "edge_order": [],
+                "label": "Models"
+            },
+            "node_01kbk9x57tfew85xdcn687zync": {
+                "type": "override_agent",
+                "conversation_config": {
+                    "turn": {},
+                    "tts": {},
+                    "agent": {
+                        "prompt": {
+                            "built_in_tools": {}
+                        }
+                    }
+                },
+                "additional_prompt": "Pinpoint the exact vehicle and engine variant using IDs, license plate/KBA, or VIN-derived hints; return vehicleId and engineId ready for parts selection.",
+                "additional_knowledge_base": [],
+                "additional_tool_ids": [],
+                "position": {
+                    "x": -69.95769521921852,
+                    "y": -57.28529576231297
+                },
+                "edge_order": [],
+                "label": "Vehicles"
+            },
+            "node_01kbk9xcdhfew85xdkvhr32p6f": {
+                "type": "override_agent",
+                "conversation_config": {
+                    "turn": {},
+                    "tts": {},
+                    "agent": {
+                        "prompt": {
+                            "built_in_tools": {}
+                        }
+                    }
+                },
+                "additional_prompt": "Find compatible part numbers and suppliers for the resolved vehicle; include cross-references, analogs, and availability flags; confirm back before presenting options.",
+                "additional_knowledge_base": [],
+                "additional_tool_ids": [],
+                "position": {
+                    "x": -112.83473120701734,
+                    "y": 338.0284812582455
+                },
+                "edge_order": [],
+                "label": "Parts (Articles)"
+            },
+            "node_01kbk9xv8wfew85xdzma4zwb6y": {
+                "type": "override_agent",
+                "conversation_config": {
+                    "turn": {},
+                    "tts": {},
+                    "agent": {
+                        "prompt": {
+                            "built_in_tools": {}
+                        }
+                    }
+                },
+                "additional_prompt": "Validate the VIN, decode to the TecDoc vehicle, and output typeId, vehicleId, modelId, and engineId; gracefully handle typos and offer plate/KBA fallback.",
+                "additional_knowledge_base": [],
+                "additional_tool_ids": [],
+                "position": {
+                    "x": 331.91707312286553,
+                    "y": -393.0254944462589
+                },
+                "edge_order": [],
+                "label": "VIN"
+            }
+        },
+        "prevent_subagent_loops": false
+    }
+}

@@ -1,0 +1,23 @@
+name: E2E Dry Run
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+
+jobs:
+  synthetic-call:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Install deps
+        working-directory: tests/e2e
+        run: npm install
+      - name: Dry-run synthetic call
+        working-directory: tests/e2e
+        run: npm test -- --dry-run
+        env:
+          DRY_RUN: 'true'

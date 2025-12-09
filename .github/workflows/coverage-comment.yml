@@ -1,0 +1,122 @@
+name: Coverage Summary
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
+
+jobs:
+  coverage:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+      - name: Install c8 for parsing
+        run: npm install -g c8
+      - name: Install lcov
+        run: sudo apt-get update && sudo apt-get install -y lcov
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: "3.24.2"
+          channel: "stable"
+
+      - name: Node deps (menu-ingestion)
+        working-directory: backend/services/menu-ingestion
+        run: npm ci
+      - name: Coverage (menu-ingestion)
+        id: cov_menu_ingestion
+        working-directory: backend/services/menu-ingestion
+        run: |
+          npm test -- --coverage
+          pct=$(node -e "const s=require('./coverage/coverage-summary.json');console.log(s.total.statements.pct)")
+          echo "pct=$pct" >> $GITHUB_OUTPUT
+
+      - name: Node deps (notification-service)
+        working-directory: backend/services/notification-service
+        run: npm ci
+      - name: Coverage (notification-service)
+        id: cov_notification
+        working-directory: backend/services/notification-service
+        run: |
+          npm test -- --coverage
+          pct=$(node -e "const s=require('./coverage/coverage-summary.json');console.log(s.total.statements.pct)")
+          echo "pct=$pct" >> $GITHUB_OUTPUT
+
+      - name: Node deps (voice-agent-worker)
+        working-directory: backend/services/voice-agent-worker
+        run: npm ci
+      - name: Coverage (voice-agent-worker)
+        id: cov_voice_worker
+        working-directory: backend/services/voice-agent-worker
+        run: |
+          C8_REPORT_DIR=coverage npx c8 -r json-summary -r text tsx --test src/runtime/__tests__/*.test.ts
+          pct=$(node -e "const s=require('./coverage/coverage-summary.json');console.log(s.total.statements.pct)")
+          echo "pct=$pct" >> $GITHUB_OUTPUT
+
+      - name: Flutter deps (admin)
+        working-directory: apps/admin
+        run: flutter pub get
+      - name: Coverage (admin Flutter)
+        id: cov_admin_flutter
+        working-directory: apps/admin
+        run: |
+          flutter test --coverage
+          pct=$(lcov --summary coverage/lcov.info 2>/dev/null | awk '/lines/ {print $4}' | sed 's/%//')
+          echo "pct=$pct" >> $GITHUB_OUTPUT
+
+      - name: Flutter deps (business)
+        working-directory: apps/business
+        run: flutter pub get
+      - name: Coverage (business Flutter)
+        id: cov_business_flutter
+        working-directory: apps/business
+        run: |
+          flutter test --coverage
+          pct=$(lcov --summary coverage/lcov.info 2>/dev/null | awk '/lines/ {print $4}' | sed 's/%//')
+          echo "pct=$pct" >> $GITHUB_OUTPUT
+      - name: Extract Go coverage
+        run: |
+          go test -coverprofile=backend/services/order-service/cmd/order-service/coverage.out ./backend/services/order-service/cmd/order-service || true
+          go test -coverprofile=backend/services/admin-service/cmd/admin-service/coverage.out ./backend/services/admin-service/cmd/admin-service || true
+      - name: Summarize coverage
+        id: summary
+        run: |
+          summarize() {
+            local path=$1
+            if [ -f "$path" ]; then
+              total=$(go tool cover -func="$path" | awk '/total:/ {print $3}')
+              echo "$total"
+            else
+              echo "n/a"
+            fi
+          }
+          ORDER=$(summarize backend/services/order-service/cmd/order-service/coverage.out)
+          ADMIN=$(summarize backend/services/admin-service/cmd/admin-service/coverage.out)
+          MENU_JS=${{ steps.cov_menu_ingestion.outputs.pct }}
+          NOTIFY_JS=${{ steps.cov_notification.outputs.pct }}
+          VOICE_JS=${{ steps.cov_voice_worker.outputs.pct }}
+          ADMIN_FL=${{ steps.cov_admin_flutter.outputs.pct }}
+          BUSINESS_FL=${{ steps.cov_business_flutter.outputs.pct }}
+          echo "order=$ORDER" >> $GITHUB_OUTPUT
+          echo "admin=$ADMIN" >> $GITHUB_OUTPUT
+          echo "menu_js=$MENU_JS" >> $GITHUB_OUTPUT
+          echo "notify_js=$NOTIFY_JS" >> $GITHUB_OUTPUT
+          echo "voice_js=$VOICE_JS" >> $GITHUB_OUTPUT
+          echo "admin_fl=$ADMIN_FL" >> $GITHUB_OUTPUT
+          echo "business_fl=$BUSINESS_FL" >> $GITHUB_OUTPUT
+      - name: Post PR comment
+        uses: marocchino/sticky-pull-request-comment@v2
+        with:
+          message: |
+            **Coverage summary**
+            - order-service (Go): ${{ steps.summary.outputs.order }}
+            - admin-service (Go): ${{ steps.summary.outputs.admin }}
+            - menu-ingestion (Node): ${{ steps.summary.outputs.menu_js }}%
+            - notification-service (Node): ${{ steps.summary.outputs.notify_js }}%
+            - voice-agent-worker (Node): ${{ steps.summary.outputs.voice_js }}%
+            - admin app (Flutter): ${{ steps.summary.outputs.admin_fl }}%
+            - business app (Flutter): ${{ steps.summary.outputs.business_fl }}%

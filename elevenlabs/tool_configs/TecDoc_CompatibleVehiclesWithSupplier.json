@@ -1,0 +1,62 @@
+{
+    "type": "webhook",
+    "name": "TecDoc_CompatibleVehiclesWithSupplier",
+    "description": "Vehicles compatible with article number & supplier.",
+    "response_timeout_secs": 30,
+    "disable_interruptions": false,
+    "force_pre_tool_speech": false,
+    "assignments": [],
+    "tool_call_sound_behavior": "auto",
+    "dynamic_variables": {
+        "dynamic_variable_placeholders": {}
+    },
+    "execution_mode": "immediate",
+    "api_schema": {
+        "request_headers": {
+            "X-RapidAPI-Key": {
+                "secret_id": "RAPIDAPI_KEY"
+            },
+            "x-rapidapi-host": "tecdoc-catalog.p.rapidapi.com"
+        },
+        "url": "https://tecdoc-catalog.p.rapidapi.com/articles/vehicles-by-article-no-and-supplier-id/type-id/{typeId}/article-no/{articleNo}/supplier-id/{supplierId}/lang-id/{langId}/country-filter-id/{countryFilterId}",
+        "method": "GET",
+        "path_params_schema": {
+            "country_filter_id": {
+                "type": "string",
+                "description": "countryFilterId",
+                "is_system_provided": false,
+                "dynamic_variable": "",
+                "constant_value": ""
+            },
+            "supplier_id": {
+                "type": "string",
+                "description": "supplierId",
+                "is_system_provided": false,
+                "dynamic_variable": "",
+                "constant_value": ""
+            },
+            "article_no": {
+                "type": "string",
+                "description": "articleNo",
+                "is_system_provided": false,
+                "dynamic_variable": "",
+                "constant_value": ""
+            },
+            "lang_id": {
+                "type": "string",
+                "description": "langId",
+                "is_system_provided": false,
+                "dynamic_variable": "",
+                "constant_value": ""
+            },
+            "type_id": {
+                "type": "string",
+                "description": "typeId",
+                "is_system_provided": false,
+                "dynamic_variable": "",
+                "constant_value": ""
+            }
+        },
+        "content_type": "application/json"
+    }
+}

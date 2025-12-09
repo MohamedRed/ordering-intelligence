@@ -1,0 +1,34 @@
+{
+  "name": "@ordering-intelligence/e2e",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "test": "ts-node scripts/synthetic_call.ts",
+    "build": "tsc -p tsconfig.json",
+    "menu:worker-smoke": "ts-node scripts/agent_worker_smoke.ts",
+    "sip:validate": "ts-node scripts/validate_dispatch.ts",
+    "sip:update-metadata": "ts-node scripts/update_dispatch_metadata.ts",
+    "voice:set-profile": "ts-node scripts/set_voice_profile_location.ts",
+    "menu:ingest": "ts-node scripts/menu_ingestion_flow.ts",
+    "menu:steps": "ts-node scripts/menu_ingestion_steps.ts"
+  },
+  "dependencies": {
+    "@google-cloud/firestore": "^7.11.0",
+    "@google-cloud/storage": "^7.12.0",
+    "axios": "^1.7.9",
+    "dotenv": "^16.4.5",
+    "google-auth-library": "^9.15.1",
+    "livekit-server-sdk": "^2.14.0",
+    "twilio": "^5.10.4",
+    "yargs": "^17.7.2"
+  },
+  "devDependencies": {
+    "@types/node": "^20.16.10",
+    "@types/yargs": "^17.0.33",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.6.3"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

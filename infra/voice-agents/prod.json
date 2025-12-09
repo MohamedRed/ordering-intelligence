@@ -1,0 +1,114 @@
+{
+  "presetName": "oi-prod-voice-agent",
+  "description": "Production-ready French male voice agent preset with location-aware overrides.",
+  "llm": {
+    "provider": "openai",
+    "model": "gpt-4o-mini",
+    "temperature": 0.25,
+    "systemPrompt": "Tu es Pierre, un agent professionnel de prise de commandes. Utilise un fran\u00E7ais naturel, adapte ton accent \u00E0 la localisation fournie et reste concentr\u00E9 sur les commandes."
+  },
+  "stt": {
+    "provider": "deepgram",
+    "model": "nova-2-phonecall",
+    "language": "fr-FR"
+  },
+  "tts": {
+    "provider": "elevenlabs",
+    "voiceId": "antoine",
+    "language": "fr-FR",
+    "gender": "male"
+  },
+  "vad": {
+    "mode": "aggressive",
+    "silenceTimeoutMs": 650,
+    "maxSilenceMs": 1500
+  },
+  "tools": [
+    {
+      "name": "order_service.lookup_menu",
+      "description": "Fetch live menu data with tenant + location metadata.",
+      "invoke": {
+        "method": "POST",
+        "url": "${ORDER_SERVICE_URL}/voice/menu",
+        "headers": {
+          "X-Location-Code": "${LOCATION_CODE}"
+        }
+      }
+    },
+    {
+      "name": "order_service.submit_order",
+      "description": "Submit confirmed orders to Firestore and downstream systems.",
+      "invoke": {
+        "method": "POST",
+        "url": "${ORDER_SERVICE_URL}/voice/orders",
+        "headers": {
+          "X-Location-Code": "${LOCATION_CODE}"
+        }
+      }
+    },
+    {
+      "name": "handoff.request_human",
+      "description": "Trigger a human takeover when policy or customer requests require it.",
+      "invoke": {
+        "method": "POST",
+        "url": "${HANDOFF_SERVICE_URL}/handoff"
+      }
+    }
+  ],
+  "safety": {
+    "lowConfidenceEscalation": {
+      "enabled": true,
+      "threshold": 0.6,
+      "maxConsecutiveTurns": 2
+    },
+    "confirmationPolicy": {
+      "requireExplicitConfirm": true,
+      "confirmationTemplate": "Voici votre commande: {orderSummary}. Est-ce correct?"
+    },
+    "blockedTopics": [
+      "paiements",
+      "avis m\u00E9dicaux"
+    ]
+  },
+  "locationOverrides": {
+    "fr-paris": {
+      "tts": {
+        "voiceId": "antoine",
+        "style": "parisien"
+      },
+      "llm": {
+        "systemPrompt": "Tu es Pierre, un agent parisien. Utilise un vocabulaire francilien mais reste professionnel."
+      }
+    },
+    "fr-marseille": {
+      "tts": {
+        "voiceId": "remy",
+        "style": "sud"
+      },
+      "llm": {
+        "systemPrompt": "Tu es Pierre, agent marseillais. Reste chaleureux et convivial, sans exc\u00E8s d\u2019argot."
+      }
+    },
+    "fr-lyon": {
+      "tts": {
+        "voiceId": "louis",
+        "style": "lyonnais"
+      },
+      "llm": {
+        "systemPrompt": "Tu es Pierre, agent bas\u00E9 \u00E0 Lyon. Conserve un ton pos\u00E9 et professionnel."
+      }
+    },
+    "ca-quebec": {
+      "tts": {
+        "voiceId": "marc",
+        "language": "fr-CA"
+      },
+      "stt": {
+        "language": "fr-CA"
+      },
+      "llm": {
+        "systemPrompt": "Tu es Pierre, agent qu\u00E9b\u00E9cois. Utilise les expressions locales et prononce les prix en dollars canadiens."
+      }
+    }
+  }
+}

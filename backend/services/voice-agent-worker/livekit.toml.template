@@ -1,0 +1,11 @@
+# Copy this file to `livekit.toml` (which is gitignored) and update the values
+# after running `lk agent create` or `lk agent config`.
+
+[project]
+  subdomain = "ordering-intelligence"
+
+[agent]
+  # Replace with the agent ID returned by `lk agent create`.
+  id = "CA_REPLACE_ME"
+  name = "oi-voice-agent"
+

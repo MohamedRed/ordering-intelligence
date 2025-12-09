@@ -1,0 +1,13 @@
+# Fill and copy to terraform.tfvars before apply.
+project_id      = "ordering-intelligence-dev"
+project_name    = "Ordering Intelligence Dev"
+billing_account = "013632-2013D4-83320F"
+org_id          = "123456789012"   # leave empty if using folder_id
+folder_id       = ""               # optional: e.g., "folders/345678901234"
+default_region  = "us-central1"
+
+# Optional labels
+project_labels = {
+  environment = "dev"
+  owner       = "menu-ingestion"
+}

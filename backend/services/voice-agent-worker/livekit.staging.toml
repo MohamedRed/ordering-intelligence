@@ -1,0 +1,10 @@
+[project]
+  subdomain = "ordering-intelligence-staging-cse94tey"
+
+[agent]
+  id = "CA_w9QyeoDnBCvP"
+
+[env]
+  ORDER_SERVICE_URL = "https://order-service-staging"
+  STORE_ID = "demo-store"
+  MENU_UPDATES_SUBSCRIPTION = "menu-updates-to-voice-worker-staging"

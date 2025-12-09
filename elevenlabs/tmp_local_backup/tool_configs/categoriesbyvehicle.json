@@ -1,0 +1,48 @@
+{
+    "type": "webhook",
+    "name": "TecDoc_CategoriesByVehicle",
+    "description": "Product categories that fit a vehicle (variant 2).",
+    "response_timeout_secs": 30,
+    "disable_interruptions": false,
+    "force_pre_tool_speech": false,
+    "assignments": [],
+    "tool_call_sound_behavior": "auto",
+    "dynamic_variables": {
+        "dynamic_variable_placeholders": {}
+    },
+    "execution_mode": "immediate",
+    "api_schema": {
+        "request_headers": {
+            "X-RapidAPI-Key": {
+                "secret_id": "RAPIDAPI_KEY"
+            },
+            "x-rapidapi-host": "tecdoc-catalog.p.rapidapi.com"
+        },
+        "url": "https://tecdoc-catalog.p.rapidapi.com/category/type-id/{typeId}/products-groups-variant-2/{vehicleId}/lang-id/{langId}",
+        "method": "GET",
+        "path_params_schema": {
+            "typeId": {
+                "type": "string",
+                "description": "typeId",
+                "is_system_provided": false,
+                "dynamic_variable": "",
+                "constant_value": ""
+            },
+            "vehicleId": {
+                "type": "string",
+                "description": "vehicleId",
+                "is_system_provided": false,
+                "dynamic_variable": "",
+                "constant_value": ""
+            },
+            "langId": {
+                "type": "string",
+                "description": "langId",
+                "is_system_provided": false,
+                "dynamic_variable": "",
+                "constant_value": ""
+            }
+        },
+        "content_type": "application/json"
+    }
+}

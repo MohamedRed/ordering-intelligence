@@ -1,0 +1,28 @@
+environment            = "dev"
+twilio_account_sid     = "ACXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
+twilio_auth_token      = "your_auth_token"
+livekit_sip_subdomain  = "ordering-intelligence-dev"
+livekit_sip_region     = "us"
+friendly_name_prefix   = "oi"
+
+termination_allowed_cidrs = [
+  "0.0.0.0/0"
+]
+
+inbound_phone_numbers = {
+  primary = "PNXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
+}
+
+fallback_targets = [
+  {
+    target   = "sip:fallback-gateway.example.com"
+    priority = 20
+    weight   = 1
+  }
+]
+
+enable_outbound_trunk   = false
+create_credential_list  = false
+# sip_username          = "oi-livekit"
+# sip_password          = "super-secret"
+

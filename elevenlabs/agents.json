@@ -1,0 +1,16 @@
+{
+    "agents": [
+        {
+            "config": "agent_configs/Auto-Parts-Ordering.json",
+            "id": "agent_5301kbk085bpebwbvd1jm9ng1k5t"
+        },
+        {
+            "config": "agent_configs/Order-taker.json",
+            "id": "agent_7201kbfs3pbpe1tsv4dmakk1207q"
+        },
+        {
+            "config": "agent_configs/Auto-Parts-Ordering-v2.json",
+            "id": "agent_9201kbnjy570f0ysjk9mssmwewm3"
+        }
+    ]
+}

@@ -1,0 +1,102 @@
+{
+  "displayName": "Operations Overview (${environment})",
+  "gridLayout": {
+    "columns": "2",
+    "widgets": [
+      {
+        "title": "Telephony Call Volume",
+        "xyChart": {
+          "dataSets": [
+            {
+              "plotType": "LINE",
+              "targetAxis": "Y1",
+              "timeSeriesQuery": {
+                "timeSeriesFilter": {
+                  "filter": "metric.type=\"run.googleapis.com/request_count\" resource.type=\"cloud_run_revision\" resource.label.\"service_name\"=\"${telephony_service_name}\"",
+                  "aggregation": {
+                    "alignmentPeriod": "300s",
+                    "perSeriesAligner": "ALIGN_RATE"
+                  }
+                }
+              }
+            }
+          ],
+          "yAxis": {
+            "label": "Requests/min",
+            "scale": "LINEAR"
+          }
+        }
+      },
+      {
+        "title": "Orchestrator Latency P95",
+        "xyChart": {
+          "dataSets": [
+            {
+              "plotType": "LINE",
+              "targetAxis": "Y1",
+              "timeSeriesQuery": {
+                "timeSeriesFilter": {
+                  "filter": "metric.type=\"run.googleapis.com/request_latencies\" resource.type=\"cloud_run_revision\" resource.label.\"service_name\"=\"${conversation_service_name}\"",
+                  "aggregation": {
+                    "alignmentPeriod": "300s",
+                    "perSeriesAligner": "ALIGN_PERCENTILE_95"
+                  }
+                }
+              }
+            }
+          ],
+          "yAxis": {
+            "label": "Milliseconds",
+            "scale": "LINEAR"
+          }
+        }
+      },
+      {
+        "title": "BigQuery Slot Usage",
+        "xyChart": {
+          "dataSets": [
+            {
+              "plotType": "LINE",
+              "timeSeriesQuery": {
+                "timeSeriesFilter": {
+                  "filter": "metric.type=\"bigquery.googleapis.com/query/total_slot_ms\" resource.type=\"bigquery_project\"",
+                  "aggregation": {
+                    "alignmentPeriod": "300s",
+                    "perSeriesAligner": "ALIGN_RATE"
+                  }
+                }
+              }
+            }
+          ],
+          "yAxis": {
+            "label": "Slot ms/sec",
+            "scale": "LINEAR"
+          }
+        }
+      },
+      {
+        "title": "Pub/Sub Order Events",
+        "xyChart": {
+          "dataSets": [
+            {
+              "plotType": "LINE",
+              "timeSeriesQuery": {
+                "timeSeriesFilter": {
+                  "filter": "metric.type=\"pubsub.googleapis.com/subscription/pull_message_operation_count\" resource.type=\"pubsub_subscription\" metric.label.\"subscription_id\"=starts_with(\"orders-events\")",
+                  "aggregation": {
+                    "alignmentPeriod": "300s",
+                    "perSeriesAligner": "ALIGN_RATE"
+                  }
+                }
+              }
+            }
+          ],
+          "yAxis": {
+            "label": "Messages/sec",
+            "scale": "LINEAR"
+          }
+        }
+      }
+    ]
+  }
+}

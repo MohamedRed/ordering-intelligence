@@ -1,0 +1,100 @@
+{
+    "tools": [
+        {
+            "path": "tool_configs/analogspareparts.json"
+        },
+        {
+            "path": "tool_configs/categoriesbyvehicle.json"
+        },
+        {
+            "path": "tool_configs/compatiblevehicles.json"
+        },
+        {
+            "path": "tool_configs/compatiblevehicleswithsupplier.json"
+        },
+        {
+            "path": "tool_configs/crossreferences.json"
+        },
+        {
+            "path": "tool_configs/enginedetails.json"
+        },
+        {
+            "path": "tool_configs/enginetypesbymodel.json"
+        },
+        {
+            "path": "tool_configs/getcountry.json"
+        },
+        {
+            "path": "tool_configs/getlanguage.json"
+        },
+        {
+            "path": "tool_configs/listcategorytree.json"
+        },
+        {
+            "path": "tool_configs/listcountries.json"
+        },
+        {
+            "path": "tool_configs/listcountriesbylang.json"
+        },
+        {
+            "path": "tool_configs/listlanguages.json"
+        },
+        {
+            "path": "tool_configs/listmanufacturers.json"
+        },
+        {
+            "path": "tool_configs/listmodels.json"
+        },
+        {
+            "path": "tool_configs/listproductnames.json"
+        },
+        {
+            "path": "tool_configs/listsuppliers.json"
+        },
+        {
+            "path": "tool_configs/listvehicleids.json"
+        },
+        {
+            "path": "tool_configs/listvehicletypes.json"
+        },
+        {
+            "path": "tool_configs/manufacturerdetails.json"
+        },
+        {
+            "path": "tool_configs/modeldetails.json"
+        },
+        {
+            "path": "tool_configs/modeldetailsbyvehicle.json"
+        },
+        {
+            "path": "tool_configs/partcriteria.json"
+        },
+        {
+            "path": "tool_configs/searcharticle.json"
+        },
+        {
+            "path": "tool_configs/searcharticlev2.json"
+        },
+        {
+            "path": "tool_configs/searchcategories.json"
+        },
+        {
+            "path": "tool_configs/searchvehiclebynumber.json"
+        },
+        {
+            "path": "tool_configs/vehicleinfo.json"
+        },
+        {
+            "path": "tool_configs/vincheck.json"
+        },
+        {
+            "path": "tool_configs/vindecoderv1.json"
+        },
+        {
+            "path": "tool_configs/vindecoderv2.json"
+        },
+        {
+            "path": "tool_configs/vindecoderv3.json"
+        }
+    ]
+}

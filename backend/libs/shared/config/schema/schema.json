@@ -1,0 +1,118 @@
+{
+  "order-service": {
+    "PORT": {
+      "type": "number",
+      "default": 8082,
+      "description": "HTTP port for order service."
+    },
+    "ENVIRONMENT": {
+      "type": "string",
+      "default": "development",
+      "description": "Deployment environment identifier."
+    },
+    "FIRESTORE_PROJECT_ID": {
+      "type": "string",
+      "required": true,
+      "description": "Firestore project identifier."
+    },
+    "GOOGLE_APPLICATION_CREDENTIALS": {
+      "type": "string",
+      "required": false,
+      "description": "Path to service account JSON for Firestore access."
+    },
+    "PUBSUB_TOPIC_ORDERS": {
+      "type": "string",
+      "required": true,
+      "description": "Pub/Sub topic for order events."
+    }
+  },
+  "notification-service": {
+    "PORT": {
+      "type": "number",
+      "default": 8084,
+      "description": "HTTP port for notification service."
+    },
+    "ENVIRONMENT": {
+      "type": "string",
+      "default": "development",
+      "description": "Deployment environment identifier."
+    },
+    "FIREBASE_PROJECT_ID": {
+      "type": "string",
+      "required": true,
+      "description": "Firebase project ID."
+    },
+    "FIREBASE_SERVICE_ACCOUNT": {
+      "type": "string",
+      "required": true,
+      "description": "JSON string or file path for Firebase service account."
+    },
+    "TWILIO_ACCOUNT_SID": {
+      "type": "string",
+      "required": false,
+      "description": "Twilio account SID for SMS delivery."
+    },
+    "TWILIO_AUTH_TOKEN": {
+      "type": "string",
+      "required": false,
+      "sensitive": true,
+      "description": "Twilio auth token for SMS."
+    },
+    "SENDGRID_API_KEY": {
+      "type": "string",
+      "required": false,
+      "sensitive": true,
+      "description": "SendGrid API key for email."
+    },
+    "ALERT_TOPIC": {
+      "type": "string",
+      "required": false,
+      "description": "Pub/Sub topic for alert fan-out."
+    }
+  },
+  "admin-service": {
+    "PORT": {
+      "type": "number",
+      "default": 8085,
+      "description": "HTTP port for admin service."
+    },
+    "ENVIRONMENT": {
+      "type": "string",
+      "default": "development",
+      "description": "Deployment environment identifier."
+    },
+    "FIRESTORE_PROJECT_ID": {
+      "type": "string",
+      "required": true,
+      "description": "Firestore project identifier."
+    },
+    "FIREBASE_PROJECT_ID": {
+      "type": "string",
+      "required": true,
+      "description": "Firebase project for auth validation."
+    },
+    "GOOGLE_APPLICATION_CREDENTIALS": {
+      "type": "string",
+      "required": false,
+      "description": "Path to service account JSON for Firestore access."
+    }
+  },
+  "telephony-routing": {
+    "TELEPHONY_PROVIDER": {
+      "type": "string",
+      "enum": ["us-livekit-pstn", "sip-trunk"],
+      "default": "sip-trunk",
+      "description": "Select inbound provider per tenant/store: use LiveKit first-party PSTN numbers for US only (`us-livekit-pstn`), otherwise keep third-party SIP trunks (`sip-trunk`)."
+    },
+    "TELEPHONY_NUMBER": {
+      "type": "string",
+      "required": true,
+      "description": "E.164 phone number for the chosen provider. LiveKit US number when TELEPHONY_PROVIDER=us-livekit-pstn; carrier DID when TELEPHONY_PROVIDER=sip-trunk."
+    },
+    "TELEPHONY_DISPATCH_RULE_ID": {
+      "type": "string",
+      "required": true,
+      "description": "LiveKit SIP dispatch rule ID to route inbound calls to the correct agent/room, regardless of provider."
+    }
+  }
+}

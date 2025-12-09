@@ -1,0 +1,2 @@
+include config_loader/__init__.py
+include ../schema/schema.json

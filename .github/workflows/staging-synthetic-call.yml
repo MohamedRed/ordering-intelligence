@@ -1,0 +1,39 @@
+name: Staging Synthetic Call
+
+on:
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: "Run in dry-run mode"
+        required: false
+        default: "false"
+
+jobs:
+  staging-call:
+    runs-on: ubuntu-latest
+    environment: staging
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Install dependencies
+        working-directory: tests/e2e
+        run: npm install
+
+      - name: Trigger synthetic call
+        working-directory: tests/e2e
+        env:
+          DRY_RUN: ${{ github.event.inputs.dry_run }}
+          TWILIO_ACCOUNT_SID: ${{ secrets.STAGING_TWILIO_ACCOUNT_SID }}
+          TWILIO_AUTH_TOKEN: ${{ secrets.STAGING_TWILIO_AUTH_TOKEN }}
+          TWILIO_CALL_FROM: ${{ secrets.STAGING_TWILIO_CALL_FROM }}
+          TWILIO_CALL_TO: ${{ secrets.STAGING_TWILIO_CALL_TO }}
+          TWILIO_TWIML_URL: ${{ secrets.STAGING_TWIML_URL }}
+          LIVEKIT_URL: ${{ secrets.STAGING_LIVEKIT_URL }}
+          LIVEKIT_API_KEY: ${{ secrets.STAGING_LIVEKIT_API_KEY }}
+          LIVEKIT_API_SECRET: ${{ secrets.STAGING_LIVEKIT_API_SECRET }}
+          ORDER_SERVICE_URL: ${{ secrets.STAGING_ORDER_SERVICE_URL }}
+        run: npm test -- --require-order

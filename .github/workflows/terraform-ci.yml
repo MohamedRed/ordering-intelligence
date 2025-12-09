@@ -1,0 +1,35 @@
+name: Terraform CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+
+jobs:
+  terraform:
+    runs-on: ubuntu-latest
+    env:
+      TF_IN_AUTOMATION: "true"
+    steps:
+      - uses: actions/checkout@v4
+      - name: Security lints
+        working-directory: ops/security
+        run: |
+          npm ci
+          npm run lint-cloud-run-overrides
+          npm run lint-iam-bindings
+      - uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.7.5
+      - name: Terraform fmt
+        working-directory: infrastructure/terraform
+        run: terraform fmt -check -recursive
+      - name: Validate environments
+        run: |
+          for env in dev staging prod; do
+            echo "Validating $env"
+            pushd infrastructure/terraform/environments/$env > /dev/null
+            terraform init -backend=false
+            terraform validate
+            popd > /dev/null
+          done

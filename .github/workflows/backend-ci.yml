@@ -1,0 +1,89 @@
+name: Backend CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+
+jobs:
+  node-services:
+    name: Node.js Services
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        service: [telephony-adapter, notification-service, pos-export, menu-ingestion, voice-agent-worker]
+    defaults:
+      run:
+        working-directory: backend/services/${{ matrix.service }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+          cache-dependency-path: backend/services/${{ matrix.service }}/package-lock.json
+      - run: npm ci
+      - run: npm audit --production --audit-level=high || true
+      - run: npm run build
+      - run: npm test
+
+  python-services:
+    name: Python Services
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        service: [conversation-orchestrator, speech-pipeline]
+    defaults:
+      run:
+        working-directory: backend/services/${{ matrix.service }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install Poetry
+        run: pip install poetry
+      - name: Install dependencies
+        run: poetry install --no-interaction --no-root
+      - name: Compile sources
+        run: poetry run python -m compileall app
+      - name: Run tests
+        run: poetry run pytest
+
+  go-services:
+    name: Go Services
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        service: [order-service, admin-service]
+    defaults:
+      run:
+        working-directory: backend/services/${{ matrix.service }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: "1.22"
+      - name: Cache staticcheck
+        id: staticcheck-cache
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cache/go-build
+            ~/go/pkg/mod
+            ~/go/bin/staticcheck
+          key: staticcheck-${{ runner.os }}-go1.22-v0.5.1
+      - run: go vet ./...
+      - name: Staticcheck
+        run: |
+          if ! command -v staticcheck >/dev/null 2>&1; then
+            go install honnef.co/go/tools/cmd/staticcheck@v0.5.1
+          fi
+          staticcheck ./...
+      - name: Go tests with coverage gate
+        run: |
+          go test -coverprofile=coverage.out ./...
+          total=$(go tool cover -func=coverage.out | awk '/total:/ {print $3}' | sed 's/%//')
+          echo "total coverage: $total%"
+          threshold=15
+          awk -v total="$total" -v thr="$threshold" 'BEGIN { if (total+0 < thr) { exit 1 } }'

@@ -1,0 +1,81 @@
+name: LiveKit SIP Health
+
+on:
+  schedule:
+    # 01:00 PT / 08:00 UTC daily
+    - cron: '0 8 * * *'
+  workflow_dispatch:
+    inputs:
+      run_call:
+        description: 'Set to false to skip placing the LiveKit outbound health call'
+        type: choice
+        default: 'true'
+        options:
+          - 'true'
+          - 'false'
+
+jobs:
+  sip-health:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      RUN_HEALTH_CALL: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.run_call == 'false' ? 'false' : 'true' }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - target: dev
+            environment_name: dev
+            livekit_url_secret: DEV_LIVEKIT_URL
+            livekit_api_key_secret: DEV_LIVEKIT_API_KEY
+            livekit_api_secret_secret: DEV_LIVEKIT_API_SECRET
+            inbound_trunk_secret: DEV_LIVEKIT_SIP_INBOUND_TRUNK_ID
+            dispatch_rule_secret: DEV_LIVEKIT_SIP_DISPATCH_RULE_ID
+            outbound_trunk_secret: DEV_LIVEKIT_SIP_OUTBOUND_TRUNK_ID
+            call_to_secret: DEV_LIVEKIT_SIP_HEALTH_CALL_TO
+          - target: staging
+            environment_name: staging
+            livekit_url_secret: STAGING_LIVEKIT_URL
+            livekit_api_key_secret: STAGING_LIVEKIT_API_KEY
+            livekit_api_secret_secret: STAGING_LIVEKIT_API_SECRET
+            inbound_trunk_secret: STAGING_LIVEKIT_SIP_INBOUND_TRUNK_ID
+            dispatch_rule_secret: STAGING_LIVEKIT_SIP_DISPATCH_RULE_ID
+            outbound_trunk_secret: STAGING_LIVEKIT_SIP_OUTBOUND_TRUNK_ID
+            call_to_secret: STAGING_LIVEKIT_SIP_HEALTH_CALL_TO
+          - target: prod
+            environment_name: production
+            livekit_url_secret: PROD_LIVEKIT_URL
+            livekit_api_key_secret: PROD_LIVEKIT_API_KEY
+            livekit_api_secret_secret: PROD_LIVEKIT_API_SECRET
+            inbound_trunk_secret: PROD_LIVEKIT_SIP_INBOUND_TRUNK_ID
+            dispatch_rule_secret: PROD_LIVEKIT_SIP_DISPATCH_RULE_ID
+            outbound_trunk_secret: PROD_LIVEKIT_SIP_OUTBOUND_TRUNK_ID
+            call_to_secret: PROD_LIVEKIT_SIP_HEALTH_CALL_TO
+    environment: ${{ matrix.environment_name }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install dependencies
+        working-directory: tests/e2e
+        run: npm install
+
+      - name: Validate LiveKit SIP configuration
+        working-directory: tests/e2e
+        env:
+          LIVEKIT_URL: ${{ secrets[matrix.livekit_url_secret] }}
+          LIVEKIT_API_KEY: ${{ secrets[matrix.livekit_api_key_secret] }}
+          LIVEKIT_API_SECRET: ${{ secrets[matrix.livekit_api_secret_secret] }}
+          LIVEKIT_SIP_INBOUND_TRUNK_ID: ${{ secrets[matrix.inbound_trunk_secret] }}
+          LIVEKIT_SIP_DISPATCH_RULE_ID: ${{ secrets[matrix.dispatch_rule_secret] }}
+          LIVEKIT_SIP_OUTBOUND_TRUNK_ID: ${{ secrets[matrix.outbound_trunk_secret] }}
+          LIVEKIT_SIP_HEALTH_CALL_TO: ${{ secrets[matrix.call_to_secret] }}
+          LIVEKIT_SIP_HEALTH_ROOM: sip-health-${{ matrix.target }}-${{ github.run_id }}
+          LIVEKIT_SIP_HEALTH_IDENTITY_PREFIX: sip-health-${{ matrix.target }}
+          LIVEKIT_SIP_HEALTH_RUN_CALL: ${{ env.RUN_HEALTH_CALL }}
+          LIVEKIT_SIP_HEALTH_TIMEOUT: '60000'
+          LIVEKIT_SIP_HEALTH_WAIT_UNTIL_ANSWERED: 'true'
+        run: npm run sip:validate

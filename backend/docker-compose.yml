@@ -1,0 +1,21 @@
+version: "3.9"
+
+services:
+  order-service:
+    build: ./services/order-service
+    ports:
+      - "8082:8082"
+    env_file:
+      - ./services/order-service/.env.example
+  notification-service:
+    build: ./services/notification-service
+    ports:
+      - "8084:8084"
+    env_file:
+      - ./services/notification-service/.env.example
+  admin-service:
+    build: ./services/admin-service
+    ports:
+      - "8085:8085"
+    env_file:
+      - ./services/admin-service/.env.example
