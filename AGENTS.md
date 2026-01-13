@@ -5,3 +5,4 @@
 - When a code file reaches 100–300 lines, you need to break it down into different component following modular architecture. 
 - I don't want quick fixes, but professional code for enterprise clients.
 - Build always enterprise-grade level products. 
+- everytime you finish a task, git commit and push the changes.
