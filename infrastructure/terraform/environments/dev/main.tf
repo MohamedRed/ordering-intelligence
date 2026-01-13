@@ -1515,6 +1515,7 @@ module "channel_gateway" {
     WAIT_TIME_SERVICE_URL        = local.service_urls.wait_time_service
     ORDER_SERVICE_URL            = local.service_urls.order_service
     PAYMENTS_SERVICE_URL         = local.service_urls.payments_service
+    DISPATCH_SERVICE_URL         = local.service_urls.dispatch_service
     TELEGRAM_WEBAPP_URL          = "https://telegram-mini-oi2.web.app"
     DISCORD_CLIENT_ID            = "1457874399339347988"
     DISCORD_PUBLIC_KEY           = "96b99f7ce4c32905ea11af7e3bcd9507d5a02d5459f851e8cb0f7b116c800149"
