@@ -1,6 +1,7 @@
 project_id      = "ordering-intelligence-ENV"
 region          = "us-central1"
 billing_account = ""
+custom_domain_base = ""
 
 order_service_lb_hostname         = "order-service.liive.app"
 order_service_lb_certificate_mode = "MANAGED"

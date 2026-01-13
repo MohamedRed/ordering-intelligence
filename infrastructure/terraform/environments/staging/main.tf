@@ -67,12 +67,51 @@ locals {
 
   image_registry_project = var.image_registry_project != "" ? var.image_registry_project : var.project_id
 
+  custom_domain_prefix = var.custom_domain_prefix != "" ? var.custom_domain_prefix : (
+    var.environment_name == "prod" ? "" : "${var.environment_name}-"
+  )
+
+  default_custom_domain_exclusions = concat(
+    ["agent_tools", "agent_webhooks"],
+    length(var.order_service_lb_managed_domains) > 0 ? ["order_service"] : []
+  )
+
+  custom_domain_service_keys = length(var.custom_domain_service_keys) > 0 ? var.custom_domain_service_keys : [
+    for key in keys(local.service_names) : key
+    if !contains(local.default_custom_domain_exclusions, key)
+  ]
+
+  default_service_domains = {
+    for key, name in local.service_names :
+    key => var.custom_domain_base != "" && contains(local.custom_domain_service_keys, key)
+      ? "${local.custom_domain_prefix}${name}.${var.custom_domain_base}"
+      : ""
+  }
+
+  order_service_domain_override = length(var.order_service_lb_managed_domains) > 0 ? {
+    order_service = var.order_service_lb_managed_domains[0]
+  } : {}
+
+  custom_service_domains = merge(
+    local.default_service_domains,
+    var.custom_service_domain_overrides,
+    local.order_service_domain_override
+  )
+
   service_urls = {
     for key, name in local.service_names :
-    key => "https://${name}-${local.project_number}.${var.region}.run.app"
+    key => local.custom_service_domains[key] != ""
+      ? "https://${local.custom_service_domains[key]}"
+      : "https://${name}-${local.project_number}.${var.region}.run.app"
   }
 
   order_service_lb_url = module.order_service_lb.hostname != "" ? "https://${module.order_service_lb.hostname}" : local.service_urls.order_service
+
+  domain_mappings = {
+    for key, domain in local.custom_service_domains :
+    key => domain
+    if domain != "" && contains(local.custom_domain_service_keys, key)
+  }
 
   cloud_run_defaults = {
     admin_service = {

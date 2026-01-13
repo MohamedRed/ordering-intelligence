@@ -3,6 +3,11 @@ output "menu_ingestion_base_url" {
   value       = local.service_urls.menu_ingestion
 }
 
+output "cloud_run_domain_mappings" {
+  description = "Cloud Run domain mappings and required DNS records."
+  value       = module.cloud_run_domain_mappings.resource_records
+}
+
 output "onboarding_base_url" {
   description = "Cloud Run URL for the onboarding service"
   value       = local.service_urls.onboarding_service

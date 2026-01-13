@@ -39,6 +39,36 @@ variable "image_registry_project" {
   default     = ""
 }
 
+variable "custom_domain_base" {
+  description = "Base DNS zone for custom service domains (e.g. liive.app). Leave empty to keep run.app URLs."
+  type        = string
+  default     = ""
+}
+
+variable "custom_domain_prefix" {
+  description = "Optional prefix for custom service domains (defaults to env name with a trailing hyphen, except prod)."
+  type        = string
+  default     = ""
+}
+
+variable "custom_domain_service_keys" {
+  description = "Optional list of service keys to receive custom domains. Leave empty to use the default set."
+  type        = list(string)
+  default     = []
+}
+
+variable "custom_service_domain_overrides" {
+  description = "Optional per-service domain overrides (map of service key to domain)."
+  type        = map(string)
+  default     = {}
+}
+
+variable "order_service_lb_managed_domains" {
+  description = "Optional explicit domains for the order-service load balancer (dev defaults to none)."
+  type        = list(string)
+  default     = []
+}
+
 variable "cloud_run_overrides" {
   description = "Optional per-service overrides for Cloud Run runtime settings and environment variables."
   type = map(object({
