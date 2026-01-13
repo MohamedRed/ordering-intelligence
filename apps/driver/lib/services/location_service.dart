@@ -3,7 +3,7 @@ import 'dart:io';
 
 import 'package:geolocator/geolocator.dart';
 
-import 'dispatch_api.dart';
+import 'location_poster.dart';
 
 class LocationService {
   LocationService({
@@ -14,7 +14,7 @@ class LocationService {
     this.minSendInterval = const Duration(seconds: 30),
   });
 
-  final DispatchDriverApi api;
+  final LocationPoster api;
   final void Function(Position position)? onPosition;
   final void Function(Position position)? onSent;
   final void Function(String message)? onError;

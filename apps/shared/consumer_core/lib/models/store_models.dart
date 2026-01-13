@@ -6,6 +6,8 @@ class StoreChoice {
   final String logoUrl;
   final String currency;
   final int fuelDefaultPrepayCents;
+  final bool deliveryEnabled;
+  final String deliveryFleetMode;
 
   const StoreChoice({
     required this.name,
@@ -15,6 +17,8 @@ class StoreChoice {
     required this.logoUrl,
     this.currency = '',
     this.fuelDefaultPrepayCents = 0,
+    this.deliveryEnabled = false,
+    this.deliveryFleetMode = '',
   });
 
   factory StoreChoice.fromJson(Map<String, dynamic> json) {
@@ -28,6 +32,21 @@ class StoreChoice {
                 json['image_url'] ??
                 '')
             .toString();
+    final deliverySettings =
+        (json['delivery_settings'] ?? json['deliverySettings']) as Map?;
+    final deliveryEnabled =
+        (json['deliveryEnabled'] ??
+                json['delivery_enabled'] ??
+                deliverySettings?['enabled'])
+            ?.toString()
+            .toLowerCase() ==
+        'true';
+    final deliveryFleetMode =
+        (json['deliveryFleetMode'] ??
+                json['delivery_fleet_mode'] ??
+                deliverySettings?['fleet_mode'])
+            ?.toString()
+            .trim();
     return StoreChoice(
       name: (json['name'] ?? json['storeName'] ?? json['store_name'] ?? '')
           .toString(),
@@ -36,11 +55,14 @@ class StoreChoice {
       businessType: (json['businessType'] ?? json['business_type'] ?? '')
           .toString(),
       logoUrl: logoUrl,
-      currency: (json['currency'] ?? json['storeCurrency'] ?? '')
-          .toString(),
-      fuelDefaultPrepayCents: _toInt(json['fuelDefaultPrepayCents'] ??
-          json['fuel_default_prepay_cents'] ??
-          json['fuel_prepay_default_cents']),
+      currency: (json['currency'] ?? json['storeCurrency'] ?? '').toString(),
+      fuelDefaultPrepayCents: _toInt(
+        json['fuelDefaultPrepayCents'] ??
+            json['fuel_default_prepay_cents'] ??
+            json['fuel_prepay_default_cents'],
+      ),
+      deliveryEnabled: deliveryEnabled,
+      deliveryFleetMode: deliveryFleetMode ?? '',
     );
   }
 
@@ -90,22 +112,26 @@ class SessionInfo {
       storeId: (json['storeId'] ?? '').toString(),
       storeName: (json['storeName'] ?? '').toString(),
       tenantId: (json['tenantId'] ?? '').toString(),
-      customerId:
-          (json['customerId'] ?? json['customer_id'] ?? '').toString(),
+      customerId: (json['customerId'] ?? json['customer_id'] ?? '').toString(),
       businessType: (json['businessType'] ?? '').toString(),
       currency: (json['currency'] ?? '').toString(),
-      fuelDefaultPrepayCents: _toInt(json['fuelDefaultPrepayCents'] ??
-          json['fuel_default_prepay_cents'] ??
-          json['fuel_prepay_default_cents']),
-      fuelPreauthCapCents: _toInt(json['fuelPreauthCapCents'] ??
-          json['fuel_preauth_cap_cents']),
-      startGroupOrder: json['startGroupOrder'] == true ||
+      fuelDefaultPrepayCents: _toInt(
+        json['fuelDefaultPrepayCents'] ??
+            json['fuel_default_prepay_cents'] ??
+            json['fuel_prepay_default_cents'],
+      ),
+      fuelPreauthCapCents: _toInt(
+        json['fuelPreauthCapCents'] ?? json['fuel_preauth_cap_cents'],
+      ),
+      startGroupOrder:
+          json['startGroupOrder'] == true ||
           json['startGroupOrder']?.toString().toLowerCase() == 'true',
-      telegramBotUsername: (json['telegramBotUsername'] ??
-              json['telegram_bot_username'] ??
-              json['botUsername'] ??
-              '')
-          .toString(),
+      telegramBotUsername:
+          (json['telegramBotUsername'] ??
+                  json['telegram_bot_username'] ??
+                  json['botUsername'] ??
+                  '')
+              .toString(),
     );
   }
 

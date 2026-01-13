@@ -21,6 +21,7 @@ class CartSheetContent extends StatelessWidget {
     required this.paymentMethod,
     required this.onPaymentMethodChanged,
     this.paymentMethodsSection,
+    this.deliverySection,
   });
 
   final List<CartItem> cart;
@@ -36,6 +37,7 @@ class CartSheetContent extends StatelessWidget {
   final String paymentMethod;
   final ValueChanged<String> onPaymentMethodChanged;
   final Widget? paymentMethodsSection;
+  final Widget? deliverySection;
 
   @override
   Widget build(BuildContext context) {
@@ -50,6 +52,10 @@ class CartSheetContent extends StatelessWidget {
           onQuantityChange: onQuantityChange,
           formatPrice: formatPrice,
         ),
+        if (deliverySection != null) ...[
+          const SizedBox(height: 12),
+          deliverySection!,
+        ],
         if (showPaymentMethod) ...[
           const SizedBox(height: 12),
           PaymentMethodToggle(
@@ -75,9 +81,7 @@ class CartSheetContent extends StatelessWidget {
         const SizedBox(height: 12),
         Row(
           children: [
-            Expanded(
-              child: Text('Total', style: textTheme.large),
-            ),
+            Expanded(child: Text('Total', style: textTheme.large)),
             Text(formatPrice(totalCents), style: textTheme.large),
           ],
         ),

@@ -78,6 +78,7 @@ type serviceConfig struct {
 	MobileSessionSkewSeconds  int
 	OrderServiceURL           string
 	PaymentsServiceURL        string
+	DispatchServiceURL        string
 	CustomerProfileServiceURL string
 	TypesenseHost             string
 	TypesenseAPIKey           string
@@ -106,10 +107,12 @@ type channelSession struct {
 }
 
 type storeChoice struct {
-	Name         string `firestore:"name" json:"name"`
-	TenantID     string `firestore:"tenant_id" json:"tenantId"`
-	StoreID      string `firestore:"store_id" json:"storeId"`
-	BusinessType string `firestore:"business_type" json:"businessType"`
+	Name              string `firestore:"name" json:"name"`
+	TenantID          string `firestore:"tenant_id" json:"tenantId"`
+	StoreID           string `firestore:"store_id" json:"storeId"`
+	BusinessType      string `firestore:"business_type" json:"businessType"`
+	DeliveryEnabled   bool   `firestore:"delivery_enabled,omitempty" json:"deliveryEnabled,omitempty"`
+	DeliveryFleetMode string `firestore:"delivery_fleet_mode,omitempty" json:"deliveryFleetMode,omitempty"`
 }
 
 type sessionManager struct {
@@ -149,6 +152,14 @@ func main() {
 			log.Fatalf("failed to create order-service idtoken source: %v", err)
 		}
 		orderHTTPClient = oauth2.NewClient(ctx, orderTokenSrc)
+	}
+	dispatchHTTPClient := &http.Client{Timeout: 20 * time.Second}
+	if strings.TrimSpace(cfg.DispatchServiceURL) != "" {
+		dispatchTokenSrc, err := idtoken.NewTokenSource(ctx, cfg.DispatchServiceURL)
+		if err != nil {
+			log.Fatalf("failed to create dispatch-service idtoken source: %v", err)
+		}
+		dispatchHTTPClient = oauth2.NewClient(ctx, dispatchTokenSrc)
 	}
 	paymentsHTTPClient := &http.Client{Timeout: 20 * time.Second}
 	if strings.TrimSpace(cfg.PaymentsServiceURL) != "" {
@@ -195,12 +206,12 @@ func main() {
 	router.Post("/telegram/webapp/session/start", func(w http.ResponseWriter, r *http.Request) {
 		handleWebAppSessionStart(w, r, cfg, firestoreClient)
 	})
-	registerWebAppRoutes(router, "/telegram/webapp", cfg, firestoreClient, orderHTTPClient, paymentsHTTPClient, manager)
+	registerWebAppRoutes(router, "/telegram/webapp", cfg, firestoreClient, orderHTTPClient, paymentsHTTPClient, dispatchHTTPClient, manager)
 
 	router.Post("/discord/webapp/session/start", func(w http.ResponseWriter, r *http.Request) {
 		handleDiscordWebAppSessionStart(w, r, cfg, firestoreClient)
 	})
-	registerWebAppRoutes(router, "/discord/webapp", cfg, firestoreClient, orderHTTPClient, paymentsHTTPClient, manager)
+	registerWebAppRoutes(router, "/discord/webapp", cfg, firestoreClient, orderHTTPClient, paymentsHTTPClient, dispatchHTTPClient, manager)
 	router.Post("/discord/interactions", func(w http.ResponseWriter, r *http.Request) {
 		handleDiscordInteractions(w, r, cfg, firestoreClient)
 	})
@@ -208,11 +219,11 @@ func main() {
 	router.Post("/snapchat/webapp/session/start", func(w http.ResponseWriter, r *http.Request) {
 		handleSnapchatWebAppSessionStart(w, r, cfg, firestoreClient)
 	})
-	registerWebAppRoutes(router, "/snapchat/webapp", cfg, firestoreClient, orderHTTPClient, paymentsHTTPClient, manager)
+	registerWebAppRoutes(router, "/snapchat/webapp", cfg, firestoreClient, orderHTTPClient, paymentsHTTPClient, dispatchHTTPClient, manager)
 
-	registerWebAppRoutes(router, "/mobile", cfg, firestoreClient, orderHTTPClient, paymentsHTTPClient, manager)
+	registerWebAppRoutes(router, "/mobile", cfg, firestoreClient, orderHTTPClient, paymentsHTTPClient, dispatchHTTPClient, manager)
 
-	registerWebAppRoutes(router, "/tv", cfg, firestoreClient, orderHTTPClient, paymentsHTTPClient, manager)
+	registerWebAppRoutes(router, "/tv", cfg, firestoreClient, orderHTTPClient, paymentsHTTPClient, dispatchHTTPClient, manager)
 	registerTvRoutes(router, cfg, firestoreClient)
 
 	router.Post("/mobile/session/start", func(w http.ResponseWriter, r *http.Request) {
@@ -415,6 +426,10 @@ func loadConfig() (*serviceConfig, error) {
 		PaymentsServiceURL: strings.TrimSpace(firstNonEmpty(
 			os.Getenv("PAYMENTS_SERVICE_URL"),
 			stringOrDefault(values["PAYMENTS_SERVICE_URL"], ""),
+		)),
+		DispatchServiceURL: strings.TrimSpace(firstNonEmpty(
+			os.Getenv("DISPATCH_SERVICE_URL"),
+			stringOrDefault(values["DISPATCH_SERVICE_URL"], ""),
 		)),
 		CustomerProfileServiceURL: strings.TrimSpace(firstNonEmpty(
 			os.Getenv("CUSTOMER_PROFILE_SERVICE_URL"),
@@ -831,6 +846,7 @@ type webAppOrderRequest struct {
 	Notes           string            `json:"notes,omitempty"`
 	Locale          string            `json:"locale,omitempty"`
 	FulfillmentType string            `json:"fulfillmentType,omitempty"`
+	Delivery        *webAppDelivery   `json:"delivery,omitempty"`
 	IdempotencyKey  string            `json:"idempotencyKey,omitempty"`
 	PaymentMethod   string            `json:"paymentMethod,omitempty"`
 	SuccessURL      string            `json:"successUrl,omitempty"`
@@ -853,6 +869,7 @@ type orderServiceOrderRequest struct {
 	Fuel            *orderServiceFuelOrder  `json:"fuel,omitempty"`
 	IdempotencyKey  string                  `json:"idempotencyKey,omitempty"`
 	FulfillmentType string                  `json:"fulfillmentType,omitempty"`
+	Delivery        *orderServiceDelivery   `json:"delivery,omitempty"`
 }
 
 type channelContact struct {
@@ -1161,6 +1178,7 @@ func handleWebAppOrderCreate(
 			PumpNumber:           strings.TrimSpace(payload.Fuel.PumpNumber),
 		}
 	}
+	deliveryPayload := buildOrderServiceDelivery(payload.Delivery)
 
 	orderChannel := webAppOrderChannel(session)
 	customerName := strings.TrimSpace(session.DisplayName)
@@ -1188,6 +1206,7 @@ func handleWebAppOrderCreate(
 		PaymentMethod:   payload.PaymentMethod,
 		Items:           orderItems,
 		Fuel:            fuelPayload,
+		Delivery:        deliveryPayload,
 		IdempotencyKey:  strings.TrimSpace(payload.IdempotencyKey),
 		FulfillmentType: strings.TrimSpace(payload.FulfillmentType),
 	}
@@ -1281,6 +1300,8 @@ type storeMetadata struct {
 	LogoURL                string
 	Currency               string
 	FuelDefaultPrepayCents int64
+	DeliveryEnabled        bool
+	DeliveryFleetMode      string
 }
 
 func fetchStoreMetadata(ctx context.Context, client *cloudfirestore.Client, storeID string) (storeMetadata, error) {
@@ -1329,6 +1350,22 @@ func fetchStoreMetadata(ctx context.Context, client *cloudfirestore.Client, stor
 		),
 		0,
 	))
+	deliverySettings, _ := data["delivery_settings"].(map[string]any)
+	if deliverySettings == nil {
+		if alt, ok := data["deliverySettings"].(map[string]any); ok {
+			deliverySettings = alt
+		}
+	}
+	deliveryEnabled := false
+	deliveryFleetMode := ""
+	if deliverySettings != nil {
+		if enabled, ok := deliverySettings["enabled"].(bool); ok {
+			deliveryEnabled = enabled
+		} else if enabledStr := strings.TrimSpace(anyToString(deliverySettings["enabled"])); enabledStr != "" {
+			deliveryEnabled = strings.ToLower(enabledStr) == "true"
+		}
+		deliveryFleetMode = strings.TrimSpace(anyToString(deliverySettings["fleet_mode"]))
+	}
 	return storeMetadata{
 		StoreID:                strings.TrimSpace(firstNonEmpty(anyToString(data["store_id"]), doc.Ref.ID)),
 		StoreName:              name,
@@ -1337,6 +1374,8 @@ func fetchStoreMetadata(ctx context.Context, client *cloudfirestore.Client, stor
 		LogoURL:                logoURL,
 		Currency:               strings.ToLower(currency),
 		FuelDefaultPrepayCents: fuelDefaultPrepay,
+		DeliveryEnabled:        deliveryEnabled,
+		DeliveryFleetMode:      deliveryFleetMode,
 	}, nil
 }
 

@@ -3,6 +3,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 import '../services/dispatch_api.dart';
+import '../services/marketplace_api.dart';
 import '../services/store_prefs.dart';
 
 class SignInScreen extends StatefulWidget {
@@ -19,6 +20,7 @@ class _SignInScreenState extends State<SignInScreen> {
   final _codeCtrl = TextEditingController();
 
   bool _busy = false;
+  bool _marketplaceMode = false;
   String? _error;
   String? _verificationId;
   int? _forceResendToken;
@@ -30,6 +32,7 @@ class _SignInScreenState extends State<SignInScreen> {
     final prefs = StorePrefs.instance;
     _storeCtrl.text = prefs.storeId();
     _phoneCtrl.text = prefs.phone();
+    _marketplaceMode = prefs.mode() == 'marketplace';
   }
 
   @override
@@ -49,8 +52,7 @@ class _SignInScreenState extends State<SignInScreen> {
     final phone = _phoneCtrl.text.trim();
     try {
       if (kIsWeb) {
-        final result =
-            await FirebaseAuth.instance.signInWithPhoneNumber(phone);
+        final result = await FirebaseAuth.instance.signInWithPhoneNumber(phone);
         setState(() {
           _confirmationResult = result;
           _verificationId = result.verificationId;
@@ -119,10 +121,19 @@ class _SignInScreenState extends State<SignInScreen> {
   Future<void> _claimDriver() async {
     final storeId = _storeCtrl.text.trim();
     final phone = _phoneCtrl.text.trim();
-    await StorePrefs.instance.setStoreId(storeId);
     await StorePrefs.instance.setPhone(phone);
-    final api = DispatchDriverApi(storeId: storeId);
-    await api.claimDriver(phoneE164: phone);
+    await StorePrefs.instance.setMode(
+      _marketplaceMode ? 'marketplace' : 'store',
+    );
+    if (_marketplaceMode) {
+      await StorePrefs.instance.setStoreId('');
+      final api = MarketplaceDispatchApi();
+      await api.registerDeliverer(phoneE164: phone);
+    } else {
+      await StorePrefs.instance.setStoreId(storeId);
+      final api = DispatchDriverApi(storeId: storeId);
+      await api.claimDriver(phoneE164: phone);
+    }
   }
 
   @override
@@ -147,13 +158,25 @@ class _SignInScreenState extends State<SignInScreen> {
                     ),
                   ),
                   const SizedBox(height: 12),
+                  SwitchListTile(
+                    contentPadding: EdgeInsets.zero,
+                    title: const Text('Marketplace courier'),
+                    value: _marketplaceMode,
+                    onChanged: (value) {
+                      setState(() => _marketplaceMode = value);
+                    },
+                  ),
+                  const SizedBox(height: 8),
                   TextFormField(
                     controller: _storeCtrl,
                     decoration: const InputDecoration(
                       labelText: 'Store ID',
                       border: OutlineInputBorder(),
                     ),
-                    validator: (value) => value == null || value.trim().isEmpty
+                    enabled: !_marketplaceMode,
+                    validator: (value) => _marketplaceMode
+                        ? null
+                        : value == null || value.trim().isEmpty
                         ? 'Enter store id'
                         : null,
                   ),

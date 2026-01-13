@@ -1,12 +1,9 @@
 import 'dart:convert';
 
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:http/http.dart' as http;
 
-const _dispatchBaseUrl = String.fromEnvironment(
-  'DISPATCH_SERVICE_URL',
-  defaultValue: 'https://dispatch-service-230152279015.us-central1.run.app',
-);
+import 'dispatch_api_base.dart';
+import 'location_poster.dart';
 
 class DispatchRoute {
   const DispatchRoute({
@@ -35,29 +32,18 @@ class DispatchRoute {
   }
 }
 
-class DispatchDriverApi {
+class DispatchDriverApi implements LocationPoster {
   DispatchDriverApi({required this.storeId, http.Client? client})
     : _client = client ?? http.Client();
 
   final String storeId;
   final http.Client _client;
 
-  Uri _uri(String path) => Uri.parse(_dispatchBaseUrl + path);
+  Uri _uri(String path) => Uri.parse(dispatchBaseUrl + path);
 
-  Future<String> _token() async {
-    final user = FirebaseAuth.instance.currentUser;
-    if (user == null) throw Exception('Not signed in');
-    final token = await user.getIdToken();
-    if (token == null || token.isEmpty) {
-      throw Exception('Failed to fetch auth token');
-    }
-    return token;
-  }
+  Future<String> _token() async => fetchDispatchToken();
 
-  Map<String, String> _headers(String token) => {
-    'Authorization': 'Bearer $token',
-    'Content-Type': 'application/json',
-  };
+  Map<String, String> _headers(String token) => dispatchHeaders(token);
 
   Future<void> claimDriver({required String phoneE164}) async {
     final token = await _token();
@@ -86,6 +72,7 @@ class DispatchDriverApi {
     }
   }
 
+  @override
   Future<void> postLocation({
     required double lat,
     required double lng,

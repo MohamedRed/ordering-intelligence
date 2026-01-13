@@ -6,6 +6,7 @@ import 'package:shadcn_ui/shadcn_ui.dart';
 
 import 'firebase_options.dart';
 import 'screens/driver_home_screen.dart';
+import 'screens/marketplace_home_screen.dart';
 import 'screens/sign_in_screen.dart';
 import 'services/store_prefs.dart';
 import '../../shared/ui/glass_backdrop.dart';
@@ -44,7 +45,9 @@ class DriverApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     const enableGlass = true; // flip to false on low-end devices if needed
-    final cardShape = RoundedRectangleBorder(borderRadius: BorderRadius.circular(20));
+    final cardShape = RoundedRectangleBorder(
+      borderRadius: BorderRadius.circular(20),
+    );
     return ShadApp.custom(
       themeMode: ThemeMode.light,
       theme: ShadThemeData(
@@ -57,8 +60,7 @@ class DriverApp extends StatelessWidget {
       ),
       appBuilder: (context) {
         final base = Theme.of(context);
-        final textTheme =
-            GoogleFonts.manropeTextTheme(base.textTheme);
+        final textTheme = GoogleFonts.manropeTextTheme(base.textTheme);
         final themedApp = MaterialApp(
           title: 'Driver',
           theme: base.copyWith(
@@ -98,6 +100,10 @@ class DriverApp extends StatelessWidget {
               }
               if (snapshot.data == null) {
                 return const SignInScreen();
+              }
+              final mode = StorePrefs.instance.mode();
+              if (mode == 'marketplace') {
+                return const MarketplaceHomeScreen();
               }
               return const DriverHomeScreen();
             },

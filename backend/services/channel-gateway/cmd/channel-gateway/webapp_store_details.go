@@ -18,6 +18,8 @@ type webAppStoreDetailsResponse struct {
 	LogoURL                string `json:"logoUrl"`
 	Currency               string `json:"currency,omitempty"`
 	FuelDefaultPrepayCents int64  `json:"fuelDefaultPrepayCents,omitempty"`
+	DeliveryEnabled        bool   `json:"deliveryEnabled,omitempty"`
+	DeliveryFleetMode      string `json:"deliveryFleetMode,omitempty"`
 }
 
 func handleWebAppStoreDetails(
@@ -47,5 +49,7 @@ func handleWebAppStoreDetails(
 		LogoURL:                meta.LogoURL,
 		Currency:               meta.Currency,
 		FuelDefaultPrepayCents: meta.FuelDefaultPrepayCents,
+		DeliveryEnabled:        meta.DeliveryEnabled,
+		DeliveryFleetMode:      meta.DeliveryFleetMode,
 	})
 }

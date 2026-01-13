@@ -139,6 +139,7 @@ type orderDelivery struct {
 	DropoffAddress        *deliveryAddress `json:"dropoffAddress,omitempty"`
 	Instructions          string           `json:"instructions,omitempty"`
 	Quote                 *deliveryQuote   `json:"quote,omitempty"`
+	OfferCents            int64            `json:"offerCents,omitempty"`
 	ProviderDeliveryID    string           `json:"providerDeliveryId,omitempty"`
 	TrackingURL           string           `json:"trackingUrl,omitempty"`
 	DeliveryStatusSummary string           `json:"deliveryStatusSummary,omitempty"`

@@ -534,6 +534,29 @@ app.post("/events/dispatch", async (req: Request, res: Response) => {
       }
     }
 
+    if ((kind === "marketplace_offer" || kind === "marketplace_prewarm") && driverId) {
+      const tokens = await listDeviceTokensForUser({ userId: driverId });
+      if (tokens.length > 0) {
+        const offerId = String(raw?.payload?.offerId ?? raw?.offerId ?? "").trim();
+        const notifyRequest: NotifyRequest = {
+          channel: ["push"],
+          target: { deviceTokens: tokens },
+          payload: {
+            title: kind === "marketplace_offer" ? "New delivery offer" : "Upcoming delivery opportunity",
+            body: orderId
+              ? `Store ${storeId} needs a courier for order ${orderId}.`
+              : `Store ${storeId} may need a courier soon.`,
+            data: {
+              storeId,
+              orderId,
+              offerId
+            }
+          }
+        };
+        await sendPushNotification(notifyRequest, "marketplace_offer");
+      }
+    }
+
     const dispatchEventKey = normalizeDispatchEvent(kind);
     if (dispatchEventKey) {
       const store = await fetchStore(storeId);
@@ -687,10 +710,11 @@ app.post("/events/deliveries", async (req: Request, res: Response) => {
 app.post("/device-tokens", verifyUser, async (req: Request, res: Response) => {
   try {
     const token = req.body?.token as string;
-    const storeId = req.body?.storeId as string;
+    const rawStoreId = req.body?.storeId as string;
+    const storeId = (rawStoreId && rawStoreId.trim().length > 0) ? rawStoreId : "marketplace";
     const platform = req.body?.platform as string ?? "unknown";
     const userId = (req as any).uid as string;
-    if (!token || !storeId) {
+    if (!token) {
       res.status(400).json({ error: "missing_fields" });
       return;
     }

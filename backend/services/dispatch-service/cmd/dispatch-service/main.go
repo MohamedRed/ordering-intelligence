@@ -70,6 +70,7 @@ type serviceConfig struct {
 	RadarAPIKey          string
 	AssignmentTTLSeconds int
 	TopKCandidates       int
+	MarketplaceCandidateLimit int
 
 	CloudTasksProjectID          string
 	CloudTasksLocation           string
@@ -114,9 +115,12 @@ type deliveryAddress struct {
 }
 
 type orderDelivery struct {
-	FleetMode     string          `json:"fleetMode,omitempty"`
-	DropoffLatLng *deliveryLatLng `json:"dropoffLatLng,omitempty"`
-	TrackingURL   string          `json:"trackingUrl,omitempty"`
+	FleetMode      string           `json:"fleetMode,omitempty"`
+	DropoffLatLng  *deliveryLatLng  `json:"dropoffLatLng,omitempty"`
+	DropoffAddress *deliveryAddress `json:"dropoffAddress,omitempty"`
+	Instructions   string           `json:"instructions,omitempty"`
+	OfferCents     int64            `json:"offerCents,omitempty"`
+	TrackingURL    string           `json:"trackingUrl,omitempty"`
 }
 
 type orderRecord struct {
@@ -292,6 +296,14 @@ func main() {
 	router.Post("/tasks/assignments/expire", func(w http.ResponseWriter, r *http.Request) {
 		handleAssignmentExpiry(w, r, fs, cfg, pubsubClient, tasksClient, httpClient, orderTokenSrc)
 	})
+	router.Post("/tasks/marketplace/offers/{offerId}/finalize", func(w http.ResponseWriter, r *http.Request) {
+		offerID := strings.TrimSpace(chi.URLParam(r, "offerId"))
+		if offerID == "" {
+			writeJSON(w, http.StatusBadRequest, map[string]string{"error": "missing_offer_id"})
+			return
+		}
+		handleMarketplaceFinalize(w, r, fs, cfg, pubsubClient, httpClient, orderTokenSrc, offerID)
+	})
 
 	router.Route("/v1", func(r chi.Router) {
 		if cfg.RequireAuth {
@@ -335,6 +347,18 @@ func main() {
 				return
 			}
 			updateStopStatus(w, r, fs, cfg, pubsubClient, httpClient, orderTokenSrc, storeID, routeID, deliveryID)
+		})
+		r.Post("/stores/{storeID}/marketplace/prewarm", func(w http.ResponseWriter, r *http.Request) {
+			storeID := strings.TrimSpace(chi.URLParam(r, "storeID"))
+			if storeID == "" {
+				writeJSON(w, http.StatusBadRequest, map[string]string{"error": "missing_store_id"})
+				return
+			}
+			if !canAccessStore(r.Context(), storeID) {
+				writeJSON(w, http.StatusForbidden, map[string]string{"error": "forbidden"})
+				return
+			}
+			handleMarketplacePrewarm(w, r, fs, cfg, pubsubClient, storeID)
 		})
 
 		// Business-facing driver management.
@@ -447,6 +471,38 @@ func main() {
 				getCurrentRoute(w, r, fs, storeID)
 			})
 		})
+
+		// Marketplace deliverer endpoints (store-agnostic).
+		r.Route("/marketplace", func(rr chi.Router) {
+			rr.Post("/deliverers/me/register", func(w http.ResponseWriter, r *http.Request) {
+				handleMarketplaceDelivererRegister(w, r, fs)
+			})
+			rr.Post("/deliverers/me/availability", func(w http.ResponseWriter, r *http.Request) {
+				handleMarketplaceAvailability(w, r, fs)
+			})
+			rr.Post("/deliverers/me/location", func(w http.ResponseWriter, r *http.Request) {
+				handleMarketplaceLocation(w, r, fs)
+			})
+			rr.Get("/offers", func(w http.ResponseWriter, r *http.Request) {
+				handleMarketplaceOffersList(w, r, fs)
+			})
+			rr.Post("/offers/{offerId}/accept", func(w http.ResponseWriter, r *http.Request) {
+				offerID := strings.TrimSpace(chi.URLParam(r, "offerId"))
+				if offerID == "" {
+					writeJSON(w, http.StatusBadRequest, map[string]string{"error": "missing_offer_id"})
+					return
+				}
+				handleMarketplaceOfferAccept(w, r, fs, offerID)
+			})
+			rr.Post("/orders/{orderId}/status", func(w http.ResponseWriter, r *http.Request) {
+				orderID := strings.TrimSpace(chi.URLParam(r, "orderId"))
+				if orderID == "" {
+					writeJSON(w, http.StatusBadRequest, map[string]string{"error": "missing_order_id"})
+					return
+				}
+				handleMarketplaceOrderStatus(w, r, fs, cfg, pubsubClient, httpClient, orderTokenSrc, orderID)
+			})
+		})
 	})
 
 	log.Printf("dispatch-service listening on :%s", cfg.Port)
@@ -486,6 +542,13 @@ func loadConfig() (*serviceConfig, error) {
 	if topK > 25 {
 		topK = 25
 	}
+	marketplaceLimit := intFromEnv("MARKETPLACE_CANDIDATE_LIMIT", 25)
+	if marketplaceLimit < 5 {
+		marketplaceLimit = 5
+	}
+	if marketplaceLimit > 50 {
+		marketplaceLimit = 50
+	}
 
 	return &serviceConfig{
 		Port:                         port,
@@ -500,6 +563,7 @@ func loadConfig() (*serviceConfig, error) {
 		RadarAPIKey:                  strings.TrimSpace(stringOrDefault(values["RADAR_API_KEY"], strings.TrimSpace(os.Getenv("RADAR_API_KEY")))),
 		AssignmentTTLSeconds:         ttlSeconds,
 		TopKCandidates:               topK,
+		MarketplaceCandidateLimit:    marketplaceLimit,
 		CloudTasksProjectID:          strings.TrimSpace(stringOrDefault(values["CLOUD_TASKS_PROJECT_ID"], strings.TrimSpace(os.Getenv("CLOUD_TASKS_PROJECT_ID")))),
 		CloudTasksLocation:           strings.TrimSpace(stringOrDefault(values["CLOUD_TASKS_LOCATION"], strings.TrimSpace(os.Getenv("CLOUD_TASKS_LOCATION")))),
 		CloudTasksAssignmentQueue:    strings.TrimSpace(stringOrDefault(values["CLOUD_TASKS_ASSIGNMENT_QUEUE"], strings.TrimSpace(os.Getenv("CLOUD_TASKS_ASSIGNMENT_QUEUE")))),
@@ -702,7 +766,16 @@ func handleOrdersEvents(
 		writeJSON(w, http.StatusOK, map[string]string{"status": "ignored_not_delivery"})
 		return
 	}
-	if order.Delivery == nil || strings.ToLower(strings.TrimSpace(order.Delivery.FleetMode)) != "owned_fleet" {
+	if order.Delivery == nil {
+		writeJSON(w, http.StatusOK, map[string]string{"status": "ignored_missing_delivery"})
+		return
+	}
+	fleetMode := strings.ToLower(strings.TrimSpace(order.Delivery.FleetMode))
+	if fleetMode == "marketplace" {
+		handleMarketplaceOrdersEvent(w, r, fs, cfg, pubsubClient, tasksClient, httpClient, orderTokenSrc, order)
+		return
+	}
+	if fleetMode != "owned_fleet" {
 		writeJSON(w, http.StatusOK, map[string]string{"status": "ignored_not_owned_fleet"})
 		return
 	}

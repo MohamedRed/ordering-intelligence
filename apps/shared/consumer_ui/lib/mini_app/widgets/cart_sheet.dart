@@ -19,6 +19,7 @@ class CartSheet extends StatelessWidget {
     required this.paymentMethod,
     required this.onPaymentMethodChanged,
     this.paymentMethodsSection,
+    this.deliverySection,
   });
 
   final List<CartItem> cart;
@@ -34,6 +35,7 @@ class CartSheet extends StatelessWidget {
   final String paymentMethod;
   final ValueChanged<String> onPaymentMethodChanged;
   final Widget? paymentMethodsSection;
+  final Widget? deliverySection;
 
   @override
   Widget build(BuildContext context) {
@@ -53,6 +55,7 @@ class CartSheet extends StatelessWidget {
         paymentMethod: paymentMethod,
         onPaymentMethodChanged: onPaymentMethodChanged,
         paymentMethodsSection: paymentMethodsSection,
+        deliverySection: deliverySection,
       ),
     );
   }

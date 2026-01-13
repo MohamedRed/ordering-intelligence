@@ -303,7 +303,7 @@ type deliveryQuote struct {
 }
 
 type orderDelivery struct {
-	FleetMode string `json:"fleetMode,omitempty" firestore:"fleetMode,omitempty"` // third_party|owned_fleet
+	FleetMode string `json:"fleetMode,omitempty" firestore:"fleetMode,omitempty"` // third_party|owned_fleet|marketplace
 
 	DropoffAddress *deliveryAddress `json:"dropoffAddress,omitempty" firestore:"dropoffAddress,omitempty"`
 	DropoffLatLng  *deliveryLatLng  `json:"dropoffLatLng,omitempty" firestore:"dropoffLatLng,omitempty"`
@@ -313,6 +313,7 @@ type orderDelivery struct {
 
 	CustomerPaysDeliveryFee           bool  `json:"customerPaysDeliveryFee,omitempty" firestore:"customerPaysDeliveryFee,omitempty"`
 	DeliveryFeeCentsChargedToCustomer int64 `json:"deliveryFeeCentsChargedToCustomer,omitempty" firestore:"deliveryFeeCentsChargedToCustomer,omitempty"`
+	OfferCents                        int64 `json:"offerCents,omitempty" firestore:"offerCents,omitempty"`
 
 	ProviderDeliveryID string `json:"providerDeliveryId,omitempty" firestore:"providerDeliveryId,omitempty"`
 	TrackingURL        string `json:"trackingUrl,omitempty" firestore:"trackingUrl,omitempty"`
@@ -338,6 +339,7 @@ type orderDeliveryPatch struct {
 	ProviderDeliveryID    *string             `json:"providerDeliveryId,omitempty"`
 	TrackingURL           *string             `json:"trackingUrl,omitempty"`
 	DeliveryStatusSummary *string             `json:"deliveryStatusSummary,omitempty"`
+	OfferCents            *int64              `json:"offerCents,omitempty"`
 	Quote                 *deliveryQuotePatch `json:"quote,omitempty"`
 }
 
@@ -526,7 +528,9 @@ func main() {
 				return
 			}
 			payload.Delivery.FleetMode = strings.ToLower(strings.TrimSpace(payload.Delivery.FleetMode))
-			if payload.Delivery.FleetMode != "owned_fleet" && payload.Delivery.FleetMode != "third_party" {
+			if payload.Delivery.FleetMode != "owned_fleet" &&
+				payload.Delivery.FleetMode != "third_party" &&
+				payload.Delivery.FleetMode != "marketplace" {
 				writeJSON(w, http.StatusBadRequest, map[string]string{"error": "invalid_delivery_fleet_mode"})
 				return
 			}
@@ -1000,7 +1004,7 @@ func main() {
 			}
 		}
 
-	writeJSON(w, http.StatusOK, updated)
+		writeJSON(w, http.StatusOK, updated)
 	})
 
 	// Refund order payment (card only).
@@ -2253,6 +2257,9 @@ func updateOrderDelivery(
 		}
 		if patch.DeliveryStatusSummary != nil {
 			record.Delivery.DeliveryStatusSummary = strings.TrimSpace(*patch.DeliveryStatusSummary)
+		}
+		if patch.OfferCents != nil {
+			record.Delivery.OfferCents = *patch.OfferCents
 		}
 		if patch.Quote != nil {
 			if record.Delivery.Quote == nil {

@@ -1,10 +1,20 @@
 part of 'mini_app_screen.dart';
 
 mixin MiniAppStateOrder
-    on State<MiniAppScreen>, MiniAppStateFields, MiniAppStateGas, MiniAppStatePayments {
+    on
+        State<MiniAppScreen>,
+        MiniAppStateFields,
+        MiniAppStateGas,
+        MiniAppStatePayments,
+        MiniAppStateDelivery {
   Future<void> _placeOrder() async {
     final session = _session;
     if (session == null || session.storeId.isEmpty || _cart.isEmpty) {
+      return;
+    }
+    final deliveryDraft = _buildDeliveryDraft();
+    if (_isDeliverySelected && deliveryDraft == null) {
+      setState(() => _orderError = 'Enter a delivery address.');
       return;
     }
     setState(() {
@@ -25,6 +35,8 @@ mixin MiniAppStateOrder
         paymentMethod: paymentMethod,
         successUrl: paymentMethod == 'card' ? redirectUrl : null,
         cancelUrl: paymentMethod == 'card' ? redirectUrl : null,
+        fulfillmentType: _isDeliverySelected ? 'delivery' : 'pickup',
+        delivery: deliveryDraft,
       );
       if (!mounted) {
         return;
@@ -34,12 +46,10 @@ mixin MiniAppStateOrder
         _orderConfirmation = result;
         _cart = [];
         _notesController.clear();
+        _resetDeliveryDraft();
       });
       if (paymentMethod == 'card') {
-        await _handleOrderPayment(
-          orderResponse: result,
-          session: session,
-        );
+        await _handleOrderPayment(orderResponse: result, session: session);
       }
       Navigator.of(context).maybePop();
     } catch (e) {
@@ -59,6 +69,7 @@ mixin MiniAppStateOrder
       _orderError = null;
       _cart = [];
       _notesController.clear();
+      _resetDeliveryDraft();
       if (_isGasStation) {
         _resetFuelDraft();
       }

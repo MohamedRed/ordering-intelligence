@@ -17,6 +17,7 @@ import 'mini_app_scope.dart';
 import 'widgets/account_link_panel.dart';
 import 'widgets/cart_sheet.dart';
 import 'widgets/centered_message.dart';
+import 'widgets/delivery_options_section.dart';
 import 'widgets/group_order_panel.dart';
 import 'widgets/menu_view.dart';
 import 'widgets/modifier_dialog.dart';
@@ -30,6 +31,7 @@ part 'mini_app_state_store.dart';
 part 'mini_app_state_menu.dart';
 part 'mini_app_state_cart.dart';
 part 'mini_app_state_cart_sheet.dart';
+part 'mini_app_state_delivery.dart';
 part 'mini_app_state_group_orders_actions.dart';
 part 'mini_app_state_group_orders_hydrate.dart';
 part 'mini_app_state_group_orders_entry.dart';
@@ -81,6 +83,7 @@ class _MiniAppScreenState extends State<MiniAppScreen>
         MiniAppStateOrder,
         MiniAppStateGroupOrdersItems,
         MiniAppStateCart,
+        MiniAppStateDelivery,
         MiniAppStateReorders,
         MiniAppStateCartSheet,
         MiniAppStateGroupOrdersCheckout,

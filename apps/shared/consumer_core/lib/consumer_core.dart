@@ -3,6 +3,7 @@ library consumer_core;
 export 'models/cart_models.dart';
 export 'models/chat_models.dart';
 export 'models/customer_profile.dart';
+export 'models/delivery_models.dart';
 export 'models/fuel_order.dart';
 export 'models/group_order_allocation.dart';
 export 'models/group_order_checkout_response.dart';

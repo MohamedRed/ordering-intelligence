@@ -5,6 +5,7 @@ import 'package:shadcn_ui/shadcn_ui.dart';
 import '../../util/store_id.dart';
 import '../../widgets/business_scaffold.dart';
 import '../../widgets/shad_snackbar.dart';
+import 'delivery_settings_card.dart';
 
 class StoreSettingsScreen extends StatefulWidget {
   const StoreSettingsScreen({super.key});
@@ -70,9 +71,11 @@ class _StoreSettingsScreenState extends State<StoreSettingsScreen> {
   final TextEditingController _storeLatCtrl = TextEditingController();
   final TextEditingController _storeLngCtrl = TextEditingController();
   final TextEditingController _storeAddressCtrl = TextEditingController();
+  final TextEditingController _marketplaceOfferCtrl = TextEditingController();
   bool _deliveryArrivingSoonEnabled = false;
   int _deliveryArrivingSoonMinutes = 3;
   int _deliveryRateLimitPerHour = 3;
+  int _marketplaceOfferCents = 300;
 
   String get _storeId => effectiveStoreId();
 
@@ -89,6 +92,7 @@ class _StoreSettingsScreenState extends State<StoreSettingsScreen> {
     _storeLatCtrl.dispose();
     _storeLngCtrl.dispose();
     _storeAddressCtrl.dispose();
+    _marketplaceOfferCtrl.dispose();
     for (final list in _templatesByStatus.values) {
       for (final row in list) {
         row.dispose();
@@ -192,8 +196,11 @@ class _StoreSettingsScreenState extends State<StoreSettingsScreen> {
               <String, dynamic>{};
       _storeLatCtrl.text = (storeLoc['lat'] ?? '').toString();
       _storeLngCtrl.text = (storeLoc['lng'] ?? '').toString();
-      _storeAddressCtrl.text =
-          (storeLoc['formatted'] as String?)?.trim() ?? '';
+      _storeAddressCtrl.text = (storeLoc['formatted'] as String?)?.trim() ?? '';
+      final offer = delivery['marketplace_offer_cents'];
+      _marketplaceOfferCents =
+          offer is int ? offer : (offer is num ? offer.toInt() : 300);
+      _marketplaceOfferCtrl.text = _marketplaceOfferCents.toString();
 
       final merged = _defaultComms();
       merged.addAll(comms);
@@ -280,7 +287,8 @@ class _StoreSettingsScreenState extends State<StoreSettingsScreen> {
 
       _deliveryArrivingSoonEnabled =
           mergedDelivery['arriving_soon_enabled'] == true;
-      final arrivingMins = mergedDelivery['arriving_soon_eta_threshold_minutes'];
+      final arrivingMins =
+          mergedDelivery['arriving_soon_eta_threshold_minutes'];
       _deliveryArrivingSoonMinutes = arrivingMins is int
           ? arrivingMins
           : (arrivingMins is num ? arrivingMins.toInt() : 3);
@@ -358,15 +366,15 @@ class _StoreSettingsScreenState extends State<StoreSettingsScreen> {
         'enabled': _deliveryEnabled,
         'fleet_mode': _deliveryFleetMode,
         'store_location': storeLoc,
+        'marketplace_offer_cents':
+            int.tryParse(_marketplaceOfferCtrl.text.trim()) ??
+                _marketplaceOfferCents,
       };
-      await FirebaseFirestore.instance
-          .collection('stores')
-          .doc(_storeId)
-          .set({
-            'order_comms': comms,
-            'delivery_comms': deliveryComms,
-            'delivery_settings': deliverySettings,
-          }, SetOptions(merge: true));
+      await FirebaseFirestore.instance.collection('stores').doc(_storeId).set({
+        'order_comms': comms,
+        'delivery_comms': deliveryComms,
+        'delivery_settings': deliverySettings,
+      }, SetOptions(merge: true));
 
       if (mounted) {
         showShadSnack(
@@ -425,82 +433,19 @@ class _StoreSettingsScreenState extends State<StoreSettingsScreen> {
                   ),
                 ),
                 const SizedBox(height: 12),
-                ShadCard(
-                  padding: const EdgeInsets.all(14),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text('Delivery settings',
-                          style: Theme.of(context).textTheme.titleMedium),
-                      const SizedBox(height: 8),
-                      SwitchListTile(
-                        contentPadding: EdgeInsets.zero,
-                        title: const Text('Enable delivery'),
-                        value: _deliveryEnabled,
-                        onChanged: (v) => setState(() => _deliveryEnabled = v),
-                      ),
-                      const SizedBox(height: 8),
-                      DropdownButtonFormField<String>(
-                        value: _deliveryFleetMode,
-                        decoration: const InputDecoration(
-                          labelText: 'Fleet mode',
-                          border: OutlineInputBorder(),
-                        ),
-                        items: const [
-                          DropdownMenuItem(
-                              value: 'owned_fleet', child: Text('Owned fleet')),
-                          DropdownMenuItem(
-                              value: 'third_party', child: Text('Third-party')),
-                          DropdownMenuItem(
-                              value: 'hybrid', child: Text('Hybrid')),
-                        ],
-                        onChanged: (v) => setState(
-                            () => _deliveryFleetMode = v ?? 'owned_fleet'),
-                      ),
-                      const SizedBox(height: 10),
-                      TextFormField(
-                        controller: _storeAddressCtrl,
-                        decoration: const InputDecoration(
-                          labelText: 'Store address (optional)',
-                          border: OutlineInputBorder(),
-                        ),
-                      ),
-                      const SizedBox(height: 10),
-                      Row(
-                        children: [
-                          Expanded(
-                            child: TextFormField(
-                              controller: _storeLatCtrl,
-                              keyboardType: TextInputType.number,
-                              decoration: const InputDecoration(
-                                labelText: 'Store lat',
-                                border: OutlineInputBorder(),
-                              ),
-                            ),
-                          ),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: TextFormField(
-                              controller: _storeLngCtrl,
-                              keyboardType: TextInputType.number,
-                              decoration: const InputDecoration(
-                                labelText: 'Store lng',
-                                border: OutlineInputBorder(),
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 6),
-                      Text(
-                        'Dispatch uses Radar routes. Store lat/lng is required for delivery quotes and assignment ETAs.',
-                        style: Theme.of(context)
-                            .textTheme
-                            .bodySmall
-                            ?.copyWith(color: Colors.grey[600]),
-                      ),
-                    ],
+                DeliverySettingsCard(
+                  deliveryEnabled: _deliveryEnabled,
+                  onDeliveryEnabledChanged: (v) =>
+                      setState(() => _deliveryEnabled = v),
+                  fleetMode: _deliveryFleetMode,
+                  onFleetModeChanged: (v) => setState(
+                    () => _deliveryFleetMode = v ?? 'owned_fleet',
                   ),
+                  storeAddressController: _storeAddressCtrl,
+                  storeLatController: _storeLatCtrl,
+                  storeLngController: _storeLngCtrl,
+                  marketplaceOfferController: _marketplaceOfferCtrl,
+                  showMarketplaceOffer: _deliveryFleetMode == 'marketplace',
                 ),
                 const SizedBox(height: 12),
                 ShadCard(
@@ -626,15 +571,13 @@ class _StoreSettingsScreenState extends State<StoreSettingsScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('Guardrails',
-              style: Theme.of(context).textTheme.titleMedium),
+          Text('Guardrails', style: Theme.of(context).textTheme.titleMedium),
           const SizedBox(height: 8),
           SwitchListTile(
             contentPadding: EdgeInsets.zero,
             title: const Text('Enable arriving-soon notifications'),
             value: _deliveryArrivingSoonEnabled,
-            onChanged: (v) =>
-                setState(() => _deliveryArrivingSoonEnabled = v),
+            onChanged: (v) => setState(() => _deliveryArrivingSoonEnabled = v),
           ),
           const SizedBox(height: 8),
           Row(
@@ -725,8 +668,8 @@ class _StoreSettingsScreenState extends State<StoreSettingsScreen> {
           const SizedBox(height: 8),
           ...templates.map((t) => Padding(
                 padding: const EdgeInsets.only(bottom: 10),
-                child: _buildTemplateEditor(context, status, t,
-                    isDelivery: false),
+                child:
+                    _buildTemplateEditor(context, status, t, isDelivery: false),
               )),
           ShadButton.outline(
             onPressed: () => setState(() {
@@ -782,16 +725,16 @@ class _StoreSettingsScreenState extends State<StoreSettingsScreen> {
                         ? t.id.text.trim()
                         : t.label.text.trim())))
                 .toList(),
-            onChanged: (v) => setState(
-                () => _deliveryDefaultTemplateIdByStatus[status] = v ?? 'default'),
+            onChanged: (v) => setState(() =>
+                _deliveryDefaultTemplateIdByStatus[status] = v ?? 'default'),
           ),
           const SizedBox(height: 12),
           Text('Templates', style: Theme.of(context).textTheme.titleSmall),
           const SizedBox(height: 8),
           ...templates.map((t) => Padding(
                 padding: const EdgeInsets.only(bottom: 10),
-                child: _buildTemplateEditor(context, status, t,
-                    isDelivery: true),
+                child:
+                    _buildTemplateEditor(context, status, t, isDelivery: true),
               )),
           ShadButton.outline(
             onPressed: () => setState(() {
@@ -808,8 +751,8 @@ class _StoreSettingsScreenState extends State<StoreSettingsScreen> {
     );
   }
 
-  Widget _buildTemplateEditor(BuildContext context, String status,
-      _TemplateRow row,
+  Widget _buildTemplateEditor(
+      BuildContext context, String status, _TemplateRow row,
       {required bool isDelivery}) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -845,9 +788,10 @@ class _StoreSettingsScreenState extends State<StoreSettingsScreen> {
                           .where((t) => t != row)
                           .toList();
                 } else {
-                  _templatesByStatus[status] = (_templatesByStatus[status] ?? [])
-                      .where((t) => t != row)
-                      .toList();
+                  _templatesByStatus[status] =
+                      (_templatesByStatus[status] ?? [])
+                          .where((t) => t != row)
+                          .toList();
                 }
                 row.dispose();
               }),

@@ -1,7 +1,12 @@
 part of 'mini_app_screen.dart';
 
 mixin MiniAppStateStore
-    on State<MiniAppScreen>, MiniAppStateFields, MiniAppStateMenu, MiniAppStateIdentity {
+    on
+        State<MiniAppScreen>,
+        MiniAppStateFields,
+        MiniAppStateMenu,
+        MiniAppStateIdentity,
+        MiniAppStateDelivery {
   Future<void> _selectStore(StoreChoice store) async {
     final session = _session;
     if (session == null) {
@@ -23,12 +28,14 @@ mixin MiniAppStateStore
       _searchError = null;
       _searchController.clear();
       _notesController.clear();
+      _resetDeliveryDraft();
     });
     try {
       await _api.selectStore(
         sessionId: session.sessionId,
         storeId: store.storeId,
       );
+      await _refreshDeliverySettings(store.storeId, fallback: store);
       if (!mounted) {
         return;
       }
@@ -108,6 +115,7 @@ mixin MiniAppStateStore
       _searchError = null;
       _searchController.clear();
       _notesController.clear();
+      _resetDeliveryDraft();
     });
   }
 }

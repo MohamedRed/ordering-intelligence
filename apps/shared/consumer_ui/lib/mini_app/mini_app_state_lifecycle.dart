@@ -7,7 +7,8 @@ mixin MiniAppStateLifecycle
         MiniAppStateSearch,
         MiniAppStateGroupOrdersEntry,
         MiniAppStateMenu,
-        MiniAppStateChatState {
+        MiniAppStateChatState,
+        MiniAppStateDelivery {
   @override
   void initState() {
     super.initState();
@@ -81,6 +82,8 @@ mixin MiniAppStateLifecycle
       if (!joined && session.storeId.isNotEmpty) {
         _setSessionStage('load_menu');
         await _loadMenu(session.storeId);
+        _setSessionStage('load_delivery_settings');
+        await _refreshDeliverySettings(session.storeId);
         _setSessionStage('load_store_recommendations');
         await _loadStoreRecommendations(session.storeId);
       }

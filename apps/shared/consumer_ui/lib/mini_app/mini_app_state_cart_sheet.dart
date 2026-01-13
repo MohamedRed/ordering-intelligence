@@ -7,6 +7,7 @@ mixin MiniAppStateCartSheet
         MiniAppStateOrder,
         MiniAppStateGroupOrdersItems,
         MiniAppStateCart,
+        MiniAppStateDelivery,
         MiniAppStatePayments {
   void _openCartSheet() {
     setState(() => _orderError = null);
@@ -41,6 +42,7 @@ mixin MiniAppStateCartSheet
                   _cartSheetSetState?.call(() {});
                 },
                 paymentMethodsSection: _buildPaymentMethodsPanel(),
+                deliverySection: isGroupOrder ? null : _buildDeliverySection(),
               ),
             );
           },

@@ -7,6 +7,7 @@ import '../adapters/auth_adapter.dart';
 import '../models/cart_models.dart';
 import '../models/chat_models.dart';
 import '../models/customer_profile.dart';
+import '../models/delivery_models.dart';
 import '../models/group_order_checkout_response.dart';
 import '../models/group_order_invite.dart';
 import '../models/group_order_session.dart';
@@ -55,8 +56,8 @@ abstract class ChannelGatewayApiBase {
     final prefix = webappPathPrefix.isEmpty
         ? ''
         : webappPathPrefix.startsWith('/')
-            ? webappPathPrefix
-            : '/$webappPathPrefix';
+        ? webappPathPrefix
+        : '/$webappPathPrefix';
     return _buildUri('$prefix$path', query);
   }
 }

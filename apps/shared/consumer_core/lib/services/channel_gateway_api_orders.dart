@@ -11,6 +11,8 @@ mixin ChannelGatewayOrdersApi on ChannelGatewayApiBase {
     String? paymentMethod,
     String? successUrl,
     String? cancelUrl,
+    String? fulfillmentType,
+    DeliveryDraft? delivery,
   }) async {
     final response = await _client.post(
       _buildWebAppUri('/orders'),
@@ -24,6 +26,8 @@ mixin ChannelGatewayOrdersApi on ChannelGatewayApiBase {
         'successUrl': successUrl,
         'cancelUrl': cancelUrl,
         'fuel': fuel?.toJson(),
+        'fulfillmentType': fulfillmentType,
+        'delivery': delivery?.toJson(),
         'items': items
             .map(
               (item) => {
@@ -49,10 +53,7 @@ mixin ChannelGatewayOrdersApi on ChannelGatewayApiBase {
     final response = await _client.post(
       _buildWebAppUri('/orders/$orderId/fuel/pump'),
       headers: const {'Content-Type': 'application/json'},
-      body: jsonEncode({
-        'sessionId': sessionId,
-        'pumpNumber': pumpNumber,
-      }),
+      body: jsonEncode({'sessionId': sessionId, 'pumpNumber': pumpNumber}),
     );
     if (response.statusCode < 200 || response.statusCode >= 300) {
       throw Exception('Pump update failed (${response.statusCode})');
@@ -81,5 +82,36 @@ mixin ChannelGatewayOrdersApi on ChannelGatewayApiBase {
       throw Exception('Payment intent failed (${response.statusCode})');
     }
     return jsonDecode(response.body) as Map<String, dynamic>;
+  }
+
+  Future<DeliveryPrewarmResult?> prewarmDelivery({
+    required String sessionId,
+    required String storeId,
+    DeliveryLatLng? dropoffLatLng,
+    DeliveryAddress? dropoffAddress,
+    String? dropoffAddressText,
+  }) async {
+    final response = await _client.post(
+      _buildWebAppUri('/delivery/prewarm'),
+      headers: const {'Content-Type': 'application/json'},
+      body: jsonEncode({
+        'sessionId': sessionId,
+        'storeId': storeId,
+        'dropoffLatLng': dropoffLatLng?.toJson(),
+        'dropoffAddress': dropoffAddress?.toJson(),
+        'dropoffAddressText': dropoffAddressText,
+      }),
+    );
+    if (response.statusCode == 404) {
+      return null;
+    }
+    if (response.statusCode < 200 || response.statusCode >= 300) {
+      throw Exception('Delivery prewarm failed (${response.statusCode})');
+    }
+    final payload = jsonDecode(response.body);
+    if (payload is Map<String, dynamic>) {
+      return DeliveryPrewarmResult.fromJson(payload);
+    }
+    return null;
   }
 }

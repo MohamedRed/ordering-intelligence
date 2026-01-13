@@ -15,6 +15,7 @@ func registerWebAppRoutes(
 	firestoreClient *cloudfirestore.Client,
 	orderHTTPClient *http.Client,
 	paymentsHTTPClient *http.Client,
+	dispatchHTTPClient *http.Client,
 	manager *sessionManager,
 ) {
 	pathPrefix := strings.TrimRight(basePath, "/")
@@ -46,6 +47,9 @@ func registerWebAppRoutes(
 		})
 		r.Post("/orders", func(w http.ResponseWriter, req *http.Request) {
 			handleWebAppOrderCreate(w, req, cfg, firestoreClient, orderHTTPClient, paymentsHTTPClient)
+		})
+		r.Post("/delivery/prewarm", func(w http.ResponseWriter, req *http.Request) {
+			handleWebAppDeliveryPrewarm(w, req, cfg, firestoreClient, dispatchHTTPClient)
 		})
 		r.Post("/orders/{orderId}/fuel/pump", func(w http.ResponseWriter, req *http.Request) {
 			orderID := chi.URLParam(req, "orderId")
