@@ -152,8 +152,9 @@ describe('/tasks/process guards', () => {
     expect(txUpdate.processingExpiresAt).toBeGreaterThan(now);
   });
 
-  it('returns 400 when jobId missing', async () => {
+  it('returns 200 when jobId missing (ack to avoid Pub/Sub redelivery loops)', async () => {
     const { agent } = await makeApp({ status: 'queued' });
-    await agent.post('/tasks/process').send({}).expect(400);
+    const res = await agent.post('/tasks/process').send({}).expect(200);
+    expect(res.body.skipped).toBe(true);
   });
 });

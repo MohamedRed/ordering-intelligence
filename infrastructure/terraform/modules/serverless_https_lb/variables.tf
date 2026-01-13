@@ -26,6 +26,7 @@ variable "hostname" {
 variable "security_policy_id" {
   description = "Cloud Armor security policy ID to attach to the backend service."
   type        = string
+  default     = null
 }
 
 variable "certificate_mode" {

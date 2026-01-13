@@ -44,7 +44,9 @@ variable "pubsub_topics" {
   default = [
     "orders-events",
     "call-transcripts",
-    "alerts-events"
+    "alerts-events",
+    "dispatch-events",
+    "deliveries-events"
   ]
 }
 
@@ -82,8 +84,10 @@ variable "enable_services" {
   type        = list(string)
   default = [
     "compute.googleapis.com",
+    "cloudresourcemanager.googleapis.com",
     "run.googleapis.com",
     "firestore.googleapis.com",
+    "eventarc.googleapis.com",
     "pubsub.googleapis.com",
     "artifactregistry.googleapis.com",
     "secretmanager.googleapis.com",
@@ -93,8 +97,30 @@ variable "enable_services" {
     "cloudbuild.googleapis.com",
     "iamcredentials.googleapis.com",
     "vision.googleapis.com",
-    "aiplatform.googleapis.com"
+    "aiplatform.googleapis.com",
+    "vpcaccess.googleapis.com",
+    "servicenetworking.googleapis.com",
+    "redis.googleapis.com",
+    "recaptchaenterprise.googleapis.com"
   ]
+}
+
+variable "serverless_vpc_connector_name" {
+  description = "Name of the Serverless VPC Access connector."
+  type        = string
+  default     = "serverless-connector"
+}
+
+variable "serverless_vpc_connector_cidr" {
+  description = "CIDR range for the Serverless VPC Access connector (must not overlap subnet ranges)."
+  type        = string
+  default     = "10.8.0.0/28"
+}
+
+variable "enable_serverless_vpc_connector" {
+  description = "Whether to create a Serverless VPC Access connector in the core network."
+  type        = bool
+  default     = false
 }
 
 variable "analytics_dataset_id" {

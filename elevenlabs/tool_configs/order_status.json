@@ -1,0 +1,55 @@
+{
+    "name": "order_service_update_order_status",
+    "description": "Update an order's status (proxied via agent-tools; can trigger customer SMS/call via store defaults and notifyMode)",
+    "type": "webhook",
+    "api_schema": {
+        "url": "https://agent-tools-230152279015.us-central1.run.app/v1/orders/{orderId}/status",
+        "method": "PATCH",
+        "path_params_schema": {
+            "orderId": {
+                "type": "string",
+                "description": "Order identifier",
+                "is_system_provided": false,
+                "dynamic_variable": "",
+                "constant_value": ""
+            }
+        },
+        "request_body_schema": {
+            "type": "object",
+            "required": ["status"],
+            "properties": {
+                "status": {
+                    "type": "string",
+                    "description": "New order status",
+                    "enum": ["pending", "confirmed", "ready", "completed", "cancelled"]
+                },
+                "notifyMode": {
+                    "type": "string",
+                    "description": "How to notify the customer: auto uses store defaults; sms/call/none override",
+                    "enum": ["auto", "sms", "call", "none"]
+                },
+                "note": {
+                    "type": "string",
+                    "description": "Optional note (used as the message body / call context)"
+                },
+                "templateId": {
+                    "type": "string",
+                    "description": "Optional template ID (resolved by notification-service from store settings)"
+                }
+            }
+        },
+        "request_headers": {
+            "Content-Type": "application/json"
+        },
+        "auth_connection": {
+            "auth_connection_id": "auth_5601kcj9z8e2fbqscr8e6m06nyw6"
+        }
+    },
+    "response_timeout_secs": 30,
+    "dynamic_variables": {
+        "dynamic_variable_placeholders": {}
+    },
+    "assignments": [],
+    "disable_interruptions": false,
+    "force_pre_tool_speech": false
+}

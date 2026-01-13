@@ -3,6 +3,12 @@ variable "project_id" {
   type        = string
 }
 
+variable "enabled" {
+  description = "Whether to create the Cloud Armor policy."
+  type        = bool
+  default     = true
+}
+
 variable "policy_name" {
   description = "Name of the Cloud Armor security policy."
   type        = string
@@ -16,6 +22,12 @@ variable "description" {
 
 variable "blocked_ip_ranges" {
   description = "Static list of IP ranges to block."
+  type        = list(string)
+  default     = []
+}
+
+variable "allowed_ip_ranges" {
+  description = "Optional allowlist of IP ranges. If non-empty, only these IPs are allowed and all others are denied."
   type        = list(string)
   default     = []
 }

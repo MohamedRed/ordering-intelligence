@@ -9,7 +9,8 @@ import axios from 'axios';
 
 const FIREBASE_API_KEY = process.env.FIREBASE_API_KEY ?? 'AIzaSyAyva47VFazHoIHMkQVJ7j9_preZIyFlvI';
 const FIREBASE_USER = process.env.FIREBASE_USER ?? 'admin-tester@example.com';
-const FIREBASE_PASS = process.env.FIREBASE_PASS ?? 'AdminTest123!';
+// Keep in sync with the seeded admin test account used in the admin app.
+const FIREBASE_PASS = process.env.FIREBASE_PASS ?? 'Temp#2025!';
 
 async function main() {
   const worker = await startWorkerIfRequested();
@@ -133,6 +134,14 @@ async function assertThumbnails(baseUrl: string, jobId: string) {
   const compositeUrls: string[] = resp.data?.draft?.compositeUrls ?? [];
   if (!compositeUrls.length) {
     throw new Error('Missing composite image (draft.compositeUrls is empty)');
+  }
+  // Ensure we are actually using generated composites (not raw pages fallback).
+  const allowRawFallback = process.env.MENU_INGESTION_ALLOW_RAW_FALLBACK === '1';
+  if (!allowRawFallback) {
+    const nonGenerated = compositeUrls.filter((u) => !u.includes('/menu-generated/'));
+    if (nonGenerated.length) {
+      throw new Error(`Composite URLs include non-generated assets: ${nonGenerated.join(', ')}`);
+    }
   }
   const detected = Number(resp.data?.draft?.detectedItemCount ?? 0);
   if (detected && detected < minItems) {

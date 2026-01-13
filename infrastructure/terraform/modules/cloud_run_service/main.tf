@@ -12,6 +12,12 @@ locals {
     } : {},
     var.startup_cpu_boost ? {
       "run.googleapis.com/startup-cpu-boost" = "true"
+    } : {},
+    var.vpc_access_connector != null && var.vpc_access_connector != "" ? {
+      "run.googleapis.com/vpc-access-connector" = var.vpc_access_connector
+    } : {},
+    var.vpc_access_connector != null && var.vpc_access_connector != "" && var.vpc_access_egress != null && var.vpc_access_egress != "" ? {
+      "run.googleapis.com/vpc-access-egress" = var.vpc_access_egress
     } : {}
   )
 

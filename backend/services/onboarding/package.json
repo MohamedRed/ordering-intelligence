@@ -1,0 +1,41 @@
+{
+  "name": "@ordering-intelligence/onboarding-service",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Onboarding service for tenant signup and asset uploads",
+  "scripts": {
+    "dev": "tsx src/index.ts",
+    "start": "node dist/index.js",
+    "build": "tsc -p tsconfig.json",
+    "test": "jest --coverage"
+  },
+  "dependencies": {
+    "@google-cloud/storage": "^7.12.0",
+    "@google-cloud/firestore": "^7.10.0",
+    "@google-cloud/pubsub": "^4.7.5",
+    "@google-cloud/vertexai": "^1.9.0",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.5",
+    "express": "^4.19.2",
+    "multer": "^1.4.5-lts.1",
+    "morgan": "^1.10.0",
+    "node-fetch": "^3.3.2",
+    "stripe": "^14.0.0",
+    "twilio": "^5.3.3",
+    "uuid": "^11.0.0"
+  },
+  "devDependencies": {
+    "@types/cors": "^2.8.17",
+    "@types/express": "^4.17.21",
+    "@types/jest": "^30.0.0",
+    "@types/morgan": "^1.9.9",
+    "@types/multer": "^1.4.11",
+    "@types/node": "^24.10.0",
+    "jest": "^30.2.0",
+    "supertest": "^7.1.4",
+    "ts-jest": "^29.4.5",
+    "tsx": "^4.7.3",
+    "typescript": "^5.6.3"
+  }
+}

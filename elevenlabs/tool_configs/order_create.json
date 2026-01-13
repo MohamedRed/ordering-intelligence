@@ -1,0 +1,122 @@
+{
+    "name": "order_service_create_order",
+    "description": "Create an order (proxied via agent-tools)",
+    "type": "webhook",
+    "api_schema": {
+        "url": "https://dev-agent-tools.136-110-131-150.nip.io/v1/orders",
+        "method": "POST",
+        "request_body_schema": {
+            "type": "object",
+            "required": ["storeId", "items"],
+            "properties": {
+                "tenantId": { "type": "string", "description": "Tenant identifier (recommended for personalization + routing)" },
+                "storeId": { "type": "string", "description": "Store identifier" },
+                "callerId": { "type": "string", "description": "Caller identifier/phone (E.164 when available)" },
+                "callSid": { "type": "string", "description": "Twilio/voice call SID if applicable" },
+                "channel": { "type": "string", "description": "Channel or source of the order (e.g., voice)" },
+                "customerName": { "type": "string", "description": "Customer name as captured by the agent" },
+                "channelContact": {
+                    "type": "object",
+                    "description": "Channel contact metadata for outbound updates (optional).",
+                    "properties": {
+                        "channel": { "type": "string", "description": "Channel identifier (telegram, whatsapp, instagram, snap_lens, etc.)" },
+                        "accountId": { "type": "string", "description": "Channel account or bot identifier" },
+                        "userId": { "type": "string", "description": "Channel user id / chat id" },
+                        "threadId": { "type": "string", "description": "Optional thread or conversation id on the channel" },
+                        "displayName": { "type": "string", "description": "Display name for the customer" },
+                        "locale": { "type": "string", "description": "Locale or language tag (optional)" },
+                        "metadata": { "type": "object", "description": "Extra channel metadata (optional)" }
+                    }
+                },
+                "notes": { "type": "string", "description": "Free-form notes from the call" },
+                "businessType": { "type": "string", "description": "Business/customer category if applicable" },
+                "fulfillmentType": { "type": "string", "description": "Fulfillment type (pickup or delivery). Default is pickup.", "enum": ["pickup", "delivery"] },
+                "delivery": {
+                    "type": "object",
+                    "description": "Delivery details when fulfillmentType=delivery.",
+                    "properties": {
+                        "fleetMode": { "type": "string", "description": "Delivery execution mode", "enum": ["owned_fleet", "third_party"] },
+                        "instructions": { "type": "string", "description": "Dropoff instructions (e.g. gate code, leave at door)." },
+                        "dropoffAddressText": { "type": "string", "description": "Free-form dropoff address text (preferred for quoting/geocoding)." },
+                        "dropoffAddress": {
+                            "type": "object",
+                            "properties": {
+                                "formatted": { "type": "string", "description": "Formatted address string" },
+                                "line1": { "type": "string", "description": "Street address line 1" },
+                                "line2": { "type": "string", "description": "Street address line 2" },
+                                "city": { "type": "string", "description": "City" },
+                                "state": { "type": "string", "description": "State/region" },
+                                "postalCode": { "type": "string", "description": "Postal code" },
+                                "country": { "type": "string", "description": "Country" }
+                            }
+                        },
+                        "dropoffLatLng": {
+                            "type": "object",
+                            "properties": {
+                                "lat": { "type": "number", "description": "Latitude" },
+                                "lng": { "type": "number", "description": "Longitude" }
+                            }
+                        },
+                        "quote": {
+                            "type": "object",
+                            "description": "Optional delivery quote (typically from quote_delivery tool).",
+                            "properties": {
+                                "provider": { "type": "string", "description": "Quote provider (e.g. radar, uber_direct, stuart)" },
+                                "providerFeeCents": { "type": "integer", "description": "Provider fee in cents" },
+                                "dropoffEtaMinutes": { "type": "integer", "description": "ETA in minutes to dropoff (provider estimate)" },
+                                "quoteExpiresAt": { "type": "string", "description": "RFC3339 timestamp" },
+                                "currency": { "type": "string", "description": "Currency code (e.g. USD)" }
+                            }
+                        },
+                        "customerPaysDeliveryFee": { "type": "boolean", "description": "Whether the customer pays delivery fee" },
+                        "deliveryFeeCentsChargedToCustomer": { "type": "integer", "description": "Delivery fee charged to customer in cents" }
+                    }
+                },
+                "items": {
+                    "type": "array",
+                    "items": {
+                        "type": "object",
+                        "required": ["itemId", "name", "quantity", "priceCents"],
+                        "properties": {
+                            "itemId": { "type": "string", "description": "Menu item id" },
+                            "name": { "type": "string", "description": "Menu item name" },
+                            "quantity": { "type": "integer", "description": "Quantity ordered" },
+                            "priceCents": { "type": "integer", "description": "Unit price in cents" },
+                            "category": { "type": "string", "description": "Menu category label" },
+                            "modifiers": {
+                                "type": "array",
+                                "items": {
+                                    "type": "object",
+                                    "required": ["name"],
+                                    "properties": {
+                                        "name": { "type": "string", "description": "Modifier name" },
+                                        "priceCents": { "type": "integer", "description": "Modifier price in cents" }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "idempotencyKey": { "type": "string", "description": "Unique key to avoid duplicates" },
+                "subtotalCents": { "type": "integer", "description": "Override subtotal in cents (optional)" },
+                "taxCents": { "type": "integer", "description": "Override tax in cents (optional)" },
+                "feeCents": { "type": "integer", "description": "Override fee in cents (optional)" },
+                "discountCents": { "type": "integer", "description": "Override discount in cents (optional)" },
+                "totalCents": { "type": "integer", "description": "Override total in cents (optional)" }
+            }
+        },
+        "request_headers": {
+            "Content-Type": "application/json"
+        },
+        "auth_connection": {
+            "auth_connection_id": "auth_5601kcj9z8e2fbqscr8e6m06nyw6"
+        }
+    },
+    "response_timeout_secs": 30,
+    "dynamic_variables": {
+        "dynamic_variable_placeholders": {}
+    },
+    "assignments": [],
+    "disable_interruptions": false,
+    "force_pre_tool_speech": false
+}

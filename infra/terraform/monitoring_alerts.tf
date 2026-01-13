@@ -20,7 +20,7 @@ resource "google_monitoring_uptime_check_config" "order_service" {
   display_name = "order-service-uptime"
 
   http_check {
-    path = "/healthz"
+    path = "/healthz/"
   }
 
   monitored_resource {

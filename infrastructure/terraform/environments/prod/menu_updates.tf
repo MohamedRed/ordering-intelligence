@@ -34,6 +34,6 @@ resource "google_pubsub_subscription" "menu_updates_to_voice_worker" {
   topic   = google_pubsub_topic.menu_updates.name
   project = var.project_id
 
-  ack_deadline_seconds          = 20
-  message_retention_duration    = "1200s"
+  ack_deadline_seconds       = 20
+  message_retention_duration = "1200s"
 }

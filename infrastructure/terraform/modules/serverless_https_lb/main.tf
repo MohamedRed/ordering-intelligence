@@ -101,10 +101,12 @@ resource "google_compute_managed_ssl_certificate" "managed" {
 resource "google_compute_backend_service" "this" {
   name                  = "${var.environment_name}-${var.cloud_run_service}-backend"
   project               = var.project_id
-  protocol              = "HTTPS"
+  # Cloud Run serverless NEGs are reached over HTTP from the load balancer.
+  # Using HTTPS here can cause unexpected edge errors (e.g., 403) depending on backend integration.
+  protocol              = "HTTP"
   timeout_sec           = var.backend_timeout_seconds
   load_balancing_scheme = "EXTERNAL"
-  security_policy       = var.security_policy_id
+  security_policy       = var.security_policy_id != null && var.security_policy_id != "" ? var.security_policy_id : null
 
   backend {
     group = google_compute_region_network_endpoint_group.cloud_run_neg.id

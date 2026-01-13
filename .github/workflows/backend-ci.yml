@@ -85,5 +85,5 @@ jobs:
           go test -coverprofile=coverage.out ./...
           total=$(go tool cover -func=coverage.out | awk '/total:/ {print $3}' | sed 's/%//')
           echo "total coverage: $total%"
-          threshold=15
+          threshold=18
           awk -v total="$total" -v thr="$threshold" 'BEGIN { if (total+0 < thr) { exit 1 } }'

@@ -1,0 +1,29 @@
+{
+    "name": "order_service_menu_snapshot",
+    "description": "Fetch read-only menu snapshot for a store",
+    "type": "webhook",
+    "api_schema": {
+        "url": "https://agent-tools-230152279015.us-central1.run.app/v1/stores/{storeId}/menu/snapshot",
+        "method": "GET",
+        "path_params_schema": {
+            "storeId": {
+                "type": "string",
+                "description": "Store identifier",
+                "is_system_provided": false,
+                "dynamic_variable": "",
+                "constant_value": ""
+            }
+        },
+        "request_headers": {},
+        "auth_connection": {
+            "auth_connection_id": "auth_5601kcj9z8e2fbqscr8e6m06nyw6"
+        }
+    },
+    "response_timeout_secs": 30,
+    "dynamic_variables": {
+        "dynamic_variable_placeholders": {}
+    },
+    "assignments": [],
+    "disable_interruptions": false,
+    "force_pre_tool_speech": false
+}

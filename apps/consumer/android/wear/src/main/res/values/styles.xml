@@ -1,0 +1,7 @@
+<resources>
+    <style name="Theme.WearApp" parent="Theme.AppCompat.Light.NoActionBar">
+        <item name="android:windowFullscreen">true</item>
+        <item name="android:windowBackground">#000000</item>
+        <item name="android:textColor">#FFFFFF</item>
+    </style>
+</resources>

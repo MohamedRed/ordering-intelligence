@@ -1,0 +1,14 @@
+{
+    "agent_id": "agent_7201kbfs3pbpe1tsv4dmakk1207q",
+    "branch_id": "agtbrch_6201kcsq6dx4e539c905x0x12nc9",
+    "version_id": "agtvrsn_1201kcsq6dx3eza95bew2ret2gn1",
+    "parent_version_id": "agtvrsn_3901kcsq6bwfe7293w5qj5w2cjf3",
+    "name": "feature/order-status-comms-20251218-225219",
+    "description": "Order status comms tools + templates",
+    "create_endpoint": "/v1/convai/agents/agent_7201kbfs3pbpe1tsv4dmakk1207q/branches",
+    "api_base_url": "https://api.elevenlabs.io",
+    "raw_response": {
+        "created_branch_id": "agtbrch_6201kcsq6dx4e539c905x0x12nc9",
+        "created_version_id": "agtvrsn_1201kcsq6dx3eza95bew2ret2gn1"
+    }
+}

@@ -22,6 +22,7 @@ const LOCATION = process.env.IMAGE_REGION || 'global';
 const CONFIG_DOC = process.env.AGENT_CONFIG_DOC || 'agent_worker/config';
 const WORKER_LABEL = process.env.WORKER_LABEL;
 const DEFAULT_BUCKET = process.env.STORAGE_BUCKET_MENUS || process.env.MENU_BUCKET;
+const HEARTBEAT_DOC = process.env.AGENT_WORKER_HEARTBEAT_DOC; // optional: firestore doc to write heartbeat/counters
 
 if (!PROJECT) throw new Error('GOOGLE_CLOUD_PROJECT required');
 
@@ -31,7 +32,9 @@ const auth = new GoogleAuth({ scopes: 'https://www.googleapis.com/auth/cloud-pla
 
 async function main() {
   console.log('[worker] starting', { collection: COLLECTION, model: MODEL_ID });
+  const stats = { startedAt: Date.now(), processed: 0, errors: 0 };
   let lastEnabled = undefined;
+  let lastHeartbeat = 0;
   while (true) {
     const enabled = await isEnabled();
     if (enabled !== lastEnabled) {
@@ -42,6 +45,10 @@ async function main() {
       await sleep(POLL_MS);
       continue;
     }
+    if (HEARTBEAT_DOC && Date.now() - lastHeartbeat > 60_000) {
+      lastHeartbeat = Date.now();
+      await writeHeartbeat(stats);
+    }
     try {
       let query = firestore.collection(COLLECTION).where('status', '==', 'queued');
       if (WORKER_LABEL) query = query.where('label', '==', WORKER_LABEL);
@@ -51,7 +58,7 @@ async function main() {
         continue;
       }
       const doc = snap.docs[0];
-      await processJob(doc.id, doc.data());
+      await processJob(doc.id, doc.data(), stats);
     } catch (e) {
       console.error('[worker] poll error', e);
       await sleep(POLL_MS);
@@ -69,8 +76,24 @@ async function isEnabled() {
   }
 }
 
-async function processJob(id, data) {
+async function processJob(id, data, stats) {
   console.log('[worker] processing', id);
+  // If this job belongs to an ingestion job that has been canceled, do not call Vertex.
+  try {
+    const parentId = data.parentIngestJobId;
+    if (parentId) {
+      const parent = await firestore.collection('menus_ingest').doc(parentId).get();
+      const parentData = parent.exists ? parent.data() : undefined;
+      if (parentData?.status === 'canceled' || parentData?.cancelRequestedAt) {
+        console.warn('[worker] skipping canceled parent ingest job', { id, parentIngestJobId: parentId });
+        await update(id, { status: 'canceled', error: 'parent ingestion canceled', updatedAt: Date.now() });
+        return;
+      }
+    }
+  } catch (e) {
+    console.warn('[worker] parent ingest check failed (continuing)', { id, error: String(e) });
+  }
+
   await update(id, { status: 'running', updatedAt: Date.now() });
   const { fileUri, prompt, mimeType } = data;
   const modelId = data.modelId || MODEL_ID;
@@ -103,8 +126,17 @@ async function processJob(id, data) {
       outputText: result?.text,
       updatedAt: Date.now(),
     });
-    console.log('[worker] done', id);
+    stats.processed += 1;
+    console.log('[worker] done', {
+      id,
+      label: data.label,
+      modelId,
+      attempts: attempt,
+      outputPath: Boolean(outputPath),
+      hasText: Boolean(result?.text),
+    });
   } catch (e) {
+    stats.errors += 1;
     console.error('[worker] error', id, e);
     await update(id, { status: 'error', error: String(e), updatedAt: Date.now() });
   }
@@ -138,15 +170,32 @@ async function callVertex(prompt, fileUri, mimeType, modelId) {
     ],
   };
 
-  const res = await fetch(url, {
+  const timeoutMs = Number(process.env.AGENT_WORKER_VERTEX_TIMEOUT_MS || 60_000);
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), timeoutMs);
+  let res;
+  let text = '';
+  try {
+    res = await fetch(url, {
     method: 'POST',
     headers: {
       Authorization: `Bearer ${token}`,
       'Content-Type': 'application/json',
     },
     body: JSON.stringify(body),
+      signal: controller.signal,
   });
-  const text = await res.text();
+    text = await res.text();
+  } catch (e) {
+    const msg = String(e?.message ?? e);
+    if (msg.toLowerCase().includes('aborted')) {
+      console.warn('[vertex] request aborted (timeout)', { timeoutMs });
+      return undefined;
+    }
+    throw e;
+  } finally {
+    clearTimeout(timeout);
+  }
   if (!res.ok) {
     console.warn('[vertex] non-200', res.status, res.statusText, text.slice(0, 200));
     return undefined;
@@ -184,6 +233,11 @@ async function ensureSigned(fileUri) {
     throw new Error('missing fileUri');
   }
   if (!fileUri.startsWith('gs://')) return fileUri;
+  // Default: Vertex can read gs:// directly (when Vertex has bucket access). Signed URLs are optional.
+  // Set AGENT_WORKER_FORCE_SIGNED_URL=true if you explicitly need https URLs.
+  if (String(process.env.AGENT_WORKER_FORCE_SIGNED_URL || '').toLowerCase() !== 'true') {
+    return fileUri;
+  }
   const trimmed = fileUri.replace(/^gs:\/\//, '');
   const [bucketRaw, ...rest] = trimmed.split('/');
   const bucket = bucketRaw || DEFAULT_BUCKET;
@@ -196,7 +250,14 @@ async function ensureSigned(fileUri) {
     });
     return url;
   } catch (e) {
-    console.warn('[worker] signed URL failed, falling back to gs://', { error: String(e) });
+    const msg = String(e?.message ?? e);
+    if (msg.includes('Cannot sign data without') || msg.includes('client_email')) {
+      console.warn('[worker] signed URL failed (missing client_email). If running locally, set GOOGLE_APPLICATION_CREDENTIALS to a service-account key JSON.', {
+        error: msg,
+      });
+    } else {
+      console.warn('[worker] signed URL failed, falling back to gs://', { error: msg });
+    }
     return fileUri; // let Vertex read directly with current creds
   }
 }
@@ -207,6 +268,24 @@ async function update(id, patch) {
 
 function sleep(ms) {
   return new Promise((r) => setTimeout(r, ms));
+}
+
+async function writeHeartbeat(stats) {
+  if (!HEARTBEAT_DOC) return;
+  try {
+    await firestore.doc(HEARTBEAT_DOC).set(
+      {
+        updatedAt: Date.now(),
+        processed: stats.processed,
+        errors: stats.errors,
+        workerLabel: WORKER_LABEL || null,
+        modelId: MODEL_ID,
+      },
+      { merge: true }
+    );
+  } catch (e) {
+    console.warn('[worker] heartbeat failed', e);
+  }
 }
 
 main().catch((e) => {

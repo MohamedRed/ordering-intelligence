@@ -19,6 +19,11 @@ dependencies:
   crypto: ^3.0.3
   flutter_local_notifications: ^17.2.1
   http: ^1.2.1
+  http_parser: ^4.0.2
+  shared_preferences: ^2.2.2
+  shadcn_ui: ^0.40.6
+  google_fonts: ^6.2.1
+  fl_chart: ^0.69.0
 
 dev_dependencies:
   flutter_test:

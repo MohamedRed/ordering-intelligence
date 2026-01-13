@@ -1,0 +1,21 @@
+# Ignore everything by default; opt-in required build context.
+**
+
+# Keep backend sources and Dockerfiles for service builds.
+!backend/
+!backend/**
+
+# Keep this ignore file.
+!.gcloudignore
+
+# Strip common build artifacts and caches from the backend context.
+**/node_modules/**
+**/dist/**
+**/build/**
+**/.dart_tool/**
+**/.gradle/**
+**/.flutter-plugins
+**/.flutter-plugins-dependencies
+**/bin/**
+**/obj/**
+**/.DS_Store

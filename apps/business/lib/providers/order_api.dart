@@ -1,14 +1,19 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
-import 'package:flutter/foundation.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
 import '../models/order.dart';
+import '../models/wait_time.dart';
 import 'offline_queue.dart';
+import '../util/store_id.dart';
 
-const _baseUrl = String.fromEnvironment('ORDER_SERVICE_URL',
-    defaultValue: 'http://localhost:8082');
-const _storeId = String.fromEnvironment('STORE_ID', defaultValue: 'demo-store');
+part 'order_api_fuel.dart';
+part 'order_api_refund.dart';
+
+const _baseUrl = String.fromEnvironment(
+  'ORDER_SERVICE_URL',
+  defaultValue: 'https://order-service-230152279015.us-central1.run.app',
+);
 
 class OrderApi {
   final http.Client _client;
@@ -19,23 +24,53 @@ class OrderApi {
 
   Future<List<Order>> listOrders({String status = ''}) async {
     final token = await _token();
-    final uri = _uri('/stores/$_storeId/orders',
+    final storeId = effectiveStoreId();
+    final uri = _uri('/stores/$storeId/orders',
         status.isNotEmpty ? {'status': status} : null);
     final resp = await _client.get(uri, headers: _headers(token));
     if (resp.statusCode != 200) {
       throw Exception('Failed to load orders: ${resp.statusCode}');
     }
-    final data = jsonDecode(resp.body) as List<dynamic>;
-    return data.map((e) => Order.fromJson(e as Map<String, dynamic>)).toList();
+    final decoded = jsonDecode(resp.body);
+
+    // Some environments return `null` or wrap the list in an `orders` field—
+    // handle both gracefully and default to an empty list.
+    final list = decoded == null
+        ? <dynamic>[]
+        : decoded is List
+            ? decoded
+            : (decoded is Map && decoded['orders'] is List)
+                ? decoded['orders'] as List
+                : throw Exception('Failed to load orders: unexpected payload');
+
+    return list
+        .map((e) => Order.fromJson(e as Map<String, dynamic>))
+        .toList(growable: false);
   }
 
-  Future<Order> updateStatus(String orderId, OrderStatus status) async {
+  Future<Order> updateStatus(
+    String orderId,
+    OrderStatus status, {
+    String? notifyMode,
+    String? note,
+    String? templateId,
+  }) async {
     final token = await _token();
     final uri = _uri('/orders/$orderId/status');
+    final body = <String, dynamic>{'status': orderStatusToString(status)};
+    if (notifyMode != null && notifyMode.trim().isNotEmpty) {
+      body['notifyMode'] = notifyMode.trim();
+    }
+    if (note != null && note.trim().isNotEmpty) {
+      body['note'] = note.trim();
+    }
+    if (templateId != null && templateId.trim().isNotEmpty) {
+      body['templateId'] = templateId.trim();
+    }
     final resp = await _client.patch(
       uri,
       headers: _headers(token),
-      body: jsonEncode({'status': _statusToString(status)}),
+      body: jsonEncode(body),
     );
     if (resp.statusCode != 200) {
       throw Exception(
@@ -44,18 +79,32 @@ class OrderApi {
     return Order.fromJson(jsonDecode(resp.body) as Map<String, dynamic>);
   }
 
-  String _statusToString(OrderStatus status) {
-    switch (status) {
-      case OrderStatus.pending:
-        return 'pending';
-      case OrderStatus.confirmed:
-        return 'confirmed';
-      case OrderStatus.ready:
-        return 'ready';
-      case OrderStatus.completed:
-        return 'completed';
-      case OrderStatus.cancelled:
-        return 'cancelled';
+  Future<void> notifyDelay(
+    String orderId, {
+    required String notifyMode,
+    String? note,
+    String? templateId,
+  }) async {
+    final token = await _token();
+    final uri = _uri('/orders/$orderId/customer-comms');
+    final body = <String, dynamic>{
+      'kind': 'delay',
+      'notifyMode': notifyMode.trim().isEmpty ? 'auto' : notifyMode.trim(),
+    };
+    if (note != null && note.trim().isNotEmpty) {
+      body['note'] = note.trim();
+    }
+    if (templateId != null && templateId.trim().isNotEmpty) {
+      body['templateId'] = templateId.trim();
+    }
+    final resp = await _client.post(
+      uri,
+      headers: _headers(token),
+      body: jsonEncode(body),
+    );
+    if (resp.statusCode != 200) {
+      throw Exception(
+          'Failed to notify delay: ${resp.statusCode} ${resp.body}');
     }
   }
 
@@ -85,7 +134,31 @@ class OrderApi {
 
   Future<String?> _token() async {
     final user = FirebaseAuth.instance.currentUser;
-    return user != null ? user.getIdToken() : null;
+    return user?.getIdToken();
+  }
+
+  Future<WaitTimeSummary> getWaitTimeSummary() async {
+    final token = await _token();
+    final storeId = effectiveStoreId();
+    final uri = _uri('/stores/$storeId/wait-time/summary');
+    final resp = await _client.get(uri, headers: _headers(token));
+    if (resp.statusCode != 200) {
+      throw Exception('Failed to load wait-time summary: ${resp.statusCode}');
+    }
+    return WaitTimeSummary.fromJson(
+        jsonDecode(resp.body) as Map<String, dynamic>);
+  }
+
+  Future<WaitTimeDailyResponse> getWaitTimeDaily({int days = 7}) async {
+    final token = await _token();
+    final storeId = effectiveStoreId();
+    final uri = _uri('/stores/$storeId/wait-time/daily', {'days': '$days'});
+    final resp = await _client.get(uri, headers: _headers(token));
+    if (resp.statusCode != 200) {
+      throw Exception('Failed to load wait-time daily: ${resp.statusCode}');
+    }
+    return WaitTimeDailyResponse.fromJson(
+        jsonDecode(resp.body) as Map<String, dynamic>);
   }
 }
 
@@ -104,9 +177,43 @@ class OrderRepository {
     } catch (_) {
       // enqueue for retry
       await _queue.add(
-          QueuedStatus(orderId: orderId, status: _api._statusToString(status)));
+          QueuedStatus(orderId: orderId, status: orderStatusToString(status)));
       rethrow;
     }
+  }
+
+  Future<Order> setStatusWithAction(
+    String orderId,
+    OrderStatus status, {
+    required String notifyMode,
+    String? note,
+    String? templateId,
+  }) async {
+    final updated = await _api.updateStatus(
+      orderId,
+      status,
+      notifyMode: notifyMode,
+      note: note,
+      templateId: templateId,
+    );
+    // Best-effort flush queued updates after successful call.
+    await _flushQueue();
+    return updated;
+  }
+
+  Future<void> notifyDelayWithAction(
+    String orderId, {
+    required String notifyMode,
+    String? note,
+    String? templateId,
+  }) async {
+    await _api.notifyDelay(
+      orderId,
+      notifyMode: notifyMode,
+      note: note,
+      templateId: templateId,
+    );
+    await _flushQueue();
   }
 
   Future<void> _flushQueue() async {
@@ -119,4 +226,9 @@ class OrderRepository {
   Future<void> flushPending() async {
     await _flushQueue();
   }
+
+  Future<WaitTimeSummary> fetchWaitTimeSummary() => _api.getWaitTimeSummary();
+
+  Future<WaitTimeDailyResponse> fetchWaitTimeDaily({int days = 7}) =>
+      _api.getWaitTimeDaily(days: days);
 }

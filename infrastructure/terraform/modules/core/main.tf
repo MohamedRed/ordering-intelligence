@@ -38,6 +38,18 @@ resource "google_compute_subnetwork" "core" {
   stack_type    = "IPV4_ONLY"
 }
 
+resource "google_vpc_access_connector" "serverless" {
+  count = var.enable_serverless_vpc_connector ? 1 : 0
+
+  name          = var.serverless_vpc_connector_name
+  project       = var.project_id
+  region        = var.region
+  network       = google_compute_network.core.name
+  ip_cidr_range = var.serverless_vpc_connector_cidr
+
+  depends_on = [google_project_service.enabled, google_compute_network.core]
+}
+
 resource "google_artifact_registry_repository" "services" {
   location      = var.region
   repository_id = var.artifact_registry_repository

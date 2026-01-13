@@ -1,0 +1,19 @@
+name: consumer_ui
+description: "Shared consumer UI for Ordering Intelligence."
+publish_to: 'none'
+version: 0.1.0+1
+
+environment:
+  sdk: ">=3.10.4 <4.0.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+  consumer_core:
+    path: ../consumer_core
+  shadcn_ui: ^0.40.6
+  audioplayers: ^5.2.1
+  path_provider: ^2.1.5
+
+flutter:
+  uses-material-design: true

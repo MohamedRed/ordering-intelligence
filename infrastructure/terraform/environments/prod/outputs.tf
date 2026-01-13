@@ -3,6 +3,21 @@ output "menu_ingestion_base_url" {
   value       = local.service_urls.menu_ingestion
 }
 
+output "onboarding_base_url" {
+  description = "Cloud Run URL for the onboarding service"
+  value       = local.service_urls.onboarding_service
+}
+
+output "agent_webhooks_base_url" {
+  description = "Cloud Run URL for the agent-webhooks service"
+  value       = local.service_urls.agent_webhooks
+}
+
+output "agent_tools_base_url" {
+  description = "Cloud Run URL for the agent-tools service"
+  value       = local.service_urls.agent_tools
+}
+
 output "menu_ingestion_bucket" {
   description = "GCS bucket storing raw menu uploads"
   value       = google_storage_bucket.menu_ingestion.name

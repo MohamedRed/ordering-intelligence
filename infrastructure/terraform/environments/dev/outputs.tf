@@ -3,6 +3,51 @@ output "menu_ingestion_base_url" {
   value       = local.service_urls.menu_ingestion
 }
 
+output "onboarding_base_url" {
+  description = "Cloud Run URL for the onboarding service"
+  value       = local.service_urls.onboarding_service
+}
+
+output "agent_webhooks_base_url" {
+  description = "Cloud Run URL for the agent-webhooks service"
+  value       = local.service_urls.agent_webhooks
+}
+
+output "agent_webhooks_lb_ip" {
+  description = "Global IP address of the agent-webhooks HTTPS load balancer"
+  value       = module.agent_webhooks_lb.ip_address
+}
+
+output "agent_webhooks_lb_hostname" {
+  description = "Hostname of the agent-webhooks HTTPS load balancer (nip.io by default)"
+  value       = module.agent_webhooks_lb.hostname
+}
+
+output "agent_webhooks_lb_url" {
+  description = "Base URL for agent-webhooks via HTTPS load balancer (Cloud Armor enforced here)"
+  value       = "https://${module.agent_webhooks_lb.hostname}"
+}
+
+output "agent_tools_base_url" {
+  description = "Cloud Run URL for the agent-tools service"
+  value       = local.service_urls.agent_tools
+}
+
+output "agent_tools_lb_ip" {
+  description = "Global IP address of the agent-tools HTTPS load balancer"
+  value       = module.agent_tools_lb.ip_address
+}
+
+output "agent_tools_lb_hostname" {
+  description = "Hostname of the agent-tools HTTPS load balancer (nip.io by default)"
+  value       = module.agent_tools_lb.hostname
+}
+
+output "agent_tools_lb_url" {
+  description = "Base URL for agent-tools via HTTPS load balancer (Cloud Armor enforced here)"
+  value       = "https://${module.agent_tools_lb.hostname}"
+}
+
 output "menu_ingestion_bucket" {
   description = "GCS bucket storing raw menu uploads"
   value       = google_storage_bucket.menu_ingestion.name

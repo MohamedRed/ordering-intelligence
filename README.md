@@ -61,3 +61,10 @@ The canonical schema is defined in `schema/schema.json`; update once when adding
 CI workflows exercise the same commands automatically on pull requests.
 
 > ⚠️ The codebase is in its foundational stage; subsequent commits will flesh out services, infrastructure, and applications according to the spec.
+## CI quick checks
+
+```bash
+scripts/ci/run-go-tests.sh
+scripts/ci/run-flutter-tests.sh
+scripts/ci/run-all-tests.sh
+```

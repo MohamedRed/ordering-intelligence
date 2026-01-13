@@ -98,6 +98,39 @@ elevenlabs agents add "Support Bot" --template customer-service
 elevenlabs agents push
 ```
 
+## Agent versioning branches (API script)
+
+This repo includes a helper script to create a **versioning branch** on an existing agent (per the ElevenLabs "Agent versioning" docs), without creating a new `agent_id`.
+
+From repo root:
+
+```bash
+ELEVENLABS_API_KEY=... python3 elevenlabs/scripts/create_agent_branch.py \
+  --agent-id agent_7201kbfs3pbpe1tsv4dmakk1207q \
+  --name "experiment/personalization" \
+  --description "Test customerName + topReorders greeting flow" \
+  --output elevenlabs/tmp_local_current/order-taker-branch.json
+```
+
+## SDK scripts (no CLI)
+
+This repo also includes helper scripts that use the **official ElevenLabs Python SDK** (no `elevenlabs` CLI):
+
+```bash
+# Update one tool from a local config JSON (workspace tool update; impacts all agents using that tool_id)
+ELEVENLABS_API_KEY=... python3 elevenlabs/scripts/update_tool_from_config.py \
+  --tool-id tool_... \
+  --config elevenlabs/tool_configs/order_status.json
+
+# Sync tools by tool_id from the local manifest (elevenlabs/tools.json)
+ELEVENLABS_API_KEY=... python3 elevenlabs/scripts/sync_tools_from_manifest.py --only tool_configs/order_
+
+# Reset (delete + recreate) tools from a local config directory (dangerous; tool IDs will change)
+ELEVENLABS_API_KEY=... python3 elevenlabs/scripts/reset_tools_from_local.py \
+  --config-dir elevenlabs/tool_configs_clean \
+  --delete-mode matching
+```
+
 ## Directory Structure
 
 ```

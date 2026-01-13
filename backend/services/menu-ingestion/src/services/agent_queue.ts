@@ -7,12 +7,14 @@ import { delay } from '../utils.js';
 
 export type AgentJobDoc = {
   jobId: string;
-  status: 'queued' | 'running' | 'done' | 'error';
+  status: 'queued' | 'running' | 'done' | 'error' | 'canceled';
   prompt: string;
   fileUri: string;
   mimeType: string;
   label: string;
   modelId: string;
+  parentIngestJobId?: string;
+  parentRestaurantId?: string;
   outputPath?: string;
   outputText?: string;
   error?: string;
@@ -23,6 +25,20 @@ export type AgentJobDoc = {
 export type AgentJobResult = { outputB64?: string; outputText?: string; outputPath?: string };
 
 const firestore = new Firestore({ ignoreUndefinedProperties: true });
+
+function inferParentFromFileUri(fileUri: string): { parentIngestJobId?: string; parentRestaurantId?: string } {
+  // Expected: gs://<bucket>/menu-raw/<restaurantId>/<jobId>/page-1.jpg
+  // Also allow URLs that contain /menu-raw/<restaurantId>/<jobId>/...
+  const raw = String(fileUri || '');
+  const idx = raw.indexOf('/menu-raw/');
+  if (idx === -1) return {};
+  const tail = raw.slice(idx + '/menu-raw/'.length);
+  const parts = tail.split('/').filter(Boolean);
+  if (parts.length < 2) return {};
+  const [restaurantId, jobId] = parts;
+  if (!restaurantId || !jobId) return {};
+  return { parentRestaurantId: restaurantId, parentIngestJobId: jobId };
+}
 
 export async function enqueueAgentJob(
   label: string,
@@ -41,6 +57,7 @@ export async function enqueueAgentJob(
       return id;
     }
     const now = Date.now();
+    const parent = inferParentFromFileUri(fileUri);
     const payload: AgentJobDoc = {
       jobId: id,
       status: 'queued',
@@ -49,6 +66,7 @@ export async function enqueueAgentJob(
       mimeType,
       label,
       modelId,
+      ...parent,
       createdAt: now,
       updatedAt: now,
     };
@@ -73,6 +91,10 @@ export async function waitForAgentJob(docId: string, label: string): Promise<Age
     }
     if (data.status === 'error') {
       console.warn(`${label}: agent job ${docId} error ${data.error}`);
+      return undefined;
+    }
+    if (data.status === 'canceled') {
+      console.warn(`${label}: agent job ${docId} canceled`);
       return undefined;
     }
     await delay(3000);

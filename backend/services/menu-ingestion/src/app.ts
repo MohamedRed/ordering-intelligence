@@ -5,6 +5,7 @@ import { PubSub } from '@google-cloud/pubsub';
 import { Firestore } from '@google-cloud/firestore';
 import { initializeApp, applicationDefault } from 'firebase-admin/app';
 import { getAuth } from 'firebase-admin/auth';
+import { OAuth2Client } from 'google-auth-library';
 
 import {
   bucketEnv,
@@ -55,6 +56,7 @@ if (!VERTEX_PROJECT) {
 // Firebase Admin (for ID token verification)
 initializeApp({ credential: applicationDefault(), projectId: process.env.GOOGLE_CLOUD_PROJECT });
 const adminAuth = getAuth();
+const googleOauth = new OAuth2Client();
 
 const storage = new Storage();
 const pubsub = new PubSub();
@@ -67,11 +69,24 @@ const MENU_UPDATES_TOPIC = process.env.MENU_UPDATES_TOPIC ?? process.env.PUBSUB_
 async function signedReadUrls(files: string[]): Promise<string[]> {
   const urls: string[] = [];
   for (const object of files) {
+    try {
     const [url] = await storage.bucket(BUCKET).file(object).getSignedUrl({
       action: 'read',
       expires: Date.now() + 60 * 60 * 1000,
     });
     urls.push(url);
+    } catch (e: any) {
+      const msg = String(e?.message ?? e);
+      if (msg.includes('Cannot sign data without') || msg.includes('client_email')) {
+        throw new Error(
+          `Signed URL generation failed (missing service account identity). ` +
+            `You're likely running locally with user ADC. ` +
+            `Fix: set GOOGLE_APPLICATION_CREDENTIALS to a service-account JSON key (with client_email/private_key) ` +
+            `or run this on Cloud Run with a service account. Original error: ${msg}`,
+        );
+      }
+      throw e;
+    }
   }
   return urls;
 }
@@ -87,9 +102,40 @@ async function requireAuth(req: express.Request, res: express.Response, next: ex
       return res.status(401).json({ error: 'missing bearer token' });
     }
     const token = header.substring(7);
-    const decoded = await adminAuth.verifyIdToken(token);
-    (req as any).user = decoded;
-    return next();
+    // 1) Primary: Firebase ID token (admin UI).
+    try {
+      const decoded = await adminAuth.verifyIdToken(token);
+      (req as any).user = decoded;
+      return next();
+    } catch (firebaseErr) {
+      // 2) Optional: Google IAM OIDC identity token (for ops scripts).
+      const allowGoogle = String(process.env.ALLOW_GOOGLE_ID_TOKENS || '').toLowerCase() === 'true';
+      if (!allowGoogle) {
+        throw firebaseErr;
+      }
+
+      const host = req.get('host') || '';
+      const forwardedProto = (req.get('x-forwarded-proto') || 'https').split(',')[0].trim();
+      const audience = `${forwardedProto}://${host}`;
+
+      const ticket = await googleOauth.verifyIdToken({ idToken: token, audience });
+      const payload = ticket.getPayload();
+      const email = String(payload?.email || '').trim().toLowerCase();
+
+      const allowedEmails = String(process.env.GOOGLE_ID_TOKEN_ALLOWED_EMAILS || '')
+        .split(',')
+        .map((s) => s.trim().toLowerCase())
+        .filter(Boolean);
+      if (!email || (allowedEmails.length > 0 && !allowedEmails.includes(email))) {
+        res.header('Access-Control-Allow-Origin', '*');
+        res.header('Access-Control-Allow-Methods', 'GET,POST,OPTIONS');
+        res.header('Access-Control-Allow-Headers', 'Authorization, Content-Type, Origin, Accept');
+        return res.status(401).json({ error: 'invalid token' });
+      }
+
+      (req as any).user = payload;
+      return next();
+    }
   } catch (e) {
     console.error('auth failed', e);
     res.header('Access-Control-Allow-Origin', '*');

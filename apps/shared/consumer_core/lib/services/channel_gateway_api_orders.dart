@@ -1,0 +1,85 @@
+part of 'channel_gateway_api.dart';
+
+mixin ChannelGatewayOrdersApi on ChannelGatewayApiBase {
+  Future<Map<String, dynamic>> createOrder({
+    required String sessionId,
+    required String storeId,
+    required List<CartItem> items,
+    FuelOrderDraft? fuel,
+    String? notes,
+    String? locale,
+    String? paymentMethod,
+    String? successUrl,
+    String? cancelUrl,
+  }) async {
+    final response = await _client.post(
+      _buildWebAppUri('/orders'),
+      headers: const {'Content-Type': 'application/json'},
+      body: jsonEncode({
+        'sessionId': sessionId,
+        'storeId': storeId,
+        'notes': notes,
+        'locale': locale,
+        'paymentMethod': paymentMethod,
+        'successUrl': successUrl,
+        'cancelUrl': cancelUrl,
+        'fuel': fuel?.toJson(),
+        'items': items
+            .map(
+              (item) => {
+                'itemId': item.item.id,
+                'quantity': item.quantity,
+                'modifierSelections': item.toModifierSelectionsJson(),
+              },
+            )
+            .toList(),
+      }),
+    );
+    if (response.statusCode < 200 || response.statusCode >= 300) {
+      throw Exception('Order create failed (${response.statusCode})');
+    }
+    return jsonDecode(response.body) as Map<String, dynamic>;
+  }
+
+  Future<Map<String, dynamic>> setFuelPumpNumber({
+    required String sessionId,
+    required String orderId,
+    required String pumpNumber,
+  }) async {
+    final response = await _client.post(
+      _buildWebAppUri('/orders/$orderId/fuel/pump'),
+      headers: const {'Content-Type': 'application/json'},
+      body: jsonEncode({
+        'sessionId': sessionId,
+        'pumpNumber': pumpNumber,
+      }),
+    );
+    if (response.statusCode < 200 || response.statusCode >= 300) {
+      throw Exception('Pump update failed (${response.statusCode})');
+    }
+    return jsonDecode(response.body) as Map<String, dynamic>;
+  }
+
+  Future<Map<String, dynamic>> createMobilePaymentIntent({
+    required String orderId,
+    required String sessionId,
+    int? amountCents,
+    String? currency,
+    bool? savePaymentMethod,
+  }) async {
+    final response = await _client.post(
+      _buildUri('/mobile/orders/$orderId/payment-intent'),
+      headers: const {'Content-Type': 'application/json'},
+      body: jsonEncode({
+        'sessionId': sessionId,
+        'amountCents': amountCents,
+        'currency': currency,
+        'savePaymentMethod': savePaymentMethod,
+      }),
+    );
+    if (response.statusCode < 200 || response.statusCode >= 300) {
+      throw Exception('Payment intent failed (${response.statusCode})');
+    }
+    return jsonDecode(response.body) as Map<String, dynamic>;
+  }
+}

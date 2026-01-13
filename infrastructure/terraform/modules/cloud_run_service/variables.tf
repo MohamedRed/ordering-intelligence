@@ -95,3 +95,15 @@ variable "startup_cpu_boost" {
   type        = bool
   default     = true
 }
+
+variable "vpc_access_connector" {
+  description = "Optional Serverless VPC Access connector ID/self_link to attach to the service."
+  type        = string
+  default     = null
+}
+
+variable "vpc_access_egress" {
+  description = "Optional VPC egress mode (e.g., private-ranges-only or all-traffic). Only used when vpc_access_connector is set."
+  type        = string
+  default     = null
+}

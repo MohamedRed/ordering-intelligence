@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <!--
+    If you are serving your web app in a path other than the root, change the
+    href value below to reflect the base path you are serving from.
+
+    The path provided below has to start and end with a slash "/" in order for
+    it to work correctly.
+
+    For more details:
+    * https://developer.mozilla.org/en-US/docs/Web/HTML/Element/base
+
+    This is a placeholder for base href that will be replaced by the value of
+    the `--base-href` argument provided to `flutter build`.
+  -->
+  <base href="$FLUTTER_BASE_HREF">
+
+  <meta charset="UTF-8">
+  <meta content="IE=Edge" http-equiv="X-UA-Compatible">
+  <meta name="description" content="Ordering Intelligence Telegram mini app.">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="webapp-version" content="20260107143759">
+
+  <!-- iOS meta tags & icons -->
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black">
+  <meta name="apple-mobile-web-app-title" content="Ordering">
+  <link rel="apple-touch-icon" href="icons/Icon-192.png">
+
+  <!-- Favicon -->
+  <link rel="icon" type="image/png" href="favicon.png"/>
+
+  <title>Ordering Mini App</title>
+  <link rel="manifest" href="manifest.json">
+  <style>
+    html, body {
+      height: 100%;
+      width: 100%;
+      margin: 0;
+      background: #fff;
+      overflow: hidden;
+      overscroll-behavior: none;
+      touch-action: none;
+    }
+  </style>
+  <script>
+    (function () {
+      var meta = document.querySelector('meta[name="webapp-version"]');
+      var version = meta ? meta.content : '';
+      window.__webappVersion = version;
+      window.flutterConfiguration = {
+        fontFallbackBaseUrl: '/assets/fonts/',
+      };
+      if (!version) {
+        return;
+      }
+      try {
+        var stored = localStorage.getItem('webapp-version');
+        if (stored && stored !== version) {
+          localStorage.setItem('webapp-version', version);
+          if (window.caches && window.caches.keys) {
+            window.caches.keys().then(function (keys) {
+              keys.forEach(function (key) {
+                window.caches.delete(key);
+              });
+            });
+          }
+          if (navigator.serviceWorker && navigator.serviceWorker.getRegistrations) {
+            navigator.serviceWorker.getRegistrations().then(function (regs) {
+              regs.forEach(function (reg) {
+                reg.unregister();
+              });
+            });
+          }
+        } else if (!stored) {
+          localStorage.setItem('webapp-version', version);
+        }
+      } catch (_) {}
+      var params = new URLSearchParams(window.location.search);
+      if (params.get('v') !== version) {
+        params.set('v', version);
+        var nextUrl = window.location.pathname + '?' + params.toString() + window.location.hash;
+        window.location.replace(nextUrl);
+      }
+    })();
+  </script>
+</head>
+<body>
+  <script>
+    (function () {
+      try {
+        var nonce = document.currentScript && document.currentScript.nonce;
+        var version = window.__webappVersion || '';
+        var params = new URLSearchParams(window.location.search || '');
+        var host = (window.location.hostname || '').toLowerCase();
+        var isDiscord =
+          params.get('platform') === 'discord' ||
+          params.has('frame_id') ||
+          params.has('frameId') ||
+          host.endsWith('discordsays.com');
+        if (isDiscord) {
+          var discordScript = document.createElement('script');
+          discordScript.type = 'module';
+          discordScript.src =
+            'discord/discord_embed.js' + (version ? '?v=' + version : '');
+          if (nonce) {
+            discordScript.nonce = nonce;
+          }
+          document.head.appendChild(discordScript);
+        } else {
+          var telegramScript = document.createElement('script');
+          telegramScript.src = 'https://telegram.org/js/telegram-web-app.js';
+          if (nonce) {
+            telegramScript.nonce = nonce;
+          }
+          document.head.appendChild(telegramScript);
+        }
+        var bootstrapScript = document.createElement('script');
+        bootstrapScript.src = version
+          ? 'flutter_bootstrap-' + version + '.js'
+          : 'flutter_bootstrap.js';
+        bootstrapScript.async = true;
+        if (nonce) {
+          bootstrapScript.nonce = nonce;
+        }
+        document.body.appendChild(bootstrapScript);
+      } catch (_) {}
+    })();
+  </script>
+</body>
+</html>

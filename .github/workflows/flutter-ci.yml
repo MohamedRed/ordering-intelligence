@@ -27,4 +27,10 @@ jobs:
           channel: "stable"
       - run: flutter pub get
       - run: flutter analyze
-      - run: flutter test
+      - name: flutter test with coverage gate
+        run: |
+          flutter test --coverage
+          pct=$(lcov --summary coverage/lcov.info 2>/dev/null | awk '/lines/ {print $4}' | sed 's/%//')
+          echo "coverage=$pct%"
+          threshold=30
+          awk -v total="$pct" -v thr="$threshold" 'BEGIN { if (total+0 < thr) { exit 1 } }'

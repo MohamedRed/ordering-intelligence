@@ -1,0 +1,61 @@
+{
+  "name": "agent_tools_delivery_quote",
+  "description": "Quote delivery (owned-fleet via dispatch-service in v1): returns ETA minutes and optional geocoded lat/lng.",
+  "type": "webhook",
+  "api_schema": {
+    "url": "https://agent-tools-230152279015.us-central1.run.app/v1/stores/{storeId}/delivery/quote",
+    "method": "POST",
+    "path_params_schema": {
+      "storeId": {
+        "type": "string",
+        "description": "Store identifier",
+        "is_system_provided": false,
+        "dynamic_variable": "",
+        "constant_value": ""
+      }
+    },
+    "request_body_schema": {
+      "type": "object",
+      "properties": {
+        "dropoffAddressText": {
+          "type": "string",
+          "description": "Free-form dropoff address string (preferred; will be geocoded via Radar)."
+        },
+        "dropoffAddress": {
+          "type": "object",
+          "description": "Structured dropoff address (optional).",
+          "properties": {
+            "formatted": { "type": "string", "description": "Formatted address string" },
+            "line1": { "type": "string", "description": "Street address line 1" },
+            "line2": { "type": "string", "description": "Street address line 2" },
+            "city": { "type": "string", "description": "City" },
+            "state": { "type": "string", "description": "State/region" },
+            "postalCode": { "type": "string", "description": "Postal code" },
+            "country": { "type": "string", "description": "Country" }
+          }
+        },
+        "dropoffLatLng": {
+          "type": "object",
+          "description": "Dropoff coordinates (optional; skips geocoding).",
+          "properties": {
+            "lat": { "type": "number", "description": "Latitude" },
+            "lng": { "type": "number", "description": "Longitude" }
+          }
+        }
+      }
+    },
+    "request_headers": {
+      "Content-Type": "application/json"
+    },
+    "auth_connection": {
+      "auth_connection_id": "auth_5601kcj9z8e2fbqscr8e6m06nyw6"
+    }
+  },
+  "response_timeout_secs": 20,
+  "dynamic_variables": {
+    "dynamic_variable_placeholders": {}
+  },
+  "assignments": [],
+  "disable_interruptions": false,
+  "force_pre_tool_speech": false
+}

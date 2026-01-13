@@ -1,0 +1,14 @@
+{
+    "agent_id": "agent_7201kbfs3pbpe1tsv4dmakk1207q",
+    "branch_id": "agtbrch_8101kcpdd1asedqsf2txpeh8ge1w",
+    "version_id": "agtvrsn_5201kcpdd1arep5v87dd4btz4egw",
+    "parent_version_id": "agtvrsn_5801kcpdczh0fs4re7kxvp4zrj15",
+    "name": "experiment/customer-profile-personalization",
+    "description": "Dev test: greet returning customers + offer top reorder",
+    "create_endpoint": "/v1/convai/agents/agent_7201kbfs3pbpe1tsv4dmakk1207q/branches",
+    "api_base_url": "https://api.elevenlabs.io",
+    "raw_response": {
+        "created_branch_id": "agtbrch_8101kcpdd1asedqsf2txpeh8ge1w",
+        "created_version_id": "agtvrsn_5201kcpdd1arep5v87dd4btz4egw"
+    }
+}

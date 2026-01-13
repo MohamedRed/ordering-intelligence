@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:shadcn_ui/shadcn_ui.dart';
 
 import '../../providers/app_providers.dart';
 
@@ -27,83 +28,88 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Business Sign In')),
       body: Center(
         child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 420),
-          child: Card(
-            margin: const EdgeInsets.all(24),
-            child: Padding(
+          constraints: const BoxConstraints(maxWidth: 480),
+          child: Padding(
+            padding: const EdgeInsets.all(24),
+            child: ShadCard(
               padding: const EdgeInsets.all(24),
               child: Form(
                 key: _formKey,
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
                     const Text(
                       'Welcome back',
-                      style:
-                          TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                      style: TextStyle(fontSize: 22, fontWeight: FontWeight.w600),
                     ),
-                    const SizedBox(height: 16),
-                    TextFormField(
+                    const SizedBox(height: 6),
+                    Text(
+                      'Sign in to manage orders and menu',
+                      style: Theme.of(context)
+                          .textTheme
+                          .bodyMedium
+                          ?.copyWith(color: Colors.grey[700]),
+                    ),
+                    const SizedBox(height: 18),
+                    ShadInputFormField(
                       controller: _emailCtrl,
-                      decoration: const InputDecoration(labelText: 'Email'),
-                      validator: (value) => value == null || value.isEmpty
+                      label: const Text('Email'),
+                      placeholder: const Text('demo@restaurant.com'),
+                      validator: (value) => value.isEmpty
                           ? 'Enter your email'
                           : null,
                     ),
                     const SizedBox(height: 12),
-                    TextFormField(
+                    ShadInputFormField(
                       controller: _passCtrl,
-                      decoration: const InputDecoration(labelText: 'Password'),
+                      label: const Text('Password'),
+                      placeholder: const Text('••••••••'),
                       obscureText: true,
-                      validator: (value) => value == null || value.isEmpty
+                      validator: (value) => value.isEmpty
                           ? 'Enter password'
                           : null,
                     ),
-                    const SizedBox(height: 8),
-                    if (_error != null) ...[
-                      Text(_error!, style: const TextStyle(color: Colors.red)),
-                      const SizedBox(height: 8),
-                    ],
-                    const SizedBox(height: 12),
-                    SizedBox(
-                      width: double.infinity,
-                      child: ElevatedButton.icon(
-                        onPressed: _busy
-                            ? null
-                            : () async {
-                                if (!_formKey.currentState!.validate()) return;
-                                setState(() {
-                                  _busy = true;
-                                  _error = null;
-                                });
-                                try {
-                                  await ref
-                                      .read(authNotifierProvider)
-                                      .signInEmailPassword(
-                                        email: _emailCtrl.text.trim(),
-                                        password: _passCtrl.text,
-                                      );
-                                } catch (e) {
-                                  setState(() => _error = e.toString());
-                                } finally {
-                                  if (mounted) {
-                                    setState(() => _busy = false);
-                                  }
-                                }
-                              },
-                        icon: const Icon(Icons.login),
-                        label: _busy
-                            ? const SizedBox(
-                                height: 16,
-                                width: 16,
-                                child:
-                                    CircularProgressIndicator(strokeWidth: 2),
-                              )
-                            : const Text('Sign In'),
+                    const SizedBox(height: 10),
+                    if (_error != null)
+                      ShadAlert.destructive(
+                        title: const Text('Sign-in failed'),
+                        description: Text(_error!),
                       ),
+                    const SizedBox(height: 14),
+                    ShadButton(
+                      onPressed: _busy
+                          ? null
+                          : () async {
+                              if (!_formKey.currentState!.validate()) return;
+                              setState(() {
+                                _busy = true;
+                                _error = null;
+                              });
+                              try {
+                                await ref
+                                    .read(authNotifierProvider)
+                                    .signInEmailPassword(
+                                      email: _emailCtrl.text.trim(),
+                                      password: _passCtrl.text,
+                                    );
+                              } catch (e) {
+                                setState(() => _error = e.toString());
+                              } finally {
+                                if (mounted) {
+                                  setState(() => _busy = false);
+                                }
+                              }
+                            },
+                      child: _busy
+                          ? const SizedBox(
+                              height: 16,
+                              width: 16,
+                              child: CircularProgressIndicator(strokeWidth: 2),
+                            )
+                          : const Text('Sign In'),
                     ),
                   ],
                 ),

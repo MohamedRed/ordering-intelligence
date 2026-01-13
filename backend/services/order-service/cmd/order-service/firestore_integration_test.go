@@ -36,9 +36,9 @@ func TestCreateAndFetchOrderWithFirestoreEmulator(t *testing.T) {
 		Notes:        "extra spicy",
 		Items: []orderItem{
 			{
-				ItemID:    "item-1",
-				Name:      "Taco",
-				Quantity:  2,
+				ItemID:   "item-1",
+				Name:     "Taco",
+				Quantity: 2,
 				Modifiers: []modifierSelection{
 					{Name: "jalapeno", Price: 0},
 				},
@@ -55,7 +55,7 @@ func TestCreateAndFetchOrderWithFirestoreEmulator(t *testing.T) {
 		_, _ = client.Collection(ordersCollection).Doc(order.ID).Delete(ctx)
 	})
 
-	if err := createOrder(ctx, client, order, ""); err != nil {
+	if _, err := createOrder(ctx, client, order, ""); err != nil {
 		t.Fatalf("failed to create order: %v", err)
 	}
 

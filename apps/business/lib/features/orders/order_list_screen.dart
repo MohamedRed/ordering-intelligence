@@ -3,21 +3,33 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
+import 'package:shadcn_ui/shadcn_ui.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../models/order.dart';
+import '../../models/group_order.dart';
 import '../../providers/order_providers.dart';
-import '../../providers/order_api.dart';
-import '../../widgets/business_drawer.dart';
-import '../../fcm_token_manager.dart';
-import '../../providers/offline_badge_provider.dart';
-import '../../widgets/push_banner.dart';
+import '../../providers/group_order_providers.dart';
 import '../../providers/highlight_provider.dart';
+import '../../providers/offline_badge_provider.dart';
+import '../../providers/wait_time_providers.dart';
+import '../../widgets/business_scaffold.dart';
+import '../../fcm_token_manager.dart';
 import '../../notification_service.dart';
-import 'order_detail_screen.dart';
+import 'inbox/order_inbox_body.dart';
+import 'inbox/order_inbox_filters.dart';
+import 'inbox/order_inbox_utils.dart';
+import 'inbox/order_list_states.dart';
 
 class OrderListScreen extends ConsumerStatefulWidget {
-  const OrderListScreen({super.key});
+  const OrderListScreen({
+    super.key,
+    this.title,
+    this.fulfillmentFilter,
+  });
+
+  final String? title;
+  final String? fulfillmentFilter;
 
   @override
   ConsumerState<OrderListScreen> createState() => _OrderListScreenState();
@@ -27,19 +39,28 @@ class _OrderListScreenState extends ConsumerState<OrderListScreen>
     with WidgetsBindingObserver {
   Timer? _timer;
   final ScrollController _scrollController = ScrollController();
+  late final ProviderSubscription<String?> _navSub;
+  late final ProviderSubscription<AsyncValue<String?>> _tokenSub;
+  String _deliveryStatusFilter = 'all';
+  late OrderInboxFilter _filter;
 
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
-    ref.listen<String?>(pendingOrderNavigationProvider, (_, next) {
-      if (next != null && mounted) {
-        WidgetsBinding.instance.addPostFrameCallback((_) {
-          _goToOrderDetail(next);
-          ref.read(pendingOrderNavigationProvider.notifier).state = null;
-        });
-      }
-    });
+    _filter = _defaultFilter();
+
+    _navSub = ref.listenManual<String?>(
+      pendingOrderNavigationProvider,
+      (prev, next) {
+        if (next != null && mounted) {
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            _goToOrderDetail(next);
+            ref.read(pendingOrderNavigationProvider.notifier).state = null;
+          });
+        }
+      },
+    );
     FirebaseMessaging.instance.getInitialMessage().then((message) {
       if (message != null) {
         _handleDeeplink(message);
@@ -50,7 +71,6 @@ class _OrderListScreenState extends ConsumerState<OrderListScreen>
       ref.read(pendingOrderNavigationProvider.notifier).state = tappedPayload;
       ref.read(highlightedOrderIdProvider.notifier).state = tappedPayload;
     }
-    // Listen for foreground push updates to refresh orders.
     FirebaseMessaging.onMessage.listen((message) {
       ref.invalidate(ordersProvider);
       final orderId = message.data['orderId'];
@@ -61,22 +81,33 @@ class _OrderListScreenState extends ConsumerState<OrderListScreen>
         ref.read(highlightedOrderIdProvider.notifier).state = orderId;
       }
     });
-    // When app opened from background/tap.
     FirebaseMessaging.onMessageOpenedApp.listen(_handleDeeplink);
-    // Ensure device token is registered once per session.
-    ref.listen(fcmTokenProvider, (_, next) async {
-      final token = next.asData?.value;
-      if (token != null) {
-        await registerTokenWithBackend(token);
-      }
-    });
-    // periodic flush of offline queue
+    _tokenSub = ref.listenManual<AsyncValue<String?>>(
+      fcmTokenProvider,
+      (prev, next) {
+        final token = next.asData?.value;
+        if (token != null) {
+          registerTokenWithBackend(token);
+        }
+      },
+      fireImmediately: true,
+    );
     _timer = Timer.periodic(const Duration(minutes: 1), (_) => _flushPending());
+  }
+
+  @override
+  void didUpdateWidget(covariant OrderListScreen oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.fulfillmentFilter != widget.fulfillmentFilter) {
+      setState(() => _filter = _defaultFilter());
+    }
   }
 
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
+    _navSub.close();
+    _tokenSub.close();
     _timer?.cancel();
     _scrollController.dispose();
     super.dispose();
@@ -87,6 +118,27 @@ class _OrderListScreenState extends ConsumerState<OrderListScreen>
     if (state == AppLifecycleState.resumed) {
       _flushPending();
     }
+  }
+
+  OrderInboxFilter _defaultFilter() {
+    final fulfillment = widget.fulfillmentFilter?.toLowerCase().trim();
+    if (fulfillment == 'delivery') {
+      return OrderInboxFilter.delivery;
+    }
+    return OrderInboxFilter.all;
+  }
+
+  bool get _lockFilter =>
+      widget.fulfillmentFilter?.toLowerCase().trim() == 'delivery';
+
+  List<OrderInboxFilter> get _availableFilters {
+    if (_lockFilter) return [OrderInboxFilter.delivery];
+    return const [
+      OrderInboxFilter.all,
+      OrderInboxFilter.orders,
+      OrderInboxFilter.groupOrders,
+      OrderInboxFilter.delivery,
+    ];
   }
 
   void _handleDeeplink(RemoteMessage message) {
@@ -108,229 +160,135 @@ class _OrderListScreenState extends ConsumerState<OrderListScreen>
     }
   }
 
-  @override
-  Widget build(BuildContext context) {
-    final ordersAsync = ref.watch(ordersProvider);
-    final highlight = ref.watch(highlightedOrderIdProvider);
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Order Inbox'),
-        actions: [
-          Consumer(builder: (context, ref, _) {
-            final pending = ref.watch(pendingStatusCountProvider).maybeWhen(
-                  data: (count) => count,
-                  orElse: () => 0,
-                );
-            if (pending == 0) return const SizedBox.shrink();
-            return Padding(
-              padding: const EdgeInsets.only(right: 8.0),
-              child: Chip(
-                label: Text('$pending pending'),
-                backgroundColor: Colors.orange.shade100,
-                labelStyle: const TextStyle(color: Colors.orange),
-              ),
-            );
-          }),
-          IconButton(
-            icon: const Icon(Icons.refresh),
-            onPressed: () => ref.refresh(ordersProvider),
-          )
-        ],
-      ),
-      drawer: const BusinessDrawer(),
-      body: ordersAsync.when(
-        loading: () => const Center(child: CircularProgressIndicator()),
-        error: (err, _) => Center(child: Text('Failed to load orders: $err')),
-        data: (orders) {
-          if (orders.isEmpty) {
-            return const Center(child: Text('No orders yet'));
-          }
-          if (highlight != null) {
-            WidgetsBinding.instance.addPostFrameCallback((_) {
-              _scrollToHighlight(orders, highlight);
-            });
-          }
-          return RefreshIndicator(
-            onRefresh: () async {
-              ref.invalidate(ordersProvider);
-            },
-            child: Column(
-              children: [
-                const PushBanner(),
-                Expanded(
-                  child: ListView.separated(
-                    padding: const EdgeInsets.all(16),
-                    controller: _scrollController,
-                    itemCount: orders.length,
-                    separatorBuilder: (_, __) => const SizedBox(height: 12),
-                    itemBuilder: (context, index) {
-                      final order = orders[index];
-                      final isHighlighted =
-                          highlight != null && order.id == highlight;
-                      return _OrderCard(
-                          order: order, highlighted: isHighlighted);
-                    },
-                  ),
-                ),
-              ],
-            ),
-          );
-        },
-      ),
-    );
-  }
-
-  void _scrollToHighlight(List<Order> orders, String orderId) {
-    final index = orders.indexWhere((o) => o.id == orderId);
-    if (index >= 0 && _scrollController.hasClients) {
-      _scrollController.animateTo(
-        index * 120.0, // approximate card height
-        duration: const Duration(milliseconds: 300),
-        curve: Curves.easeInOut,
-      );
-    }
+  Future<void> _refreshAll() async {
+    ref.invalidate(waitTimeSummaryProvider);
+    ref.invalidate(ordersProvider);
+    ref.invalidate(groupOrdersProvider);
   }
 
   void _goToOrderDetail(String orderId) {
     if (!mounted) return;
     context.push('/orders/$orderId');
   }
-}
 
-class _OrderCard extends ConsumerWidget {
-  const _OrderCard({required this.order, this.highlighted = false});
-  final Order order;
-  final bool highlighted;
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    return Card(
-      color: highlighted ? Colors.yellow.shade50 : null,
-      child: InkWell(
-        onTap: () => context.push('/orders/${order.id}'),
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(order.title,
-                      style: Theme.of(context).textTheme.titleMedium),
-                  Chip(
-                    label: Text(_statusLabel(order.status)),
-                    backgroundColor:
-                        _statusColor(order.status).withOpacity(0.12),
-                    labelStyle: TextStyle(color: _statusColor(order.status)),
-                    materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                  ),
-                ],
-              ),
-              const SizedBox(height: 8),
-              Text(order.itemsSummary()),
-              if (order.notes.isNotEmpty) ...[
-                const SizedBox(height: 8),
-                Text(order.notes,
-                    style: const TextStyle(fontStyle: FontStyle.italic)),
-              ],
-              const SizedBox(height: 12),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(order.formattedTotal,
-                      style: Theme.of(context).textTheme.titleMedium),
-                  _ActionButtons(order: order, ref: ref),
-                ],
-              )
-            ],
-          ),
-        ),
-      ),
-    );
+  void _scrollToHighlight(List<Order> orders, String orderId) {
+    final index = orders.indexWhere((o) => o.id == orderId);
+    if (index >= 0 && _scrollController.hasClients) {
+      _scrollController.animateTo(
+        index * 120.0,
+        duration: const Duration(milliseconds: 300),
+        curve: Curves.easeInOut,
+      );
+    }
   }
-}
 
-class _ActionButtons extends StatelessWidget {
-  const _ActionButtons({required this.order, required this.ref});
-  final Order order;
-  final WidgetRef ref;
+  Map<OrderInboxFilter, int> _buildFilterCounts({
+    required List<Order> orders,
+    required List<GroupOrder> groupOrders,
+  }) {
+    final deliveryCount = orders
+        .where((order) =>
+            order.fulfillmentType.toLowerCase().trim() == 'delivery')
+        .length;
+    final submittedGroupOrders =
+        groupOrders.where(isGroupOrderSubmitted).toList();
+    return {
+      OrderInboxFilter.all: orders.length + submittedGroupOrders.length,
+      OrderInboxFilter.orders: orders.length,
+      OrderInboxFilter.groupOrders: submittedGroupOrders.length,
+      OrderInboxFilter.delivery: deliveryCount,
+    };
+  }
 
   @override
   Widget build(BuildContext context) {
-    final actions = _nextActions(order.status);
-    if (actions.isEmpty) return const SizedBox.shrink();
-    return Wrap(
-      spacing: 8,
-      children: actions
-          .map((status) => OutlinedButton(
-                onPressed: () => _handleStatus(context, ref, order.id, status),
-                child: Text(_statusLabel(status)),
-              ))
-          .toList(),
-    );
-  }
+    final ordersAsync = ref.watch(ordersProvider);
+    final groupOrdersAsync = ref.watch(groupOrdersProvider);
+    final highlight = ref.watch(highlightedOrderIdProvider);
+    final filter = _lockFilter ? OrderInboxFilter.delivery : _filter;
 
-  Future<void> _handleStatus(BuildContext context, WidgetRef ref,
-      String orderId, OrderStatus status) async {
-    final repo = ref.read(orderRepositoryProvider);
-    try {
-      await repo.setStatus(orderId, status);
-      ref.invalidate(ordersProvider);
-      if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-            content:
-                Text('Order $orderId updated to ${_statusLabel(status)}')));
-      }
-    } catch (err) {
-      if (context.mounted) {
-        ScaffoldMessenger.of(context)
-            .showSnackBar(SnackBar(content: Text('Failed to update: $err')));
-      }
+    final orders = ordersAsync.value ?? const <Order>[];
+    final groupOrders = groupOrdersAsync.value ?? const <GroupOrder>[];
+    final ordersError = ordersAsync.hasError ? ordersAsync.error : null;
+    final groupOrdersError =
+        groupOrdersAsync.hasError ? groupOrdersAsync.error : null;
+
+    final isLoading = (ordersAsync.isLoading && ordersAsync.value == null) &&
+        (groupOrdersAsync.isLoading && groupOrdersAsync.value == null);
+    if (isLoading) {
+      return BusinessScaffold(
+        title: Text(widget.title ?? 'Order Inbox'),
+        body: const Center(child: CircularProgressIndicator()),
+      );
     }
-  }
-}
 
-Color _statusColor(OrderStatus status) {
-  switch (status) {
-    case OrderStatus.pending:
-      return Colors.orange;
-    case OrderStatus.confirmed:
-      return Colors.blue;
-    case OrderStatus.ready:
-      return Colors.teal;
-    case OrderStatus.completed:
-      return Colors.green;
-    case OrderStatus.cancelled:
-      return Colors.grey;
-  }
-}
+    if (ordersError != null &&
+        groupOrdersError != null &&
+        orders.isEmpty &&
+        groupOrders.isEmpty) {
+      return BusinessScaffold(
+        title: Text(widget.title ?? 'Order Inbox'),
+        body: OrderListErrorState(
+          message: 'Failed to load inbox',
+          detail: '$ordersError\n$groupOrdersError',
+          onRetry: () => _refreshAll(),
+        ),
+      );
+    }
 
-String _statusLabel(OrderStatus status) {
-  switch (status) {
-    case OrderStatus.pending:
-      return 'Pending';
-    case OrderStatus.confirmed:
-      return 'Confirmed';
-    case OrderStatus.ready:
-      return 'Ready';
-    case OrderStatus.completed:
-      return 'Completed';
-    case OrderStatus.cancelled:
-      return 'Cancelled';
-  }
-}
+    final filteredOrders =
+        filterOrdersForInbox(orders, filter, _deliveryStatusFilter);
+    if (highlight != null &&
+        (filter == OrderInboxFilter.orders ||
+            filter == OrderInboxFilter.delivery)) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _scrollToHighlight(filteredOrders, highlight);
+      });
+    }
 
-List<OrderStatus> _nextActions(OrderStatus current) {
-  switch (current) {
-    case OrderStatus.pending:
-      return [OrderStatus.confirmed, OrderStatus.cancelled];
-    case OrderStatus.confirmed:
-      return [OrderStatus.ready, OrderStatus.cancelled];
-    case OrderStatus.ready:
-      return [OrderStatus.completed, OrderStatus.cancelled];
-    case OrderStatus.completed:
-    case OrderStatus.cancelled:
-      return [];
+    return BusinessScaffold(
+      title: Text(widget.title ?? 'Order Inbox'),
+      actions: [
+        Consumer(builder: (context, ref, _) {
+          final pending = ref.watch(pendingStatusCountProvider).maybeWhen(
+                data: (count) => count,
+                orElse: () => 0,
+              );
+          if (pending == 0) return const SizedBox.shrink();
+          return Padding(
+            padding: const EdgeInsets.only(right: 12.0),
+            child: ShadBadge(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+              backgroundColor: Colors.orange,
+              child: Text('$pending pending'),
+            ),
+          );
+        }),
+        IconButton(
+          icon: const Icon(Icons.refresh),
+          onPressed: () => _refreshAll(),
+        )
+      ],
+      body: OrderInboxBody(
+        orders: orders,
+        groupOrders: groupOrders,
+        ordersError: ordersError,
+        groupOrdersError: groupOrdersError,
+        filter: filter,
+        availableFilters: _availableFilters,
+        filterCounts: _buildFilterCounts(
+          orders: orders,
+          groupOrders: groupOrders,
+        ),
+        showFilters: !_lockFilter,
+        onFilterChanged: (next) => setState(() => _filter = next),
+        deliveryStatusFilter: _deliveryStatusFilter,
+        onDeliveryStatusChanged: (value) =>
+            setState(() => _deliveryStatusFilter = value),
+        scrollController: _scrollController,
+        highlightedOrderId: highlight,
+        onRefresh: _refreshAll,
+      ),
+    );
   }
 }

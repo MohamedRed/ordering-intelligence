@@ -18,6 +18,15 @@ Infrastructure-as-Code for the Ordering Intelligence platform built on GCP, Fire
 
 > **Note:** Twilio and LiveKit resources may require additional providers or manual setup; track them in this directory via external data sources or documentation.
 
+## Validation
+
+`terraform validate` requires an initialized working directory (modules/providers downloaded).
+
+- Per environment:
+  - `cd infrastructure/terraform/environments/dev && terraform init -backend=false && terraform validate`
+- All environments (helper script):
+  - `./scripts/terraform/validate.sh`
+
 ### Cloud Run Overrides
 
 Each environment accepts an optional `cloud_run_overrides` map that lets you

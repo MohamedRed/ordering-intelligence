@@ -1,0 +1,11 @@
+steps:
+  - name: gcr.io/cloud-builders/docker
+    args:
+      - build
+      - -f
+      - backend/services/order-service/Dockerfile
+      - -t
+      - us-central1-docker.pkg.dev/ordering-intelligence/services/order-service:latest
+      - .
+images:
+  - us-central1-docker.pkg.dev/ordering-intelligence/services/order-service:latest

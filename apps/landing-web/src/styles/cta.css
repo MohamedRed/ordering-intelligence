@@ -1,0 +1,26 @@
+.cta {
+  padding: 120px 0;
+  background: radial-gradient(circle at 30% 20%, #e0f1ff 0%, #ffffff 55%);
+}
+
+.cta-inner {
+  display: grid;
+  gap: 28px;
+  align-items: center;
+  background: #fff;
+  border-radius: var(--radius-lg);
+  padding: 40px;
+  box-shadow: var(--shadow);
+}
+
+.cta-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+@media (min-width: 960px) {
+  .cta-inner {
+    grid-template-columns: 1.2fr 0.8fr;
+  }
+}

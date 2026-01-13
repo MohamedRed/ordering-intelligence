@@ -161,5 +161,22 @@ export function ingestRouter(ctx: AppContext) {
     res.json({ status: 'published', items: draft.items.length });
   });
 
+  // 5) Cancel job (best-effort)
+  router.post('/ingest/:jobId/cancel', requireAuth, async (req, res) => {
+    const { jobId } = req.params;
+    const jobRef = firestore.collection('menus_ingest').doc(jobId);
+    const snap = await jobRef.get();
+    if (!snap.exists) return res.status(404).json({ error: 'job not found' });
+    const now = Date.now();
+    await jobRef.update({
+      status: 'canceled',
+      cancelRequestedAt: now,
+      progressStage: 'canceled',
+      progressPercent: 100,
+      updatedAt: now,
+    });
+    res.json({ jobId, status: 'canceled' });
+  });
+
   return router;
 }

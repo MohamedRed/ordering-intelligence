@@ -1,0 +1,36 @@
+.metrics {
+  background: var(--surface-muted);
+}
+
+.metrics-grid {
+  display: grid;
+  gap: 32px;
+  align-items: center;
+}
+
+.metrics-cards {
+  display: grid;
+  gap: 18px;
+}
+
+.metrics-cards article {
+  background: #fff;
+  padding: 22px;
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow);
+}
+
+.metrics-cards strong {
+  font-size: 1.6rem;
+  display: block;
+}
+
+.metrics-cards span {
+  color: var(--text-muted);
+}
+
+@media (min-width: 900px) {
+  .metrics-grid {
+    grid-template-columns: 1.1fr 0.9fr;
+  }
+}

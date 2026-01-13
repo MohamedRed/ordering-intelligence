@@ -15,18 +15,25 @@ import {
   AGENT_ANALYSIS_URL,
   AGENT_RETRIES,
   AGENT_BASE_DELAY_MS,
+  LOG_GENAI_SUCCESS,
 } from '../config.js';
 import { delay, parseGsUri } from '../utils.js';
 import { enqueueAgentJob, waitForAgentJob } from './agent_queue.js';
 
 const storage = new Storage();
 const auth = new GoogleAuth({ scopes: 'https://www.googleapis.com/auth/cloud-platform' });
-const vertexText = new VertexAI({ project: VERTEX_PROJECT, location: IMAGE_REGION });
+const vertexText = new VertexAI({
+  project: VERTEX_PROJECT || process.env.GOOGLE_CLOUD_PROJECT || 'ordering-intelligence',
+  location: IMAGE_REGION,
+});
 const textModel = (modelId: string) => vertexText.getGenerativeModel({ model: modelId });
 
 // Serialize Gemini image calls to avoid 429 bursts.
 let renderLock: Promise<void> = Promise.resolve();
 let lastRenderStart = 0;
+
+// GCS downloads for agent-worker outputs can occasionally hang; keep them bounded.
+const GCS_READ_TIMEOUT_MS = Number(process.env.GCS_READ_TIMEOUT_MS ?? 30_000);
 async function withRenderSlot<T>(fn: () => Promise<T>): Promise<T> {
   const prev = renderLock;
   let release: () => void = () => {};
@@ -45,6 +52,9 @@ async function withRenderSlot<T>(fn: () => Promise<T>): Promise<T> {
   } finally {
     release();
   }
+}
+function vlog(...args: any[]) {
+  if (LOG_GENAI_SUCCESS) console.log(...args);
 }
 
 const IMAGE_GEN_CONFIG: any = {
@@ -76,7 +86,17 @@ export async function renderImage(params: {
     const { prompt, mimeType, modelId, label, fileUri } = params;
     if (!fileUri) throw new Error(`${label} requires fileUri input`);
     const docIdForAgent = buildAgentDocId(label, fileUri);
+    const start = Date.now();
     for (let attempt = 1; attempt <= RENDER_RETRIES; attempt++) {
+      try {
+        // Important: make sure both the request *and* reading the response body are bounded.
+        // We previously timed out only the fetch() promise, but res.text() could hang indefinitely.
+        const controller = new AbortController();
+        const timeout = setTimeout(() => controller.abort(), RENDER_TIMEOUT_MS);
+        const attemptStart = Date.now();
+
+        let res: any;
+        let resText = '';
       try {
         const body = {
           contents: [
@@ -97,20 +117,19 @@ export async function renderImage(params: {
 
         const url = `https://aiplatform.googleapis.com/v1/projects/${VERTEX_PROJECT}/locations/${IMAGE_REGION}/publishers/google/models/${modelId}:generateContent`;
         const token = await auth.getAccessToken();
-        const res = await withTimeout(
-          fetch(url, {
+          res = await fetch(url, {
             method: 'POST',
             headers: {
               Authorization: `Bearer ${token}`,
               'Content-Type': 'application/json',
             },
             body: JSON.stringify(body),
-          }),
-          RENDER_TIMEOUT_MS,
-          `${label}-fetch`
-        );
-
-        const resText = await res.text();
+            signal: controller.signal,
+          });
+          resText = await res.text();
+        } finally {
+          clearTimeout(timeout);
+        }
         if (res.status === 429) {
           throw Object.assign(new Error(`${label} received 429`), { status: 429, resText });
         }
@@ -135,11 +154,13 @@ export async function renderImage(params: {
             ?.find((p: any) => p?.inlineData?.data || p?.data);
         const imageB64: string | undefined = imagePart?.inlineData?.data ?? imagePart?.data;
         if (!imageB64) throw new Error(`${label} missing image`);
+        vlog('genai render success', { label, modelId, attempt, ms: Date.now() - start, attemptMs: Date.now() - attemptStart });
         return imageB64;
       } catch (err: any) {
         const status = err?.status ?? err?.response?.status;
         const message = `${err?.message ?? err}`;
-        const isRetryable = status === 429 || message.includes('429') || message.includes('timed out');
+        const isAbort = err?.name === 'AbortError' || message.toLowerCase().includes('aborted');
+        const isRetryable = status === 429 || message.includes('429') || message.includes('timed out') || isAbort;
         const attemptInfo = `${label} attempt ${attempt}/${RENDER_RETRIES}`;
         console.error(`${attemptInfo} genai error`, err);
         if (attempt >= RENDER_RETRIES || !isRetryable) {
@@ -149,12 +170,19 @@ export async function renderImage(params: {
             if (fromQueue?.outputB64) return fromQueue.outputB64;
             if (fromQueue?.outputPath) {
               const { bucket, object } = parseGsUri(fromQueue.outputPath);
-              const [url] = await storage.bucket(bucket).file(object).getSignedUrl({
-                action: 'read',
-                expires: Date.now() + 60 * 60 * 1000,
-              });
-      const buf = await fetch(url).then((r) => r.arrayBuffer());
+              // Avoid signed URLs for internal reads (signed URLs require service-account style creds with client_email).
+              // Direct download works with any ADC that can read the object.
+              try {
+                const [buf] = await withTimeout(
+                  storage.bucket(bucket).file(object).download(),
+                  GCS_READ_TIMEOUT_MS,
+                  `${label}-gcs-download`,
+                );
               return Buffer.from(buf).toString('base64');
+              } catch (e) {
+                console.warn(`${label}: agent output download failed`, { error: String((e as any)?.message ?? e) });
+                return undefined;
+              }
             }
           }
           return undefined;
@@ -207,6 +235,7 @@ export async function geminiJson(
 
   let resText = '';
   let lastErr: any;
+  const start = Date.now();
   try {
     const token = await auth.getAccessToken();
     const controller = new AbortController();
@@ -252,11 +281,9 @@ export async function geminiJson(
         // If agent produced a file, try to read it as JSON.
         try {
           const { bucket, object } = parseGsUri(res.outputPath);
-          const [urlSigned] = await storage.bucket(bucket).file(object).getSignedUrl({
-            action: 'read',
-            expires: Date.now() + 60 * 60 * 1000,
-          });
-          const jsonText = await fetch(urlSigned).then((r) => r.text());
+          // Avoid signed URLs for internal reads (signed URLs require service-account style creds with client_email).
+          const [buf] = await storage.bucket(bucket).file(object).download();
+          const jsonText = Buffer.from(buf).toString('utf8');
           return JSON.parse(jsonText);
         } catch {
           return undefined;
@@ -283,9 +310,91 @@ export async function geminiJson(
     return undefined;
   }
   try {
-    return JSON.parse(text);
+    const parsed = JSON.parse(text);
+    vlog('genai json success', { label, modelId, ms: Date.now() - start });
+    return parsed;
   } catch (e) {
     console.error('gemini json parse error', e);
+    return undefined;
+  }
+}
+
+export async function geminiJsonText(
+  prompt: string,
+  modelId: string,
+  label = 'analysis-json-text'
+): Promise<any> {
+  const body = {
+    contents: [
+      {
+        role: 'user',
+        parts: [{ text: prompt }],
+      },
+    ],
+    generationConfig: {
+      responseMimeType: 'application/json',
+      temperature: 0.1,
+    },
+  };
+
+  const url = `https://aiplatform.googleapis.com/v1/projects/${VERTEX_PROJECT}/locations/${IMAGE_REGION}/publishers/google/models/${modelId}:generateContent`;
+  let resText = '';
+  const start = Date.now();
+  try {
+    const token = await auth.getAccessToken();
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), GEN_TIMEOUT_MS);
+    const res = await fetch(url, {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(body),
+      signal: controller.signal,
+    });
+    clearTimeout(timeout);
+    resText = await res.text();
+    const contentType = res.headers.get('content-type') || '';
+    if (!res.ok || !contentType.includes('application/json')) {
+      console.error('analysis-json-text fetch failed', {
+        status: res.status,
+        statusText: res.statusText,
+        bodySnippet: resText.slice(0, 400),
+        contentType,
+      });
+      throw Object.assign(new Error(`${label} failed status ${res.status}`), { status: res.status });
+    }
+  } catch (err) {
+    console.error(`${label} error`, err);
+    throw err;
+  }
+
+  let parsedResp: any;
+  try {
+    parsedResp = JSON.parse(resText);
+  } catch (e) {
+    console.error('analysis-json-text response parse error', {
+      message: (e as Error).message,
+      resText: resText.slice(0, 200),
+    });
+    return undefined;
+  }
+
+  const text =
+    parsedResp?.candidates
+      ?.flatMap((c: any) => c?.content?.parts ?? [])
+      ?.find((p: any) => p?.text)?.text;
+  if (!text) {
+    console.warn('gemini json text missing text', { model: modelId, raw: parsedResp });
+    return undefined;
+  }
+  try {
+    const parsed = JSON.parse(text);
+    vlog('genai json text success', { label, modelId, ms: Date.now() - start });
+    return parsed;
+  } catch (e) {
+    console.error('gemini json text parse error', e);
     return undefined;
   }
 }

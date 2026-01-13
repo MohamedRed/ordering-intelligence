@@ -13,8 +13,25 @@ provider "google" {
 }
 
 resource "google_compute_security_policy" "this" {
+  count       = var.enabled ? 1 : 0
   name        = var.policy_name
   description = var.description
+
+  dynamic "rule" {
+    for_each = length(var.allowed_ip_ranges) > 0 ? [1] : []
+    content {
+      action      = "allow"
+      priority    = 900
+      description = "IP allowlist"
+
+      match {
+        versioned_expr = "SRC_IPS_V1"
+        config {
+          src_ip_ranges = var.allowed_ip_ranges
+        }
+      }
+    }
+  }
 
   dynamic "rule" {
     for_each = length(var.blocked_ip_ranges) > 0 ? [1] : []
@@ -42,7 +59,7 @@ resource "google_compute_security_policy" "this" {
       match {
         versioned_expr = "SRC_IPS_V1"
         config {
-          src_ip_ranges = ["*"]
+          src_ip_ranges = length(var.allowed_ip_ranges) > 0 ? var.allowed_ip_ranges : ["*"]
         }
       }
 
@@ -59,8 +76,9 @@ resource "google_compute_security_policy" "this" {
   }
 
   rule {
-    action   = "allow"
-    priority = 2147483647
+    action      = length(var.allowed_ip_ranges) > 0 ? "deny(403)" : "allow"
+    priority    = 2147483647
+    description = length(var.allowed_ip_ranges) > 0 ? "Default deny (allowlist enabled)" : "Default allow"
     match {
       versioned_expr = "SRC_IPS_V1"
       config {
@@ -72,10 +90,10 @@ resource "google_compute_security_policy" "this" {
 
 output "policy_id" {
   description = "ID of the Cloud Armor security policy."
-  value       = google_compute_security_policy.this.id
+  value       = try(google_compute_security_policy.this[0].id, null)
 }
 
 output "policy_name" {
   description = "Name of the security policy."
-  value       = google_compute_security_policy.this.name
+  value       = try(google_compute_security_policy.this[0].name, null)
 }

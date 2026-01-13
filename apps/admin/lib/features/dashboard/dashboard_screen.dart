@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:shadcn_ui/shadcn_ui.dart';
 
 import '../../providers/summary_provider.dart';
 import '../../providers/notification_metrics_provider.dart';
 import '../../providers/ingestion_badge_provider.dart';
-import '../../widgets/admin_navigation_drawer.dart';
+import '../../widgets/admin_scaffold.dart';
 
 class DashboardScreen extends ConsumerWidget {
   const DashboardScreen({super.key});
@@ -14,12 +15,16 @@ class DashboardScreen extends ConsumerWidget {
     final summaryAsync = ref.watch(orderSummaryProvider);
     final notifMetricsAsync = ref.watch(notificationMetricsProvider);
     final ingestAsync = ref.watch(ingestionBadgeProvider);
-    return Scaffold(
-      appBar: AppBar(title: const Text('Operator Dashboard')),
-      drawer: const AdminNavigationDrawer(),
+    return AdminScaffold(
+      title: const Text('Operator Dashboard'),
       body: summaryAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
-        error: (err, _) => Center(child: Text('Failed to load summary: $err')),
+        error: (err, _) => Center(
+          child: ShadAlert.destructive(
+            title: const Text('Failed to load summary'),
+            description: Text('$err'),
+          ),
+        ),
         data: (summary) {
           final status = summary.statusCounts;
           final width = MediaQuery.of(context).size.width;
@@ -80,25 +85,23 @@ class _MetricCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Card(
-      color: highlight ? Colors.red.shade50 : null,
-      child: Padding(
-        padding: const EdgeInsets.all(24),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Text(title, style: Theme.of(context).textTheme.titleMedium),
-            const SizedBox(height: 12),
-            Text(
-              value,
-              style: Theme.of(context)
-                  .textTheme
-                  .displaySmall
-                  ?.copyWith(color: highlight ? Colors.red.shade700 : Colors.blueGrey[700]),
-            ),
-          ],
-        ),
+    final cs = ShadTheme.of(context).colorScheme;
+    return ShadCard(
+      padding: const EdgeInsets.all(24),
+      backgroundColor: highlight ? cs.destructive.withValues(alpha: 0.05) : cs.card,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Text(title, style: Theme.of(context).textTheme.titleMedium),
+          const SizedBox(height: 12),
+          Text(
+            value,
+            style: Theme.of(context).textTheme.displaySmall?.copyWith(
+                  color: highlight ? cs.destructive : cs.foreground,
+                ),
+          ),
+        ],
       ),
     );
   }

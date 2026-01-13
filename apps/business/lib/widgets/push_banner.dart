@@ -1,6 +1,7 @@
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:shadcn_ui/shadcn_ui.dart';
 
 /// Lightweight in-app banner for foreground notifications.
 class PushBanner extends ConsumerStatefulWidget {
@@ -30,38 +31,19 @@ class _PushBannerState extends ConsumerState<PushBanner> {
     if (_message == null) return const SizedBox.shrink();
     final title = _message!.notification?.title ?? 'New update';
     final body = _message!.notification?.body ?? '';
-    return Material(
-      elevation: 2,
-      color: Colors.blueGrey.shade50,
-      child: InkWell(
-        onTap: () {
-          // In future, deep-link to specific order via data[orderId]
-          setState(() => _message = null);
-        },
-        child: Padding(
-          padding: const EdgeInsets.all(12),
-          child: Row(
-            children: [
-              const Icon(Icons.notifications_active_outlined,
-                  color: Colors.blueGrey),
-              const SizedBox(width: 8),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(title,
-                        style: const TextStyle(fontWeight: FontWeight.w600)),
-                    if (body.isNotEmpty)
-                      Text(body, maxLines: 2, overflow: TextOverflow.ellipsis),
-                  ],
-                ),
-              ),
-              IconButton(
-                icon: const Icon(Icons.close),
-                onPressed: () => setState(() => _message = null),
-              )
-            ],
-          ),
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      child: ShadAlert(
+        icon: const Icon(Icons.notifications_active_outlined),
+        title: Text(title),
+        description: body.isNotEmpty
+            ? Text(body, maxLines: 2, overflow: TextOverflow.ellipsis)
+            : null,
+        trailing: ShadButton.ghost(
+          size: ShadButtonSize.sm,
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+          onPressed: () => setState(() => _message = null),
+          child: const Icon(Icons.close, size: 16),
         ),
       ),
     );

@@ -1,0 +1,14 @@
+{
+    "agent_id": "agent_7201kbfs3pbpe1tsv4dmakk1207q",
+    "branch_id": "agtbrch_3201kcvwervffgq97awrf8edm62k",
+    "version_id": "agtvrsn_5201kcvwervefb78enadva1rt2fx",
+    "parent_version_id": "agtvrsn_5301kcvwepe9eqjrhv3nwza8zq75",
+    "name": "feature/eta-minutes-20251219-180247",
+    "description": "Sync latest tool_ids + add eta_minutes dynamic var",
+    "create_endpoint": "/v1/convai/agents/agent_7201kbfs3pbpe1tsv4dmakk1207q/branches",
+    "api_base_url": "https://api.elevenlabs.io",
+    "raw_response": {
+        "created_branch_id": "agtbrch_3201kcvwervffgq97awrf8edm62k",
+        "created_version_id": "agtvrsn_5201kcvwervefb78enadva1rt2fx"
+    }
+}

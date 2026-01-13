@@ -1,0 +1,14 @@
+{
+    "agent_id": "agent_7201kbfs3pbpe1tsv4dmakk1207q",
+    "branch_id": "agtbrch_2801kcw2x48dempb0s2rwfkhakta",
+    "version_id": "agtvrsn_8701kcw2x48ce4ztv32x5qjvwgkk",
+    "parent_version_id": "agtvrsn_0801kcw2x2c5fbvv91vxtfa4hnhj",
+    "name": "feature/eta-waittime-20251219-205520",
+    "description": "Add wait time tool + eta_minutes guardrails",
+    "create_endpoint": "/v1/convai/agents/agent_7201kbfs3pbpe1tsv4dmakk1207q/branches",
+    "api_base_url": "https://api.elevenlabs.io",
+    "raw_response": {
+        "created_branch_id": "agtbrch_2801kcw2x48dempb0s2rwfkhakta",
+        "created_version_id": "agtvrsn_8701kcw2x48ce4ztv32x5qjvwgkk"
+    }
+}

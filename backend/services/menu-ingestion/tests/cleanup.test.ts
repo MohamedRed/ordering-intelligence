@@ -10,19 +10,17 @@ function makeFirestore(docs: Record<string, Job>) {
     store,
     collection: () => ({
       where: () => ({
-        where: () => ({
-          limit: () => ({
-            get: async () => ({
-              forEach: (cb: (doc: any) => void) => {
-                for (const [id, data] of store.entries()) {
-                  cb({
-                    id,
-                    data: () => data,
-                    ref: { id },
-                  });
-                }
-              },
-            }),
+        limit: () => ({
+          get: async () => ({
+            forEach: (cb: (doc: any) => void) => {
+              for (const [id, data] of store.entries()) {
+                cb({
+                  id,
+                  data: () => data,
+                  ref: { id },
+                });
+              }
+            },
           }),
         }),
       }),

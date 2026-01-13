@@ -1,0 +1,39 @@
+.process {
+  background: #fff;
+}
+
+.process-grid {
+  display: grid;
+  gap: 32px;
+  align-items: center;
+}
+
+.process-steps {
+  display: grid;
+  gap: 18px;
+}
+
+.process-step {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 16px;
+  padding: 16px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border);
+}
+
+.process-step span {
+  font-weight: 700;
+  color: var(--accent);
+}
+
+.process-visual img {
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow);
+}
+
+@media (min-width: 960px) {
+  .process-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+}

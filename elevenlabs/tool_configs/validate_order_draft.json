@@ -1,0 +1,78 @@
+{
+  "name": "agent_tools_validate_order_draft",
+  "description": "Validate an order draft against the current menu (menu-only + required modifier groups + bundles). Returns structured missing-fields errors so the agent can ask targeted follow-up questions.",
+  "type": "webhook",
+  "api_schema": {
+    "url": "https://agent-tools-230152279015.us-central1.run.app/v1/stores/{storeId}/orders/validate-draft",
+    "method": "POST",
+    "path_params_schema": {
+      "storeId": {
+        "type": "string",
+        "description": "Store identifier",
+        "is_system_provided": false,
+        "dynamic_variable": "",
+        "constant_value": ""
+      }
+    },
+    "request_body_schema": {
+      "type": "object",
+      "required": ["items"],
+      "properties": {
+        "items": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["itemId", "quantity"],
+            "properties": {
+              "itemId": { "type": "string", "description": "Menu item id" },
+              "name": { "type": "string", "description": "Item name (optional; server normalizes from menu)" },
+              "quantity": { "type": "integer", "description": "Quantity" },
+              "priceCents": { "type": "integer", "description": "Unit price in cents (optional; server normalizes from menu)" },
+              "bundleId": { "type": "string", "description": "Bundle grouping id or rule id (optional)" },
+              "bundleRole": { "type": "string", "description": "Role within the bundle (main|drink|side|extra)" },
+              "modifierSelections": {
+                "type": "array",
+                "description": "Preferred structured modifier selections",
+                "items": {
+                  "type": "object",
+                  "required": ["groupId", "optionId"],
+                  "properties": {
+                    "groupId": { "type": "string", "description": "Modifier group id" },
+                    "optionId": { "type": "string", "description": "Modifier option id" },
+                    "name": { "type": "string", "description": "Modifier option name (optional; server normalizes)" },
+                    "priceCents": { "type": "integer", "description": "Modifier price in cents (optional; server normalizes)" }
+                  }
+                }
+              },
+              "modifiers": {
+                "type": "array",
+                "description": "Legacy modifier selections by name (supported for backward compatibility)",
+                "items": {
+                  "type": "object",
+                  "required": ["name"],
+                  "properties": {
+                    "name": { "type": "string", "description": "Modifier name" },
+                    "priceCents": { "type": "integer", "description": "Modifier price in cents" }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "request_headers": {
+      "Content-Type": "application/json"
+    },
+    "auth_connection": {
+      "auth_connection_id": "auth_5601kcj9z8e2fbqscr8e6m06nyw6"
+    }
+  },
+  "response_timeout_secs": 30,
+  "dynamic_variables": {
+    "dynamic_variable_placeholders": {}
+  },
+  "assignments": [],
+  "disable_interruptions": false,
+  "force_pre_tool_speech": false
+}

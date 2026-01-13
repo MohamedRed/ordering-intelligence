@@ -1,0 +1,36 @@
+{
+  "name": "agent_tools_get_item_details",
+  "description": "Get full menu item details including modifier groups (required selections) so the agent can ask follow-up questions.",
+  "type": "webhook",
+  "api_schema": {
+    "url": "https://agent-tools-230152279015.us-central1.run.app/v1/stores/{storeId}/menu/items/{itemId}",
+    "method": "GET",
+    "path_params_schema": {
+      "storeId": {
+        "type": "string",
+        "description": "Store identifier",
+        "is_system_provided": false,
+        "dynamic_variable": "",
+        "constant_value": ""
+      },
+      "itemId": {
+        "type": "string",
+        "description": "Menu item id",
+        "is_system_provided": false,
+        "dynamic_variable": "",
+        "constant_value": ""
+      }
+    },
+    "request_headers": {},
+    "auth_connection": {
+      "auth_connection_id": "auth_5601kcj9z8e2fbqscr8e6m06nyw6"
+    }
+  },
+  "response_timeout_secs": 30,
+  "dynamic_variables": {
+    "dynamic_variable_placeholders": {}
+  },
+  "assignments": [],
+  "disable_interruptions": false,
+  "force_pre_tool_speech": false
+}

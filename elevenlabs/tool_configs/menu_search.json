@@ -1,0 +1,41 @@
+{
+  "name": "agent_tools_search_menu",
+  "description": "Search the store menu (menu-only grounding) and return matching items with required modifier group hints.",
+  "type": "webhook",
+  "api_schema": {
+    "url": "https://agent-tools-230152279015.us-central1.run.app/v1/stores/{storeId}/menu/search",
+    "method": "GET",
+    "path_params_schema": {
+      "storeId": {
+        "type": "string",
+        "description": "Store identifier",
+        "is_system_provided": false,
+        "dynamic_variable": "",
+        "constant_value": ""
+      }
+    },
+    "query_params_schema": {
+      "required": ["q"],
+      "properties": {
+        "q": {
+          "type": "string",
+          "description": "Search query (customer wording or partial item name)",
+          "is_system_provided": false,
+          "dynamic_variable": "",
+          "constant_value": ""
+        }
+      }
+    },
+    "request_headers": {},
+    "auth_connection": {
+      "auth_connection_id": "auth_5601kcj9z8e2fbqscr8e6m06nyw6"
+    }
+  },
+  "response_timeout_secs": 30,
+  "dynamic_variables": {
+    "dynamic_variable_placeholders": {}
+  },
+  "assignments": [],
+  "disable_interruptions": false,
+  "force_pre_tool_speech": false
+}

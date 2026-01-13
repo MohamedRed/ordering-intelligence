@@ -109,3 +109,22 @@ func TestLogError(t *testing.T) {
 		t.Fatalf("logError should return error")
 	}
 }
+
+func TestNewFirestoreClientMissingProject(t *testing.T) {
+	cfg := &serviceConfig{ProjectID: ""}
+	if _, err := newFirestoreClient(context.Background(), cfg); err == nil {
+		t.Fatalf("expected error when project ID missing")
+	}
+}
+
+func TestLoadConfigDefaultsPortAndEnv(t *testing.T) {
+	t.Setenv("PORT", "")
+	cfg, err := loadConfig()
+	if err != nil {
+		// loadConfig relies on sharedconfig; if it fails due to missing fixture, skip
+		t.Skip("sharedconfig not initialized in unit test env")
+	}
+	if cfg.Port != "8085" {
+		t.Fatalf("expected default port 8085, got %s", cfg.Port)
+	}
+}

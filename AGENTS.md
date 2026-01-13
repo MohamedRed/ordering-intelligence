@@ -1,0 +1,7 @@
+- Make sure to keep a modular architecture, so preferably short files. 
+- Don't do mistakes like deleting mistakenly working code that you are not meant to delete.
+- When you do an improvement, don't forget to remove the legacy code which is not used anymore if any.
+- When you do improvements, try to apply modular architecture to not have super long un-manageable code files.
+- When a code file reaches 100–300 lines, you need to break it down into different component following modular architecture. 
+- I don't want quick fixes, but professional code for enterprise clients.
+- Build always enterprise-grade level products. 

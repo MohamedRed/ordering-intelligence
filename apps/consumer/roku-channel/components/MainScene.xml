@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<component name="MainScene" extends="Scene">
+  <interface>
+    <field id="pairingUrl" type="string" />
+  </interface>
+  <children>
+    <Label
+      id="title"
+      translation="[90,70]"
+      width="1200"
+      height="80"
+      font="font:MediumBoldSystemFont"
+      horizAlign="left"
+      text="Ordering Intelligence"
+      color="#e4002b" />
+    <Label
+      id="subtitle"
+      translation="[90,140]"
+      width="1200"
+      height="50"
+      font="font:MediumSystemFont"
+      horizAlign="left"
+      text="Scan on your phone to sign in & pay"
+      color="#ffffff" />
+    <Poster
+      id="qr"
+      translation="[90,220]"
+      width="260"
+      height="260"
+      uri="https://api.qrserver.com/v1/create-qr-code/?size=260x260&data=https%3A%2F%2Fdev-channel-gateway.liive.dev%2Ftv%2Fpair" />
+    <RowList
+      id="reorders"
+      translation="[390,220]"
+      itemSize="[[420,240]]"
+      rowItemSpacing="12"
+      rowItemSize="[[420,240]]"
+      rowFocusAnimationStyle="floatingFocus"
+      numRows="1" />
+  </children>
+  <script type="text/brightscript" uri="pkg:/components/MainScene.brs" />
+</component>

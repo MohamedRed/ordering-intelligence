@@ -1,0 +1,268 @@
+{
+    "name": "Order taker",
+    "conversation_config": {
+        "asr": {
+            "quality": "high",
+            "provider": "elevenlabs",
+            "user_input_audio_format": "pcm_16000",
+            "keywords": []
+        },
+        "turn": {
+            "turn_timeout": 7,
+            "silence_end_call_timeout": -1,
+            "soft_timeout_config": {
+                "timeout_seconds": -1,
+                "message": "Hhmmmm...yeah give me a second..."
+            },
+            "mode": "turn",
+            "turn_eagerness": "normal"
+        },
+        "tts": {
+            "model_id": "eleven_turbo_v2_5",
+            "voice_id": "cjVigY5qzO86Huf0OWal",
+            "supported_voices": [],
+            "suggested_audio_tags": [],
+            "agent_output_audio_format": "pcm_16000",
+            "optimize_streaming_latency": 3,
+            "stability": 0.5,
+            "speed": 1,
+            "similarity_boost": 0.8,
+            "text_normalisation_type": "system_prompt",
+            "pronunciation_dictionary_locators": []
+        },
+        "conversation": {
+            "text_only": false,
+            "max_duration_seconds": 600,
+            "client_events": [
+                "audio",
+                "interruption",
+                "agent_response",
+                "user_transcript",
+                "agent_response_correction",
+                "agent_tool_response"
+            ]
+        },
+        "language_presets": {},
+        "vad": {
+            "background_voice_detection": false
+        },
+        "agent": {
+            "first_message": "Bonjour ! Temps d'attente estim\u00e9 : environ {{eta_minutes}} minutes. Pr\u00eat \u00e0 commander ?",
+            "language": "fr",
+            "dynamic_variables": {
+                "dynamic_variable_placeholders": {
+                    "eta_minutes": "0"
+                }
+            },
+            "disable_first_message_interruptions": false,
+            "prompt": {
+                "prompt": "# Tenant context\n\n- storeId: {{storeId}}\n- tenantId: {{tenantId}}\n- businessType: {{businessType}}\n- eta_minutes: {{eta_minutes}}\n\nWhen calling backend tools, use the tenant context values above.\n\n<!-- PERSONALIZATION_START -->\n# Personalization (dynamic variables)\n\nAt the start of the call, use the dynamic variables provided by conversation-init:\n\n- If `{{isReturningCustomer}}` is `true` and `{{customerName}}` is non-empty:\n  - greet the caller by name (example in French: \u201cRavi de vous revoir, {{customerName}}.\u201d).\n- If `{{topReorders}}` is a non-empty JSON list:\n  - suggest the first reorder from `{{topReorders}}` (use its `title` and/or `items`) before continuing with the normal order-taking flow.\n\n## Creating an order (important)\n\nWhen calling the create-order tool, always include:\n\n- `tenantId` = `{{tenantId}}`\n- `storeId` = `{{storeId}}`\n- `callerId` = `{{callerId}}`\n- `callSid` = `{{callSid}}`\n- `customerName` = `{{customerName}}` (if empty, ask for the customer\u2019s name first)\n- `channel` = `\"voice\"`\n\n<!-- PERSONALIZATION_END -->\n\n# Personality\n\nYou are a friendly and efficient order-taking assistant named Antoine, specializing in fast food orders.\nYou are knowledgeable about the menu, current promotions, and available options.\nYou speak fluent French and ensure accurate order taking.\n\n# Environment\n\nYou are interacting with customers over the phone.\nThe customer is calling to place a fast food order.\nYou have access to the current menu and inventory information.\n\n# Tone\n\nYour responses are polite, clear, and efficient.\nYou use a friendly and helpful tone, ensuring the customer feels welcome.\nYou speak in fluent French, using appropriate vocabulary for order taking.\nYou confirm each item and total amount to ensure accuracy.\n\n# Goal\n\nYour primary goal is to accurately and efficiently take fast food orders in French.\n\n1.  Greeting:\n    *   Greet the customer warmly in French.\n    *   Ask how you can assist them.\n\n2.  Order Taking:\n    *   Ask the customer for their order, item by item.\n    *   Confirm each item and any modifications (e.g., size, toppings).\n    *   Offer suggestions for sides, drinks, or promotions.\n\n3.  Order Confirmation:\n    *   Repeat the entire order back to the customer in French.\n    *   Confirm the total amount due.\n\n4.  Payment and Pickup:\n    *   Ask for the customer's name for the order.\n    *   Provide an estimated pickup time.\n    *   Thank the customer and say goodbye politely in French.\n\n# Guardrails\n\nOnly speak in French.\nDo not provide information outside of the menu and order-taking process.\nDo not engage in inappropriate or irrelevant conversations.\nIf you do not understand a request, politely ask the customer to repeat or clarify.\nMaintain a professional and courteous demeanor at all times.\n",
+                "llm": "gemini-2.5-flash",
+                "temperature": 0,
+                "max_tokens": -1,
+                "tool_ids": [
+                    "tool_6401kc5jcrtnfc08v8tv3jgms7t7",
+                    "tool_3801kc5jd9g9f4vvhywbhj42q4hr",
+                    "tool_9901kc5jdhzaffq9sfsv1s2ff8pa"
+                ],
+                "built_in_tools": {},
+                "mcp_server_ids": [],
+                "native_mcp_server_ids": [],
+                "knowledge_base": [],
+                "ignore_default_personality": false,
+                "rag": {
+                    "enabled": false,
+                    "embedding_model": "e5_mistral_7b_instruct",
+                    "max_vector_distance": 0.6,
+                    "max_documents_length": 50000,
+                    "max_retrieved_rag_chunks_count": 20
+                },
+                "backup_llm_config": {
+                    "preference": "default"
+                },
+                "tools": []
+            }
+        }
+    },
+    "platform_settings": {
+        "evaluation": {
+            "criteria": []
+        },
+        "widget": {
+            "variant": "full",
+            "placement": "bottom-right",
+            "expandable": "never",
+            "avatar": {
+                "type": "image",
+                "url": "https://storage.googleapis.com/eleven-public-cdn/convai/agent_7201kbfs3pbpe1tsv4dmakk1207q/avatar.png"
+            },
+            "feedback_mode": "during",
+            "end_feedback": {
+                "type": "rating"
+            },
+            "bg_color": "#ffffff",
+            "text_color": "#000000",
+            "btn_color": "#000000",
+            "btn_text_color": "#ffffff",
+            "border_color": "#e1e1e1",
+            "focus_color": "#000000",
+            "shareable_page_show_terms": true,
+            "terms_text": "#### Terms and conditions\n\nBy clicking \"Agree,\" and each time I interact with this AI agent, I consent to the recording, storage, and sharing of my communications with third-party service providers, and as described in the Privacy Policy.\nIf you do not wish to have your conversations recorded, please refrain from using this service.",
+            "terms_html": "<h4>Terms and conditions</h4>\n<p>By clicking &quot;Agree,&quot; and each time I interact with this AI agent, I consent to the recording, storage, and sharing of my communications with third-party service providers, and as described in the Privacy Policy.\nIf you do not wish to have your conversations recorded, please refrain from using this service.</p>\n",
+            "show_avatar_when_collapsed": false,
+            "disable_banner": false,
+            "mic_muting_enabled": false,
+            "transcript_enabled": true,
+            "text_input_enabled": true,
+            "default_expanded": false,
+            "always_expanded": false,
+            "text_contents": {},
+            "styles": {},
+            "language_selector": false,
+            "supports_text_only": true,
+            "custom_avatar_path": "convai/agent_7201kbfs3pbpe1tsv4dmakk1207q/avatar.png",
+            "language_presets": {}
+        },
+        "data_collection": {},
+        "overrides": {
+            "conversation_config_override": {
+                "turn": {
+                    "soft_timeout_config": {
+                        "message": false
+                    }
+                },
+                "tts": {
+                    "voice_id": false,
+                    "stability": false,
+                    "speed": false,
+                    "similarity_boost": false
+                },
+                "conversation": {
+                    "text_only": true
+                },
+                "agent": {
+                    "first_message": false,
+                    "language": false,
+                    "prompt": {
+                        "prompt": false,
+                        "llm": false,
+                        "native_mcp_server_ids": false
+                    }
+                }
+            },
+            "custom_llm_extra_body": false,
+            "enable_conversation_initiation_client_data_from_webhook": true
+        },
+        "workspace_overrides": {
+            "conversation_initiation_client_data_webhook": {
+                "url": "https://agent-webhooks-230152279015.us-central1.run.app/elevenlabs/conversation-init",
+                "request_headers": {
+                    "Content-Type": "application/json",
+                    "X-ElevenLabs-Conversation-Init-Secret": {
+                        "secret_id": "Z6qdO1IH1R3lph8JNWe4"
+                    }
+                }
+            },
+            "webhooks": {
+                "events": [
+                    "transcript"
+                ],
+                "send_audio": false
+            }
+        },
+        "testing": {
+            "attached_tests": [],
+            "referenced_tests_ids": []
+        },
+        "archived": false,
+        "guardrails": {
+            "version": "1",
+            "moderation": {
+                "config": {
+                    "sexual": {
+                        "is_enabled": false,
+                        "threshold": 0.3
+                    },
+                    "violence": {
+                        "is_enabled": false,
+                        "threshold": 0.3
+                    },
+                    "violence_graphic": {
+                        "is_enabled": false,
+                        "threshold": 0.3
+                    },
+                    "harassment": {
+                        "is_enabled": false,
+                        "threshold": 0.3
+                    },
+                    "harassment_threatening": {
+                        "is_enabled": false,
+                        "threshold": 0.3
+                    },
+                    "hate": {
+                        "is_enabled": false,
+                        "threshold": 0.3
+                    },
+                    "hate_threatening": {
+                        "is_enabled": false,
+                        "threshold": 0.3
+                    },
+                    "self_harm_instructions": {
+                        "is_enabled": false,
+                        "threshold": 0.3
+                    },
+                    "self_harm": {
+                        "is_enabled": false,
+                        "threshold": 0.3
+                    },
+                    "self_harm_intent": {
+                        "is_enabled": false,
+                        "threshold": 0.3
+                    },
+                    "sexual_minors": {
+                        "is_enabled": false,
+                        "threshold": 0.3
+                    }
+                }
+            }
+        },
+        "auth": {
+            "enable_auth": false,
+            "allowlist": []
+        },
+        "call_limits": {
+            "agent_concurrency_limit": -1,
+            "daily_limit": 100000,
+            "bursting_enabled": true
+        },
+        "ban": null,
+        "privacy": {
+            "record_voice": true,
+            "retention_days": -1,
+            "delete_transcript_and_pii": false,
+            "delete_audio": false,
+            "apply_to_existing_conversations": false,
+            "zero_retention_mode": false
+        },
+        "safety": {
+            "is_blocked_ivc": false,
+            "is_blocked_non_ivc": false,
+            "ignore_safety_evaluation": false
+        }
+    },
+    "tags": [],
+    "workflow": {
+        "edges": {},
+        "nodes": {
+            "start_node": {
+                "type": "start",
+                "position": {
+                    "x": 0,
+                    "y": 0
+                },
+                "edge_order": []
+            }
+        },
+        "prevent_subagent_loops": false
+    }
+}

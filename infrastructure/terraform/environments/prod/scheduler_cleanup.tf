@@ -1,8 +1,8 @@
 resource "google_cloud_scheduler_job" "menu_ingestion_cleanup" {
-  name     = "menu-ingestion-cleanup"
-  project  = var.project_id
-  region   = var.region
-  schedule = "0 * * * *"
+  name      = "menu-ingestion-cleanup"
+  project   = var.project_id
+  region    = var.region
+  schedule  = "0 * * * *"
   time_zone = "Etc/UTC"
 
   http_target {

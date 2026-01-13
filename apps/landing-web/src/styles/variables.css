@@ -1,0 +1,25 @@
+:root {
+  color-scheme: light;
+  --font-display: -apple-system, BlinkMacSystemFont, 'SF Pro Display',
+    'SF Pro Text', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  --font-body: -apple-system, BlinkMacSystemFont, 'SF Pro Text',
+    'SF Pro Display', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  --text-dark: #0b1220;
+  --text-muted: #52607a;
+  --surface: #ffffff;
+  --surface-muted: #f5f7fb;
+  --surface-dark: #0b1220;
+  --accent: #1a78ff;
+  --accent-soft: #e5f1ff;
+  --border: rgba(12, 18, 32, 0.1);
+  --shadow: 0 24px 60px rgba(12, 18, 32, 0.12);
+  --radius-lg: 28px;
+  --radius-md: 18px;
+  --section-space: 120px;
+}
+
+@media (max-width: 900px) {
+  :root {
+    --section-space: 80px;
+  }
+}

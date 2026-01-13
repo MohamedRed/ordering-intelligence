@@ -55,6 +55,22 @@ describe('generation service', () => {
     expect(saveMock.mock.calls[0][0]).toBeInstanceOf(Buffer);
   });
 
+  it('throws when no composites are generated (composite required)', async () => {
+    renderImageMock.mockResolvedValue(undefined as any);
+    await expect(generateComposites(['foo.jpg'], 'job1')).rejects.toThrow('no composites generated');
+    expect(renderImageMock).toHaveBeenCalledTimes(1);
+    expect(saveMock).not.toHaveBeenCalled();
+  });
+
+  it('skips pages whose composites fail and continues with others', async () => {
+    renderImageMock
+      .mockResolvedValueOnce(undefined as any) // page 1 fails
+      .mockResolvedValueOnce('Zmlu' as any); // page 2 succeeds
+    const res = await generateComposites(['p1.jpg', 'p2.jpg'], 'job2');
+    expect(res.generatedFiles).toEqual(['menu-generated/job2/page-2.png']);
+    expect(renderImageMock).toHaveBeenCalledTimes(2);
+  });
+
   it('extracts items and signs URLs', async () => {
     geminiJsonMock.mockResolvedValue({ count: 1 } as any);
     renderImageMock.mockResolvedValue(Buffer.from('a').toString('base64'));

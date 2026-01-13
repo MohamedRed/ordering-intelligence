@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>CFBundleDisplayName</key>
+	<string>Ordering Watch</string>
+	<key>WKCompanionAppBundleIdentifier</key>
+	<string>$(WK_COMPANION_APP_BUNDLE_IDENTIFIER)</string>
+	<key>WKWatchKitApp</key>
+	<true/>
+	<key>ConsumerAppGroup</key>
+	<string>$(CONSUMER_APP_GROUP)</string>
+</dict>
+</plist>

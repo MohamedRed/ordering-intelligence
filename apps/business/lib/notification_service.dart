@@ -46,7 +46,7 @@ class NotificationService {
       importance: Importance.high,
       priority: Priority.high,
     );
-    const details = NotificationDetails(android: androidDetails);
+    final details = NotificationDetails(android: androidDetails);
     await _plugin.show(
       notification.hashCode,
       notification.title,

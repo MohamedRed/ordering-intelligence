@@ -3,8 +3,12 @@ import { Firestore } from "@google-cloud/firestore";
 export interface DeviceToken {
   token: string;
   userId: string;
+  customerId?: string;
+  tenantId?: string;
   storeId: string;
   platform: string;
+  deviceId?: string;
+  source?: string;
   updatedAt: string;
 }
 

@@ -1,0 +1,47 @@
+name: consumer
+description: "Consumer mobile app for Ordering Intelligence."
+publish_to: 'none'
+version: 0.1.0+1
+
+environment:
+  sdk: ">=3.10.4 <4.0.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+  consumer_core:
+    path: ../shared/consumer_core
+  consumer_ui:
+    path: ../shared/consumer_ui
+  crypto: ^3.0.3
+  flutter_web_auth_2: ^4.1.0
+  flutter_facebook_auth: ^7.1.5
+  firebase_core: ^3.6.0
+  firebase_messaging: ^15.1.0
+  flutter_stripe: ^12.1.1
+  package_info_plus: ^9.0.0
+  flutter_secure_storage: ^9.2.2
+  app_links: ^3.5.0
+  shadcn_ui: ^0.40.6
+  share_plus: ^10.0.2
+  url_launcher: ^6.3.0
+  record: ^5.1.2
+  path_provider: ^2.1.4
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^3.0.1
+
+flutter:
+  uses-material-design: true
+  fonts:
+    - family: Manrope
+      fonts:
+        - asset: assets/fonts/Manrope[wght].ttf
+    - family: Roboto
+      fonts:
+        - asset: assets/fonts/Roboto-Regular.ttf
+          weight: 400
+        - asset: assets/fonts/Roboto-Medium.ttf
+          weight: 500

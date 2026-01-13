@@ -1,8 +1,9 @@
 package main
 
 import (
-	"encoding/base64"
 	cloudfirestore "cloud.google.com/go/firestore"
+	"encoding/base64"
+	"errors"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -285,5 +286,18 @@ func TestFirebaseAuthMiddlewareAllowsAdmin(t *testing.T) {
 	})).ServeHTTP(rec, req)
 	if rec.Code != http.StatusOK {
 		t.Fatalf("expected 200, got %d", rec.Code)
+	}
+}
+
+func TestFirebaseAuthMiddlewareHandlesVerifyError(t *testing.T) {
+	mw := firebaseAuthMiddleware(&fakeAuth{err: errors.New("verify failed")})
+	rec := httptest.NewRecorder()
+	req := httptest.NewRequest("GET", "/x", nil)
+	req.Header.Set("Authorization", "Bearer token")
+	mw(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		t.Fatalf("handler should not run")
+	})).ServeHTTP(rec, req)
+	if rec.Code != http.StatusUnauthorized {
+		t.Fatalf("expected 401 on verify failure, got %d", rec.Code)
 	}
 }

@@ -1,0 +1,11 @@
+steps:
+  - name: gcr.io/cloud-builders/docker
+    args:
+      - build
+      - -f
+      - backend/services/notification-service/Dockerfile
+      - -t
+      - us-central1-docker.pkg.dev/ordering-intelligence/services/notification-service:latest
+      - .
+images:
+  - us-central1-docker.pkg.dev/ordering-intelligence/services/notification-service:latest

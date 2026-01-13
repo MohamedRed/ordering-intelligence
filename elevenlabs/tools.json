@@ -404,6 +404,46 @@
             "type": "webhook",
             "config": "tool_configs/TecDoc_VinDecoderV2-1.json",
             "id": "tool_3601kbrnzqrke48svfyq7nrn3gvh"
+        },
+        {
+            "type": "webhook",
+            "config": "tool_configs/order_create.json",
+            "id": "tool_6401kc5jcrtnfc08v8tv3jgms7t7"
+        },
+        {
+            "type": "webhook",
+            "config": "tool_configs/menu_snapshot.json",
+            "id": "tool_3801kc5jd9g9f4vvhywbhj42q4hr"
+        },
+        {
+            "type": "webhook",
+            "config": "tool_configs/order_status.json",
+            "id": "tool_9901kc5jdhzaffq9sfsv1s2ff8pa"
+        },
+        {
+            "type": "webhook",
+            "config": "tool_configs/menu_search.json",
+            "id": "tool_6601kcsc2ngwfw3b18q2mwfwgked"
+        },
+        {
+            "type": "webhook",
+            "config": "tool_configs/menu_item_details.json",
+            "id": "tool_8101kcsc3k3tfjpavv4wnmd140c6"
+        },
+        {
+            "type": "webhook",
+            "config": "tool_configs/validate_order_draft.json",
+            "id": "tool_9901kcsc4f3ze1dvyp964a95jd94"
+        },
+        {
+            "type": "webhook",
+            "config": "tool_configs/wait_time_estimate.json",
+            "id": "tool_6501kcw2e79mexdv3fhdxbb4zxf8"
+        },
+        {
+            "type": "webhook",
+            "config": "tool_configs/delivery_quote.json",
+            "id": "tool_8501kcx1vyyaftzakzx5s65dv6p3"
         }
     ]
 }

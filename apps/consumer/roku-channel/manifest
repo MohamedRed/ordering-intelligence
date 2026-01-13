@@ -1,0 +1,10 @@
+# Minimal Roku channel manifest (sideload/test only)
+title=Ordering Intelligence TV
+mm_icon_focus_hd=pkg:/images/icon_focus_hd.png
+mm_icon_side_hd=pkg:/images/icon_side_hd.png
+major_version=1
+minor_version=0
+build_version=0001
+ui_resolutions=fhd
+bs_libs_required=roku_ads_lib
+screensaver_clock=disabled

@@ -22,3 +22,7 @@ export const AGENT_QUEUE_WAIT_MS = Number(process.env.AGENT_QUEUE_WAIT_MS ?? 90_
 export const AGENT_CONFIG_DOC = process.env.AGENT_CONFIG_DOC ?? 'agent_worker/config';
 export const MENU_UPDATES_TOPIC =
   process.env.MENU_UPDATES_TOPIC ?? process.env.PUBSUB_TOPIC_MENU_UPDATES;
+export const VERBOSE_LOGGING = process.env.VERBOSE_LOGGING === 'true';
+export const ENVIRONMENT = process.env.ENVIRONMENT ?? process.env.NODE_ENV ?? 'dev';
+// In dev we always want call-level visibility to debug runaway spend / retries.
+export const LOG_GENAI_SUCCESS = VERBOSE_LOGGING || ENVIRONMENT === 'dev';

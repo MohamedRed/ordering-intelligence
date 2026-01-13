@@ -1,0 +1,29 @@
+{
+  "name": "agent_tools_wait_time_estimate",
+  "description": "Get the store's current estimated wait time (minutes) for the current daypart.",
+  "type": "webhook",
+  "api_schema": {
+    "url": "https://agent-tools-230152279015.us-central1.run.app/v1/stores/{storeId}/wait-time/estimate",
+    "method": "GET",
+    "path_params_schema": {
+      "storeId": {
+        "type": "string",
+        "description": "Store identifier",
+        "is_system_provided": false,
+        "dynamic_variable": "",
+        "constant_value": ""
+      }
+    },
+    "request_headers": {},
+    "auth_connection": {
+      "auth_connection_id": "auth_5601kcj9z8e2fbqscr8e6m06nyw6"
+    }
+  },
+  "response_timeout_secs": 15,
+  "dynamic_variables": {
+    "dynamic_variable_placeholders": {}
+  },
+  "assignments": [],
+  "disable_interruptions": false,
+  "force_pre_tool_speech": false
+}

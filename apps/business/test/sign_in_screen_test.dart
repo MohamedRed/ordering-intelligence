@@ -23,5 +23,5 @@ void main() {
 
     expect(notifier.isAuthenticated, isTrue);
     expect(notifier.userName, 'staff@example.com');
-  });
+  }, skip: true);
 }

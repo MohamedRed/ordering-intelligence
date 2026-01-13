@@ -3,8 +3,10 @@ import 'dart:convert';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import 'package:shadcn_ui/shadcn_ui.dart';
 
-import '../../widgets/admin_navigation_drawer.dart';
+import '../../widgets/shad_snackbar.dart';
+import '../../widgets/admin_scaffold.dart';
 
 const _baseUrl = String.fromEnvironment(
   'MENU_INGESTION_BASE_URL',
@@ -87,8 +89,7 @@ class _MenuIngestionScreenState extends State<MenuIngestionScreen> {
         throw Exception('Approve failed (${resp.statusCode})');
       }
       if (!mounted) return;
-      ScaffoldMessenger.of(context)
-          .showSnackBar(const SnackBar(content: Text('Published')));
+      showShadSnack(context, title: 'Published', type: ShadSnackType.success);
       // Refresh jobs list
       setState(() {
         _jobsFuture = _fetchJobs();
@@ -142,9 +143,8 @@ class _MenuIngestionScreenState extends State<MenuIngestionScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: const Text('Menu Ingestion')),
-      drawer: const AdminNavigationDrawer(),
+    return AdminScaffold(
+      title: const Text('Menu Ingestion'),
       body: Padding(
         padding: const EdgeInsets.all(16),
         child: FutureBuilder<List<MenuJob>>(
@@ -155,7 +155,11 @@ class _MenuIngestionScreenState extends State<MenuIngestionScreen> {
             }
             if (snapshot.hasError) {
               return Center(
-                  child: Text('Failed to load jobs: ${snapshot.error}'));
+                child: ShadAlert.destructive(
+                  title: const Text('Failed to load jobs'),
+                  description: Text('${snapshot.error}'),
+                ),
+              );
             }
             final jobs = snapshot.data ?? [];
             if (jobs.isEmpty) {
@@ -221,7 +225,9 @@ class _JobsList extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Card(
+    final cs = ShadTheme.of(context).colorScheme;
+    return ShadCard(
+      padding: const EdgeInsets.symmetric(vertical: 4),
       child: ListView.separated(
         shrinkWrap: true,
         itemCount: jobs.length,
@@ -229,18 +235,26 @@ class _JobsList extends StatelessWidget {
         itemBuilder: (context, idx) {
           final job = jobs[idx];
           final isSelected = selected?.id == job.id;
+          IconData icon;
+          Color color;
+          if (job.status == 'ready') {
+            icon = Icons.check_circle;
+            color = cs.primary;
+          } else if (job.status == 'error') {
+            icon = Icons.error;
+            color = cs.destructive;
+          } else {
+            icon = Icons.schedule;
+            color = cs.mutedForeground;
+          }
           return ListTile(
+            tileColor: isSelected ? cs.accent.withValues(alpha: 0.08) : null,
             title: Text(job.restaurantId),
             subtitle: Text(
                 '${job.id}\n${job.status} • ${DateTime.fromMillisecondsSinceEpoch(job.updatedAt).toLocal()}'),
             isThreeLine: true,
-            selected: isSelected,
             onTap: () => onSelect(job),
-            trailing: job.status == 'ready'
-                ? const Icon(Icons.check_circle, color: Colors.green)
-                : job.status == 'error'
-                    ? const Icon(Icons.error, color: Colors.red)
-                    : const Icon(Icons.schedule),
+            trailing: Icon(icon, color: color),
           );
         },
       ),
@@ -262,8 +276,17 @@ class _DraftPane extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     if (loading) return const Center(child: CircularProgressIndicator());
-    if (error != null) return Text('Error: $error');
-    if (draft == null) return const Text('Select a job to view draft');
+    if (error != null) {
+      return ShadAlert.destructive(
+        title: const Text('Failed to load draft'),
+        description: Text(error!),
+      );
+    }
+    if (draft == null) {
+      return const ShadAlert(
+        title: Text('Select a job to view draft'),
+      );
+    }
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -274,10 +297,9 @@ class _DraftPane extends StatelessWidget {
                 style: const TextStyle(fontWeight: FontWeight.w700)),
             const Spacer(),
             if (onApprove != null)
-              ElevatedButton.icon(
+              ShadButton(
                 onPressed: onApprove,
-                icon: const Icon(Icons.publish),
-                label: const Text('Approve & Publish'),
+                child: const Text('Approve & Publish'),
               ),
           ],
         ),
@@ -324,7 +346,8 @@ class _DraftPane extends StatelessWidget {
         ],
         const SizedBox(height: 12),
         Expanded(
-          child: Card(
+          child: ShadCard(
+            padding: EdgeInsets.zero,
             child: ListView.separated(
               itemCount: draft!.items.length,
               separatorBuilder: (_, __) => const Divider(height: 1),
@@ -426,7 +449,8 @@ class AgentQueuePane extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Card(
+    return ShadCard(
+      padding: EdgeInsets.zero,
       child: Column(
         children: [
           ListTile(
@@ -435,13 +459,14 @@ class AgentQueuePane extends StatelessWidget {
               spacing: 8,
               crossAxisAlignment: WrapCrossAlignment.center,
               children: [
-                Switch(
+                ShadSwitch(
                   value: enabled,
                   onChanged: onToggle,
                 ),
-                IconButton(
-                  icon: const Icon(Icons.refresh),
+                ShadButton.ghost(
+                  size: ShadButtonSize.sm,
                   onPressed: onRefresh,
+                  child: const Icon(Icons.refresh, size: 16),
                 ),
               ],
             ),

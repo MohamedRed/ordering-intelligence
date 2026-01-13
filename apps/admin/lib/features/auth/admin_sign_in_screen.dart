@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:shadcn_ui/shadcn_ui.dart';
 
 import '../../providers/admin_providers.dart';
 
@@ -16,6 +17,16 @@ class _AdminSignInScreenState extends ConsumerState<AdminSignInScreen> {
   final _passCtrl = TextEditingController();
   bool _busy = false;
   String? _error;
+
+  @override
+  void initState() {
+    super.initState();
+    // Prefill to speed up testing; can be overridden via --dart-define.
+    _emailCtrl.text =
+        const String.fromEnvironment('ADMIN_PREFILL_EMAIL', defaultValue: 'admin-tester@example.com');
+    _passCtrl.text =
+        const String.fromEnvironment('ADMIN_PREFILL_PASSWORD', defaultValue: 'Temp#2025!');
+  }
 
   @override
   void dispose() {
@@ -52,58 +63,64 @@ class _AdminSignInScreenState extends ConsumerState<AdminSignInScreen> {
   Widget build(BuildContext context) {
     final auth = ref.watch(adminAuthProvider);
     return Scaffold(
-      appBar: AppBar(title: const Text('Platform Admin Sign In')),
       body: Center(
         child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 420),
-          child: Card(
-            margin: const EdgeInsets.all(16),
-            child: Padding(
-              padding: const EdgeInsets.all(20),
+          constraints: const BoxConstraints(maxWidth: 440),
+          child: Padding(
+            padding: const EdgeInsets.all(24),
+            child: ShadCard(
+              padding: const EdgeInsets.all(22),
               child: Form(
                 key: _formKey,
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    const Text('Enter the admin console',
+                    const Text('Admin Console',
                         style: TextStyle(
-                            fontSize: 18, fontWeight: FontWeight.w700)),
-                    const SizedBox(height: 16),
-                    TextFormField(
+                            fontSize: 20, fontWeight: FontWeight.w700)),
+                    const SizedBox(height: 6),
+                    Text(
+                      'Sign in to manage alerts, ingestion, and tenants',
+                      style: Theme.of(context)
+                          .textTheme
+                          .bodyMedium
+                          ?.copyWith(color: Colors.grey[700]),
+                    ),
+                    const SizedBox(height: 18),
+                    ShadInputFormField(
                       controller: _emailCtrl,
-                      decoration: const InputDecoration(labelText: 'Email'),
+                      label: const Text('Email'),
+                      placeholder: const Text('admin@example.com'),
                       keyboardType: TextInputType.emailAddress,
                       autofillHints: const [AutofillHints.username],
-                      validator: (v) =>
-                          (v == null || v.isEmpty) ? 'Email required' : null,
+                      validator: (v) => v.isEmpty ? 'Email required' : null,
                     ),
                     const SizedBox(height: 12),
-                    TextFormField(
+                    ShadInputFormField(
                       controller: _passCtrl,
-                      decoration: const InputDecoration(labelText: 'Password'),
+                      label: const Text('Password'),
+                      placeholder: const Text('••••••••'),
                       obscureText: true,
                       autofillHints: const [AutofillHints.password],
-                      validator: (v) =>
-                          (v == null || v.isEmpty) ? 'Password required' : null,
+                      validator: (v) => v.isEmpty ? 'Password required' : null,
                     ),
-                    const SizedBox(height: 16),
-                    if (_error != null || auth.error != null) ...[
-                      Text(_error ?? auth.error!,
-                          style: const TextStyle(color: Colors.red)),
-                      const SizedBox(height: 8),
-                    ],
-                    SizedBox(
-                      width: double.infinity,
-                      child: ElevatedButton(
-                        onPressed: _busy ? null : _submit,
-                        child: _busy
-                            ? const SizedBox(
-                                height: 16,
-                                width: 16,
-                                child:
-                                    CircularProgressIndicator(strokeWidth: 2))
-                            : const Text('Sign in'),
+                    const SizedBox(height: 12),
+                    if (_error != null || auth.error != null)
+                      ShadAlert.destructive(
+                        title: const Text('Sign-in failed'),
+                        description: Text(_error ?? auth.error!),
                       ),
+                    const SizedBox(height: 14),
+                    ShadButton(
+                      onPressed: _busy ? null : _submit,
+                      child: _busy
+                          ? const SizedBox(
+                              height: 16,
+                              width: 16,
+                              child: CircularProgressIndicator(strokeWidth: 2),
+                            )
+                          : const Text('Sign in'),
                     ),
                   ],
                 ),

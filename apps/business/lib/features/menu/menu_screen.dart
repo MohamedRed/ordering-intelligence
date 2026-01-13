@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:shadcn_ui/shadcn_ui.dart';
 
-import '../../widgets/business_drawer.dart';
+import '../../widgets/business_scaffold.dart';
 import 'menu_editor.dart';
 
 class MenuScreen extends StatelessWidget {
@@ -8,10 +9,15 @@ class MenuScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const Scaffold(
-      appBar: AppBar(title: Text('Menu Manager')),
-      drawer: BusinessDrawer(),
-      body: MenuEditorScreen(),
+    return BusinessScaffold(
+      title: const Text('Menu Manager'),
+      actions: const [
+        Padding(
+          padding: EdgeInsets.only(right: 12.0),
+          child: ShadButton.outline(child: Text('Preview')),
+        )
+      ],
+      body: const MenuEditorScreen(),
     );
   }
 }

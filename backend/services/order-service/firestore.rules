@@ -12,6 +12,36 @@ service cloud.firestore {
       allow write: if isServiceAccount() || (isAuthenticated() && hasStore(storeId));
     }
 
+    // Store settings + dispatch collections: staff read; writes by services (and staff for store settings).
+    match /stores/{storeId} {
+      allow read, write: if isServiceAccount() || (isAuthenticated() && hasStore(storeId));
+
+      match /drivers/{driverId} {
+        allow read: if isServiceAccount() || (isAuthenticated() && hasStore(storeId));
+        allow write: if isServiceAccount();
+      }
+
+      match /driver_shifts/{driverId} {
+        allow read: if isServiceAccount() || (isAuthenticated() && hasStore(storeId));
+        allow write: if isServiceAccount();
+      }
+
+      match /driver_locations/{driverId} {
+        allow read: if isServiceAccount() || (isAuthenticated() && hasStore(storeId));
+        allow write: if isServiceAccount();
+      }
+
+      match /driver_assignments/{assignmentId} {
+        allow read: if isServiceAccount() || (isAuthenticated() && hasStore(storeId));
+        allow write: if isServiceAccount();
+      }
+
+      match /driver_routes/{routeId} {
+        allow read: if isServiceAccount() || (isAuthenticated() && hasStore(storeId));
+        allow write: if isServiceAccount();
+      }
+    }
+
     // Idempotency keys: service only.
     match /idempotency_keys/{key} {
       allow read, write: if isServiceAccount();

@@ -1,0 +1,2 @@
+tvOS target not yet configured. Add a tvOS Runner target in Xcode and point it to `lib/main_tv.dart`.
+Keep bundle id aligned with the iOS family (e.g., com.orderingintelligence.consumer.tv).

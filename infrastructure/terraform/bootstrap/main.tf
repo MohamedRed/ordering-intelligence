@@ -14,9 +14,9 @@ provider "google" {
 }
 
 locals {
-  parent_org_id  = var.folder_id == "" ? var.org_id : null
-  parent_folder  = var.folder_id != "" ? var.folder_id : null
-  labels         = var.project_labels
+  parent_org_id = var.folder_id == "" ? var.org_id : null
+  parent_folder = var.folder_id != "" ? var.folder_id : null
+  labels        = var.project_labels
 }
 
 resource "google_project" "this" {
@@ -38,8 +38,8 @@ resource "google_billing_project" "link" {
 resource "google_project_service" "bootstrap_services" {
   for_each = toset(var.enable_apis)
 
-  project             = google_project.this.project_id
-  service             = each.value
-  disable_on_destroy  = false
-  depends_on          = [google_billing_project.link]
+  project            = google_project.this.project_id
+  service            = each.value
+  disable_on_destroy = false
+  depends_on         = [google_billing_project.link]
 }
