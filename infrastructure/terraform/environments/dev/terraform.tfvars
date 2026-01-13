@@ -5,6 +5,7 @@ billing_account = "01F039-B3AA01-B0E817"
 enable_agent_tools_redis_cache = true
 typesense_host = "fl497zkby30xopqip-1.a1.typesense.net"
 custom_domain_base = "liive.app"
+enable_cloud_dns = true
 
 cloud_run_overrides = {
   notification_service = {

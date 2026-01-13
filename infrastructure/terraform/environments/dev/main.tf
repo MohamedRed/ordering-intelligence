@@ -112,6 +112,9 @@ locals {
     if domain != "" && contains(local.custom_domain_service_keys, key)
   }
 
+  dns_domain = var.cloud_dns_domain != "" ? var.cloud_dns_domain : var.custom_domain_base
+  dns_extra_records = []
+
   cloud_run_defaults = {
     admin_service = {
       min_scale             = 0

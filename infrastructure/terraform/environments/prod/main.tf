@@ -113,6 +113,16 @@ locals {
     if domain != "" && contains(local.custom_domain_service_keys, key)
   }
 
+  dns_domain = var.cloud_dns_domain != "" ? var.cloud_dns_domain : var.custom_domain_base
+  dns_extra_records = length(var.order_service_lb_managed_domains) > 0 ? [
+    for domain in var.order_service_lb_managed_domains : {
+      name    = endswith(domain, ".") ? domain : "${domain}."
+      type    = "A"
+      ttl     = 300
+      rrdatas = [module.order_service_lb.ip_address]
+    }
+  ] : []
+
   cloud_run_defaults = {
     admin_service = {
       min_scale             = 0

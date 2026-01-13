@@ -2,6 +2,7 @@ project_id      = "ordering-intelligence"
 region          = "us-central1"
 billing_account = ""
 custom_domain_base = ""
+enable_cloud_dns = false
 
 # Optional Cloud Run tuning (per service)
 # cloud_run_overrides = {

@@ -69,6 +69,24 @@ variable "order_service_lb_managed_domains" {
   default     = []
 }
 
+variable "enable_cloud_dns" {
+  description = "When true, create a Cloud DNS zone and manage records for Cloud Run domain mappings."
+  type        = bool
+  default     = false
+}
+
+variable "cloud_dns_zone_name" {
+  description = "Managed zone name for Cloud DNS (must be unique within the project)."
+  type        = string
+  default     = "liive-app"
+}
+
+variable "cloud_dns_domain" {
+  description = "Base DNS domain for the managed zone (defaults to custom_domain_base)."
+  type        = string
+  default     = ""
+}
+
 variable "cloud_run_overrides" {
   description = "Optional per-service overrides for Cloud Run runtime settings and environment variables."
   type = map(object({

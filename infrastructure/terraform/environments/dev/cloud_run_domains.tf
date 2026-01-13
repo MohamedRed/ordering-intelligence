@@ -27,3 +27,14 @@ module "cloud_run_domain_mappings" {
     module.wait_time_service
   ]
 }
+
+module "cloud_dns_zone" {
+  source     = "../../modules/cloud_dns_zone"
+  project_id = var.project_id
+  zone_name  = var.cloud_dns_zone_name
+  domain     = local.dns_domain
+  enabled    = var.enable_cloud_dns && local.dns_domain != ""
+
+  resource_records = module.cloud_run_domain_mappings.resource_records
+  extra_records    = local.dns_extra_records
+}

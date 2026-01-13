@@ -8,6 +8,11 @@ output "cloud_run_domain_mappings" {
   value       = module.cloud_run_domain_mappings.resource_records
 }
 
+output "cloud_dns_name_servers" {
+  description = "Cloud DNS name servers for the managed zone."
+  value       = module.cloud_dns_zone.name_servers
+}
+
 output "onboarding_base_url" {
   description = "Cloud Run URL for the onboarding service"
   value       = local.service_urls.onboarding_service
