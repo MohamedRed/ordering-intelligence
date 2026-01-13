@@ -71,3 +71,4 @@ coverage.xml
 lcov.info
 report.xml
 backend/libs/shared/config/node/schema/
+tmp/
