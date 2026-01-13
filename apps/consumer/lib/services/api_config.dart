@@ -18,4 +18,11 @@ class ApiConfig {
       webappPathPrefix: '/mobile',
     );
   }
+
+  static ChannelGatewayApi createTvApi() {
+    return ChannelGatewayApi(
+      baseUrl: resolveBaseUrl(),
+      webappPathPrefix: '/tv',
+    );
+  }
 }

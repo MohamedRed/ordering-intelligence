@@ -39,6 +39,8 @@ import (
 const (
 	channelRoutesCollection   = "channel_routes"
 	channelSessionsCollection = "channel_sessions"
+	tvPairingsCollection      = "tv_pairings"
+	tvSessionsCollection      = "tv_sessions"
 	storesCollection          = "stores"
 	tenantsCollection         = "tenants"
 )
@@ -209,6 +211,9 @@ func main() {
 	registerWebAppRoutes(router, "/snapchat/webapp", cfg, firestoreClient, orderHTTPClient, paymentsHTTPClient, manager)
 
 	registerWebAppRoutes(router, "/mobile", cfg, firestoreClient, orderHTTPClient, paymentsHTTPClient, manager)
+
+	registerWebAppRoutes(router, "/tv", cfg, firestoreClient, orderHTTPClient, paymentsHTTPClient, manager)
+	registerTvRoutes(router, cfg, firestoreClient)
 
 	router.Post("/mobile/session/start", func(w http.ResponseWriter, r *http.Request) {
 		handleMobileSessionStart(w, r, cfg, firestoreClient)

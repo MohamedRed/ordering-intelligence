@@ -3,7 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
 
 import '../../shared/ui/glass_backdrop.dart';
-import 'screens/session_gate.dart';
+import 'screens/tv/tv_session_gate.dart';
 
 /// TV / living‑room entrypoint for the consumer app.
 /// Uses the same feature set as mobile but optimizes focus navigation,
@@ -82,7 +82,7 @@ class ConsumerTvApp extends StatelessWidget {
               shape: cardShape,
             ),
           ),
-          home: const _TvFocusShell(child: SessionGate()),
+          home: const _TvFocusShell(child: TvSessionGate()),
           builder: (context, child) => ShadAppBuilder(child: child!),
         );
 

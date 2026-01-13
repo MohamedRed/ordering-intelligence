@@ -1,3 +1,5 @@
+import "pkg:/source/pairing.brs"
+
 sub Main()
     screen = CreateObject("roSGScreen")
     port = CreateObject("roMessagePort")
@@ -6,11 +8,17 @@ sub Main()
     scene = screen.CreateScene("MainScene")
     screen.Show()
 
-    pairingUrl = GetPairingUrl()
-    scene.pairingUrl = pairingUrl
-
-    ' Kick off lightweight pairing poll in background.
-    StartPairingPoll(pairingUrl)
+    baseUrl = GetBaseUrl()
+    pairing = StartTvPairing(baseUrl)
+    if pairing <> invalid then
+        scene.baseUrl = baseUrl
+        scene.pairingId = pairing.pairingId
+        scene.pairingCode = pairing.code
+        scene.pairingUrl = pairing.pairUrl
+        scene.pollIntervalSeconds = pairing.pollIntervalSeconds
+    else
+        scene.baseUrl = baseUrl
+    end if
 
     while true
         msg = wait(0, port)
@@ -18,18 +26,4 @@ sub Main()
             exit while
         end if
     end while
-end sub
-
-function GetPairingUrl() as string
-    registry = CreateObject("roRegistrySection", "ordering-intel")
-    url = registry.Read("pairing_url", invalid)
-    if url <> invalid then return url
-    ' Fallback dev endpoint; replace at build time.
-    return "https://dev-channel-gateway.liive.dev/tv/pair"
-end function
-
-sub StartPairingPoll(pairingUrl as string)
-    task = CreateObject("roSGNode", "PairingTask")
-    task.control = "run"
-    task.pairingUrl = pairingUrl
 end sub

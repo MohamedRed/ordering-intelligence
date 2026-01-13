@@ -5,19 +5,27 @@ sub init()
 end sub
 
 sub runTask()
-    if m.top.pairingUrl = invalid or m.top.pairingUrl = "" then return
+    if m.top.baseUrl = invalid or m.top.baseUrl = "" then return
+    if m.top.pairingId = invalid or m.top.pairingId = "" then return
 
-    pollUrl = BuildPollUrl(m.top.pairingUrl)
-    maxTries = 60 ' ~60 polls (approx 1 minute)
+    interval = m.top.pollIntervalSeconds
+    if interval = invalid or interval <= 0 then interval = 2
+
+    maxTries = 120 ' ~4 minutes at 2s interval
     for i = 1 to maxTries
-        state = PollPairingState(pollUrl)
+        state = PollPairingState(m.top.baseUrl, m.top.pairingId)
         if state <> invalid and state.linked = true then
-            ' Write session token to registry; UI scene can pick it up next launch.
-            registry = CreateObject("roRegistrySection", "ordering-intel")
-            if state.session <> invalid then registry.Write("session_token", state.session)
-            registry.Flush()
+            token = invalid
+            if state.sessionToken <> invalid then token = state.sessionToken
+            if token = invalid and state.session <> invalid then token = state.session
+            if token <> invalid then
+                registry = CreateObject("roRegistrySection", "ordering-intel")
+                registry.Write("session_token", token)
+                registry.Flush()
+                m.top.sessionToken = token
+            end if
             exit for
         end if
-        sleep(1000)
+        sleep(interval * 1000)
     end for
 end sub

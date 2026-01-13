@@ -7,6 +7,7 @@ import '../models/gas_order_handoff.dart';
 import '../models/handoff_payload.dart';
 import '../models/order_payment_handoff.dart';
 import '../models/reorder_handoff.dart';
+import '../models/tv_pairing_handoff.dart';
 import 'session_bridge.dart';
 
 class HandoffLinkService {
@@ -46,6 +47,8 @@ class HandoffLinkParser {
     if (reorder != null) return HandoffPayload.reorder(reorder);
     final payment = OrderPaymentHandoffParser.parse(uri);
     if (payment != null) return HandoffPayload.orderPayment(payment);
+    final tvPairing = TvPairingHandoffParser.parse(uri);
+    if (tvPairing != null) return HandoffPayload.tvPairing(tvPairing);
     return null;
   }
 }
@@ -177,6 +180,19 @@ class OrderPaymentHandoffParser {
       currency: uri.queryParameters['currency']?.trim() ?? '',
     );
     return OrderPaymentHandoff(orderId: orderId, intent: intent);
+  }
+}
+
+class TvPairingHandoffParser {
+  static TvPairingHandoff? parse(Uri uri) {
+    final target = _target(uri);
+    if (target != 'tv-pair' && target != 'tv-pairing') return null;
+    final code = uri.queryParameters['code']?.trim() ?? '';
+    final pairingId = uri.queryParameters['pairingId']?.trim();
+    if (code.isEmpty && (pairingId == null || pairingId.isEmpty)) {
+      return null;
+    }
+    return TvPairingHandoff(code: code, pairingId: pairingId);
   }
 }
 

@@ -13,11 +13,13 @@ import '../services/mobile_launch_context.dart';
 import '../services/session_restorer.dart';
 import '../services/session_storage.dart';
 import '../services/session_terminator.dart';
+import '../services/tv_pairing_service.dart';
 import 'gas/gas_order_screen.dart';
 import 'payment/handoff_order_payment_screen.dart';
 import 'reorder/handoff_reorder_screen.dart';
 import 'session/session_loading_view.dart';
 import 'sign_in_screen.dart';
+import 'tv/tv_pairing_link_screen.dart';
 
 class SessionGate extends StatefulWidget {
   const SessionGate({super.key});
@@ -33,6 +35,7 @@ class _SessionGateState extends State<SessionGate> {
   late final SessionRestorer _restorer;
   late final SessionTerminator _terminator;
   late final HandoffLinkService _handoffLinks;
+  late final TvPairingService _tvPairingService;
   StreamSubscription<HandoffPayload>? _handoffSub;
   HandoffPayload? _pendingHandoff;
   bool _openingHandoff = false;
@@ -46,6 +49,7 @@ class _SessionGateState extends State<SessionGate> {
     super.initState();
     _api = ApiConfig.createApi();
     _notificationsAdapter = MobileNotificationsAdapter(api: _api);
+    _tvPairingService = TvPairingService(baseUrl: ApiConfig.resolveBaseUrl());
     _restorer = SessionRestorer(
       api: _api,
       storage: _storage,
@@ -166,6 +170,17 @@ class _SessionGateState extends State<SessionGate> {
             builder: (_) => HandoffOrderPaymentScreen(
               api: _api,
               handoff: handoff.orderPayment!,
+            ),
+          ),
+        );
+      } else if (handoff.kind == HandoffKind.tvPairing &&
+          handoff.tvPairing != null) {
+        await Navigator.of(context).push(
+          MaterialPageRoute(
+            builder: (_) => TvPairingLinkScreen(
+              session: session,
+              handoff: handoff.tvPairing!,
+              service: _tvPairingService,
             ),
           ),
         );

@@ -1,7 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <component name="MainScene" extends="Scene">
   <interface>
+    <field id="baseUrl" type="string" />
+    <field id="pairingId" type="string" />
+    <field id="pairingCode" type="string" />
     <field id="pairingUrl" type="string" />
+    <field id="pollIntervalSeconds" type="integer" />
   </interface>
   <children>
     <Label
@@ -28,6 +32,15 @@
       width="260"
       height="260"
       uri="https://api.qrserver.com/v1/create-qr-code/?size=260x260&data=https%3A%2F%2Fdev-channel-gateway.liive.dev%2Ftv%2Fpair" />
+    <Label
+      id="pairingCode"
+      translation="[90,500]"
+      width="260"
+      height="60"
+      font="font:LargeBoldSystemFont"
+      horizAlign="center"
+      text="------"
+      color="#ffffff" />
     <RowList
       id="reorders"
       translation="[390,220]"

@@ -57,6 +57,12 @@
                 <data
                     android:scheme="${appAuthRedirectScheme}"
                     android:host="order-payment" />
+                <data
+                    android:scheme="${appAuthRedirectScheme}"
+                    android:host="tv-pair" />
+                <data
+                    android:scheme="${appAuthRedirectScheme}"
+                    android:host="tv-pairing" />
             </intent-filter>
         </activity>
         <service
