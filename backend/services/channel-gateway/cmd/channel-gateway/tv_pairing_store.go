@@ -93,7 +93,7 @@ func createTvPairing(
 		CreatedAt:      now,
 		ExpiresAt:      now.Add(tvPairingTTL),
 	}
-	if err := doc.Set(ctx, record); err != nil {
+	if _, err := doc.Set(ctx, record); err != nil {
 		return tvPairingRecord{}, tvPairingStartResponse{}, err
 	}
 	return record, tvPairingStartResponse{
