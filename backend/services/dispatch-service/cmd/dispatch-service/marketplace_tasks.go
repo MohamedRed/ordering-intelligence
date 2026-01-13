@@ -12,7 +12,6 @@ import (
 	cloudfirestore "cloud.google.com/go/firestore"
 	cloudpubsub "cloud.google.com/go/pubsub"
 	"golang.org/x/oauth2"
-	"google.golang.org/api/iterator"
 	taskspb "google.golang.org/genproto/googleapis/cloud/tasks/v2"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -55,7 +54,7 @@ func fetchMarketplaceConfig(ctx context.Context, fs *cloudfirestore.Client, stor
 		return cfg
 	}
 	if v := toInt(settings["marketplace_offer_cents"]); v > 0 {
-		cfg.OfferCents = v
+		cfg.OfferCents = int64(v)
 	}
 	if v := toInt(settings["marketplace_initial_radius_m"]); v > 0 {
 		cfg.InitialRadiusM = v
