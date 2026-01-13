@@ -110,6 +110,7 @@ type DispatchEvent = {
   storeId: string;
   orderId?: string;
   assignmentId?: string;
+  offerId?: string;
   driverId?: string;
   routeId?: string;
   createdAt?: string;
