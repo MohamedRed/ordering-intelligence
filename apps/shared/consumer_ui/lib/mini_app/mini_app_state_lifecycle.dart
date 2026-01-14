@@ -11,7 +11,6 @@ mixin MiniAppStateLifecycle
         MiniAppStateDelivery {
   @override
   void initState() {
-    super.initState();
     _platform = widget.platform;
     _api = _platform.api;
     _launchContext = _platform.resolveLaunchContext();
@@ -22,6 +21,7 @@ mixin MiniAppStateLifecycle
     _pendingLinkToken = _launchContext.linkToken;
     _pendingStartGroupOrder = _launchContext.startGroupOrder;
     _searchController.addListener(_onSearchChanged);
+    super.initState();
     _bootstrap();
   }
 
