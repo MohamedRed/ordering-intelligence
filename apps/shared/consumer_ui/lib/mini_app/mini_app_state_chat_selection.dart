@@ -42,7 +42,20 @@ mixin MiniAppStateChatSelection
     _appendUserMessage(item.name);
     final added = await _addMenuItemFromChat(item);
     if (added) {
-      _appendAssistantMessage('Added ${item.name}. Anything else?');
+      setState(() {
+        _chatMessages.add(
+          ChatMessage(
+            id: _chatId(),
+            role: ChatRole.assistant,
+            text: 'Added ${item.name}. Anything else?',
+            options: const [
+              ChatOption(label: 'Yes', toolName: 'continue_browsing'),
+              ChatOption(label: 'No', toolName: 'open_cart'),
+            ],
+          ),
+        );
+      });
+      _scrollChatToBottom();
     }
   }
 
@@ -53,12 +66,14 @@ mixin MiniAppStateChatSelection
       return;
     }
     setState(() {
-      _chatMessages.add(ChatMessage(
-        id: _chatId(),
-        role: ChatRole.assistant,
-        text: 'Choose a product from $category.',
-        products: products,
-      ));
+      _chatMessages.add(
+        ChatMessage(
+          id: _chatId(),
+          role: ChatRole.assistant,
+          text: 'Choose a product from $category.',
+          products: products,
+        ),
+      );
     });
     _scrollChatToBottom();
   }
@@ -76,7 +91,9 @@ mixin MiniAppStateChatSelection
 
   void _appendUserMessage(String text) {
     setState(() {
-      _chatMessages.add(ChatMessage(id: _chatId(), role: ChatRole.user, text: text));
+      _chatMessages.add(
+        ChatMessage(id: _chatId(), role: ChatRole.user, text: text),
+      );
     });
     _scrollChatToBottom();
   }

@@ -6,6 +6,7 @@ mixin MiniAppStateChatActions
         MiniAppStateFields,
         MiniAppStateMenu,
         MiniAppStateCart,
+        MiniAppStateCartSheet,
         MiniAppStateDelivery,
         MiniAppStateChatProductLookup,
         MiniAppStateChatSelection,
@@ -48,6 +49,20 @@ mixin MiniAppStateChatActions
     final labelLower = label.toLowerCase();
     if (toolName == 'switch_to_browse') {
       _appendAssistantMessage('Browse is now in chat. Pick a category above.');
+      return true;
+    }
+    if (toolName == 'continue_browsing') {
+      _appendUserMessage('Yes');
+      _appendAssistantMessage('Great. Pick another item or ask me a question.');
+      return true;
+    }
+    if (toolName == 'open_cart') {
+      _appendUserMessage('No');
+      if (_cartItemCount > 0) {
+        _openCartSheet();
+      } else {
+        _appendAssistantMessage('Your cart is empty.');
+      }
       return true;
     }
     if (_deliveryEnabled) {
