@@ -16,6 +16,17 @@ func decodeWebAppChatTurnRequest(r *http.Request) (webappChatTurnRequest, int, s
 	payload.Text = strings.TrimSpace(payload.Text)
 	payload.AudioBase64 = strings.TrimSpace(payload.AudioBase64)
 	payload.AudioMime = strings.TrimSpace(payload.AudioMime)
+	payload.SeededIntro = strings.TrimSpace(payload.SeededIntro)
+	payload.SeededSource = strings.TrimSpace(payload.SeededSource)
+	if len(payload.SeededCategories) > 0 {
+		categories := make([]string, 0, len(payload.SeededCategories))
+		for _, raw := range payload.SeededCategories {
+			if trimmed := strings.TrimSpace(raw); trimmed != "" {
+				categories = append(categories, trimmed)
+			}
+		}
+		payload.SeededCategories = categories
+	}
 
 	if payload.SessionID == "" {
 		return payload, http.StatusBadRequest, "missing_session"

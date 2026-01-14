@@ -32,21 +32,33 @@ mixin MiniAppStateChatAudio on MiniAppStateChatState, MiniAppStateChatActions {
     if (session == null) return;
     setState(() {
       _chatBusy = true;
-      _chatMessages.add(ChatMessage(
-        id: _chatId(),
-        role: ChatRole.user,
-        audioBytes: bytes,
-        audioMime: _audioRecorder?.mimeType,
-      ));
+      _chatMessages.add(
+        ChatMessage(
+          id: _chatId(),
+          role: ChatRole.user,
+          audioBytes: bytes,
+          audioMime: _audioRecorder?.mimeType,
+        ),
+      );
     });
     _scrollChatToBottom();
     try {
+      final sendSeededContext =
+          !_seededContextSent &&
+          ((_seededIntro?.trim().isNotEmpty ?? false) ||
+              _seededCategories.isNotEmpty);
       final response = await _api.sendChatTurn(
         sessionId: session.sessionId,
         audioBytes: bytes,
         audioMime: _audioRecorder?.mimeType,
+        seededIntro: sendSeededContext ? _seededIntro : null,
+        seededCategories: sendSeededContext ? _seededCategories : null,
+        seededSource: sendSeededContext ? _seededSource : null,
       );
       _applyChatResponse(response);
+      if (sendSeededContext) {
+        _seededContextSent = true;
+      }
     } catch (_) {
       _appendAssistantMessage('Voice message received. Please type for now.');
     } finally {

@@ -13,16 +13,32 @@ mixin MiniAppStateChatComms
     if (text.isEmpty) return;
     setState(() {
       _chatBusy = true;
-      _chatMessages.add(ChatMessage(id: _chatId(), role: ChatRole.user, text: text));
+      _chatMessages.add(
+        ChatMessage(id: _chatId(), role: ChatRole.user, text: text),
+      );
       _chatController.clear();
     });
     _scrollChatToBottom();
     try {
-      final response =
-          await _api.sendChatTurn(sessionId: session.sessionId, text: text);
+      final sendSeededContext =
+          !_seededContextSent &&
+          ((_seededIntro?.trim().isNotEmpty ?? false) ||
+              _seededCategories.isNotEmpty);
+      final response = await _api.sendChatTurn(
+        sessionId: session.sessionId,
+        text: text,
+        seededIntro: sendSeededContext ? _seededIntro : null,
+        seededCategories: sendSeededContext ? _seededCategories : null,
+        seededSource: sendSeededContext ? _seededSource : null,
+      );
       _applyChatResponse(response);
+      if (sendSeededContext) {
+        _seededContextSent = true;
+      }
     } catch (_) {
-      _appendAssistantMessage('Sorry, I had trouble responding. Please try again.');
+      _appendAssistantMessage(
+        'Sorry, I had trouble responding. Please try again.',
+      );
     } finally {
       if (mounted) setState(() => _chatBusy = false);
     }
@@ -41,13 +57,15 @@ mixin MiniAppStateChatComms
     for (final tool in toolCalls) {
       final name = tool.name.trim().toLowerCase();
       if (name == 'select_category' || name == 'category') {
-        final category = tool.arguments['category']?.toString() ??
+        final category =
+            tool.arguments['category']?.toString() ??
             tool.arguments['name']?.toString();
         if (category != null && category.trim().isNotEmpty) {
           _handleCategorySelected(category.trim(), fromOption: true);
         }
       } else if (name == 'select_product' || name == 'product') {
-        final value = tool.arguments['id']?.toString() ??
+        final value =
+            tool.arguments['id']?.toString() ??
             tool.arguments['productId']?.toString() ??
             tool.arguments['name']?.toString();
         if (value != null && value.trim().isNotEmpty) {

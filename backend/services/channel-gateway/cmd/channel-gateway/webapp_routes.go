@@ -42,6 +42,9 @@ func registerWebAppRoutes(
 		r.Get("/stores/{storeID}/menu", func(w http.ResponseWriter, req *http.Request) {
 			handleWebAppMenu(w, req, cfg, orderHTTPClient)
 		})
+		r.Post("/chat/prewarm", func(w http.ResponseWriter, req *http.Request) {
+			handleWebAppChatPrewarm(w, req, cfg, firestoreClient, manager)
+		})
 		r.Post("/chat/turn", func(w http.ResponseWriter, req *http.Request) {
 			handleWebAppChatTurn(w, req, cfg, firestoreClient, manager)
 		})

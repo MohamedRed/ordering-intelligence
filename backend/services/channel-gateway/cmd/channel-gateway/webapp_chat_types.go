@@ -1,10 +1,13 @@
 package main
 
 type webappChatTurnRequest struct {
-	SessionID   string `json:"sessionId"`
-	Text        string `json:"text"`
-	AudioBase64 string `json:"audioBase64"`
-	AudioMime   string `json:"audioMime"`
+	SessionID        string   `json:"sessionId"`
+	Text             string   `json:"text"`
+	AudioBase64      string   `json:"audioBase64"`
+	AudioMime        string   `json:"audioMime"`
+	SeededIntro      string   `json:"seededIntro,omitempty"`
+	SeededSource     string   `json:"seededSource,omitempty"`
+	SeededCategories []string `json:"seededCategories,omitempty"`
 }
 
 type webappChatTurnResponse struct {
@@ -13,8 +16,8 @@ type webappChatTurnResponse struct {
 }
 
 type webappChatMessage struct {
-	Role     string             `json:"role"`
-	Text     string             `json:"text,omitempty"`
+	Role     string              `json:"role"`
+	Text     string              `json:"text,omitempty"`
 	Options  []webappChatOption  `json:"options,omitempty"`
 	Products []webappChatProduct `json:"products,omitempty"`
 }

@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"net/http"
+	"strings"
 	"time"
 
 	cloudfirestore "cloud.google.com/go/firestore"
@@ -30,6 +31,9 @@ func handleWebAppChatTurn(
 		writeJSON(w, http.StatusNotFound, map[string]string{"error": "session_not_found"})
 		return
 	}
+
+	seed := normalizeSeedContext(payload.SeededIntro, payload.SeededCategories, payload.SeededSource)
+	applySeedContextToSession(&session, seed)
 
 	route, err := agentcontext.ResolveRoute(ctx, firestoreClient, agentcontext.RouteLookup{
 		Channel:          session.Channel,
@@ -65,26 +69,36 @@ func handleWebAppChatTurn(
 		},
 		agentcontext.DynamicVarsOptions{IncludeChannelVars: true},
 	)
+	seedFromSession := seedContextFromSession(session)
+	applySeedContextToDyn(dyn, seedFromSession)
 
-	responseText, conversationID, err := manager.SendMessage(ctx, agentID, dyn, payload.Text, cfg)
+	text := payload.Text
+	if seedFromSession.hasContent() && !session.SeededContextSent {
+		if prefix := seedContextPrefix(seedFromSession); strings.TrimSpace(prefix) != "" {
+			text = prefix + "\n\nUtilisateur: " + payload.Text
+			session.SeededContextSent = true
+		}
+	}
+
+	responseText, conversationID, err := manager.SendMessage(ctx, agentID, dyn, text, cfg)
 	if err != nil {
 		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "agent_error"})
 		return
 	}
+	if seedFromSession.hasContent() && looksLikeSeededGreeting(responseText) {
+		retryCtx, cancelRetry := context.WithTimeout(ctx, 6*time.Second)
+		defer cancelRetry()
+		if followup, convID, err := manager.ReadNextResponse(retryCtx, agentID, dyn); err == nil && strings.TrimSpace(followup) != "" {
+			responseText = followup
+			if convID != "" {
+				conversationID = convID
+			}
+		}
+	}
 
-	if err := upsertSession(ctx, firestoreClient, channelSession{
-		Channel:                  session.Channel,
-		AccountID:                session.AccountID,
-		UserID:                   session.UserID,
-		ThreadID:                 session.ThreadID,
-		DisplayName:              session.DisplayName,
-		TenantID:                 session.TenantID,
-		StoreID:                  session.StoreID,
-		BusinessType:             session.BusinessType,
-		ElevenLabsConversationID: conversationID,
-		LastSeenAt:               time.Now().UTC(),
-		CreatedAt:                session.CreatedAt,
-	}); err != nil {
+	session.ElevenLabsConversationID = conversationID
+	session.LastSeenAt = time.Now().UTC()
+	if err := upsertSession(ctx, firestoreClient, session); err != nil {
 	}
 
 	writeJSON(w, http.StatusOK, parseWebAppChatResponse(responseText))

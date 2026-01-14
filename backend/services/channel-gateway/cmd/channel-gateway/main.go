@@ -100,6 +100,11 @@ type channelSession struct {
 	ClientApp                string                   `firestore:"client_app,omitempty" json:"clientApp,omitempty"`
 	ClientVersion            string                   `firestore:"client_version,omitempty" json:"clientVersion,omitempty"`
 	ElevenLabsConversationID string                   `firestore:"elevenlabs_conversation_id,omitempty" json:"conversationId,omitempty"`
+	SeededIntro              string                   `firestore:"seeded_intro,omitempty" json:"seededIntro,omitempty"`
+	SeededCategories         []string                 `firestore:"seeded_categories,omitempty" json:"seededCategories,omitempty"`
+	SeededSource             string                   `firestore:"seeded_source,omitempty" json:"seededSource,omitempty"`
+	SeededAt                 time.Time                `firestore:"seeded_at,omitempty" json:"seededAt,omitempty"`
+	SeededContextSent        bool                     `firestore:"seeded_context_sent,omitempty" json:"seededContextSent,omitempty"`
 	PendingStoreChoices      []storeChoice            `firestore:"pending_store_choices,omitempty" json:"pendingStoreChoices,omitempty"`
 	PendingDiscordSelection  *discordPendingSelection `firestore:"pending_discord_selection,omitempty" json:"pendingDiscordSelection,omitempty"`
 	LastSeenAt               time.Time                `firestore:"last_seen_at" json:"lastSeenAt"`
@@ -1767,6 +1772,36 @@ func (m *sessionManager) SendMessage(ctx context.Context, agentID string, dyn ma
 	return response, sess.conversationID, err
 }
 
+func (m *sessionManager) PrewarmSession(ctx context.Context, agentID string, dyn map[string]any, cfg *serviceConfig) (string, error) {
+	key := fmt.Sprintf("%s:%s", agentID, sessionKeyFromDyn(dyn))
+	sess, err := m.getOrCreateSession(ctx, key, agentID, dyn, cfg)
+	if err != nil {
+		return "", err
+	}
+	sess.mu.Lock()
+	defer sess.mu.Unlock()
+	sess.lastUsed = time.Now().UTC()
+	return sess.conversationID, nil
+}
+
+func (m *sessionManager) ReadNextResponse(ctx context.Context, agentID string, dyn map[string]any) (string, string, error) {
+	key := fmt.Sprintf("%s:%s", agentID, sessionKeyFromDyn(dyn))
+	m.mu.Lock()
+	sess := m.sessions[key]
+	m.mu.Unlock()
+	if sess == nil {
+		return "", "", errors.New("session_not_found")
+	}
+	sess.mu.Lock()
+	defer sess.mu.Unlock()
+	response, conversationID, err := readAgentResponse(ctx, sess.conn)
+	if conversationID != "" {
+		sess.conversationID = conversationID
+	}
+	sess.lastUsed = time.Now().UTC()
+	return response, sess.conversationID, err
+}
+
 func (m *sessionManager) getOrCreateSession(ctx context.Context, key, agentID string, dyn map[string]any, cfg *serviceConfig) (*wsSession, error) {
 	m.mu.Lock()
 	if sess, ok := m.sessions[key]; ok {
@@ -2454,7 +2489,18 @@ func upsertSession(ctx context.Context, client *cloudfirestore.Client, session c
 		"client_app":                 session.ClientApp,
 		"client_version":             session.ClientVersion,
 		"elevenlabs_conversation_id": session.ElevenLabsConversationID,
+		"seeded_intro":               session.SeededIntro,
+		"seeded_source":              session.SeededSource,
+		"seeded_context_sent":        session.SeededContextSent,
 		"last_seen_at":               session.LastSeenAt,
+	}
+	if session.SeededCategories != nil {
+		payload["seeded_categories"] = session.SeededCategories
+	} else {
+		payload["seeded_categories"] = []string{}
+	}
+	if !session.SeededAt.IsZero() {
+		payload["seeded_at"] = session.SeededAt
 	}
 	if len(session.PendingStoreChoices) > 0 {
 		payload["pending_store_choices"] = session.PendingStoreChoices

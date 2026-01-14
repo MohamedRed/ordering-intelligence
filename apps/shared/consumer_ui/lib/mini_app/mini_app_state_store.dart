@@ -21,6 +21,12 @@ mixin MiniAppStateStore
       _activeCategory = '';
       _selectedProduct = null;
       _chatMessages.clear();
+      _seededIntro = null;
+      _seededCategories = [];
+      _seededSource = 'menu';
+      _seededContextSent = false;
+      _seededPrewarmSent = false;
+      _seededPrewarmInFlight = false;
       _cart = [];
       _orderConfirmation = null;
       _groupOrder = null;
@@ -109,6 +115,12 @@ mixin MiniAppStateStore
       _activeCategory = '';
       _selectedProduct = null;
       _chatMessages.clear();
+      _seededIntro = null;
+      _seededCategories = [];
+      _seededSource = 'menu';
+      _seededContextSent = false;
+      _seededPrewarmSent = false;
+      _seededPrewarmInFlight = false;
       _cart = [];
       _orderConfirmation = null;
       _groupOrder = null;
