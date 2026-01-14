@@ -6,11 +6,15 @@ mixin ChannelGatewayChatApi on ChannelGatewayApiBase {
     String? text,
     Uint8List? audioBytes,
     String? audioMime,
+    ChatToolResult? toolResult,
     String? seededIntro,
     List<String>? seededCategories,
     String? seededSource,
   }) async {
-    final payload = <String, dynamic>{'sessionId': sessionId, 'text': text};
+    final payload = <String, dynamic>{'sessionId': sessionId};
+    if (text != null) {
+      payload['text'] = text;
+    }
     if (seededIntro != null && seededIntro.trim().isNotEmpty) {
       payload['seededIntro'] = seededIntro.trim();
     }
@@ -29,6 +33,14 @@ mixin ChannelGatewayChatApi on ChannelGatewayApiBase {
     if (audioBytes != null && audioBytes.isNotEmpty) {
       payload['audioBase64'] = base64Encode(audioBytes);
       payload['audioMime'] = audioMime ?? 'audio/webm';
+    }
+    if (toolResult != null) {
+      payload['toolResult'] = toolResult.toJson();
+    }
+    if ((text == null || text.trim().isEmpty) &&
+        (audioBytes == null || audioBytes.isEmpty) &&
+        toolResult == null) {
+      throw Exception('Chat payload missing text');
     }
     final response = await _client.post(
       _buildWebAppUri('/chat/turn'),

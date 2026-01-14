@@ -73,18 +73,42 @@ func handleWebAppChatTurn(
 	applySeedContextToDyn(dyn, seedFromSession)
 
 	text := payload.Text
-	if seedFromSession.hasContent() && !session.SeededContextSent {
+	if payload.ToolResult == nil && seedFromSession.hasContent() && !session.SeededContextSent {
 		if prefix := seedContextPrefix(seedFromSession); strings.TrimSpace(prefix) != "" {
 			text = prefix + "\n\nUtilisateur: " + payload.Text
 			session.SeededContextSent = true
 		}
 	}
 
-	responseText, conversationID, err := manager.SendMessage(ctx, agentID, dyn, text, cfg)
+	var (
+		reply          agentReply
+		conversationID string
+	)
+	if payload.ToolResult != nil {
+		result := *payload.ToolResult
+		reply, conversationID, err = manager.SendToolResult(ctx, agentID, dyn, result, cfg)
+	} else {
+		reply, conversationID, err = manager.SendMessageWithTools(ctx, agentID, dyn, text, cfg)
+	}
 	if err != nil {
 		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "agent_error"})
 		return
 	}
+	if reply.ToolCall != nil {
+		session.ElevenLabsConversationID = conversationID
+		session.LastSeenAt = time.Now().UTC()
+		_ = upsertSession(ctx, firestoreClient, session)
+		writeJSON(w, http.StatusOK, webappChatTurnResponse{
+			ToolCalls: []webappChatToolCall{{
+				ID:        reply.ToolCall.ToolCallID,
+				Name:      reply.ToolCall.ToolName,
+				Arguments: reply.ToolCall.Parameters,
+			}},
+		})
+		return
+	}
+
+	responseText := reply.Text
 	if seedFromSession.hasContent() && looksLikeSeededGreeting(responseText) {
 		retryCtx, cancelRetry := context.WithTimeout(ctx, 6*time.Second)
 		defer cancelRetry()

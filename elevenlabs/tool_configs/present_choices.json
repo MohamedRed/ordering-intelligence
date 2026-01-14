@@ -1,0 +1,58 @@
+{
+  "name": "present_choices",
+  "description": "Present selectable options in the client UI (single or multi select) and wait for the user's selection.",
+  "type": "client",
+  "response_timeout_secs": 30,
+  "disable_interruptions": false,
+  "force_pre_tool_speech": false,
+  "expects_response": true,
+  "parameters": {
+    "type": "object",
+    "required": ["message", "choices"],
+    "properties": {
+      "message": {
+        "type": "string",
+        "description": "Prompt shown above the options."
+      },
+      "choices": {
+        "type": "array",
+        "description": "Options to display.",
+        "items": {
+          "type": "object",
+          "required": ["label"],
+          "properties": {
+            "label": {
+              "type": "string",
+              "description": "Label to show in the UI."
+            },
+            "payload": {
+              "type": "string",
+              "description": "Payload value returned when this option is selected."
+            },
+            "toolName": {
+              "type": "string",
+              "description": "Optional tool name hint for the client."
+            }
+          }
+        }
+      },
+      "selectionMode": {
+        "type": "string",
+        "description": "Selection mode.",
+        "enum": ["single", "multi"]
+      },
+      "minSelections": {
+        "type": "integer",
+        "description": "Minimum number of selections required."
+      },
+      "maxSelections": {
+        "type": "integer",
+        "description": "Maximum number of selections allowed."
+      },
+      "confirmLabel": {
+        "type": "string",
+        "description": "Optional label for the confirm button."
+      }
+    }
+  }
+}

@@ -67,6 +67,9 @@
             "path": "tool_configs/modeldetailsbyvehicle.json"
         },
         {
+            "path": "tool_configs/present_choices.json"
+        },
+        {
             "path": "tool_configs/partcriteria.json"
         },
         {

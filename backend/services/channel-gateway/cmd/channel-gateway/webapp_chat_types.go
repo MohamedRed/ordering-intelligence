@@ -1,13 +1,14 @@
 package main
 
 type webappChatTurnRequest struct {
-	SessionID        string   `json:"sessionId"`
-	Text             string   `json:"text"`
-	AudioBase64      string   `json:"audioBase64"`
-	AudioMime        string   `json:"audioMime"`
-	SeededIntro      string   `json:"seededIntro,omitempty"`
-	SeededSource     string   `json:"seededSource,omitempty"`
-	SeededCategories []string `json:"seededCategories,omitempty"`
+	SessionID        string                `json:"sessionId"`
+	Text             string                `json:"text"`
+	AudioBase64      string                `json:"audioBase64"`
+	AudioMime        string                `json:"audioMime"`
+	SeededIntro      string                `json:"seededIntro,omitempty"`
+	SeededSource     string                `json:"seededSource,omitempty"`
+	SeededCategories []string              `json:"seededCategories,omitempty"`
+	ToolResult       *webappChatToolResult `json:"toolResult,omitempty"`
 }
 
 type webappChatTurnResponse struct {
@@ -37,6 +38,14 @@ type webappChatProduct struct {
 }
 
 type webappChatToolCall struct {
+	ID        string         `json:"id,omitempty"`
 	Name      string         `json:"name"`
 	Arguments map[string]any `json:"arguments,omitempty"`
+}
+
+type webappChatToolResult struct {
+	ToolCallID string `json:"toolCallId"`
+	Name       string `json:"name,omitempty"`
+	Result     any    `json:"result,omitempty"`
+	IsError    bool   `json:"isError,omitempty"`
 }

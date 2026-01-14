@@ -9,13 +9,15 @@ class ChatMessageList extends StatelessWidget {
     super.key,
     required this.messages,
     required this.onOptionSelected,
+    required this.onOptionsConfirmed,
     required this.onProductSelected,
     this.controller,
     this.isLoading = false,
   });
 
   final List<ChatMessage> messages;
-  final ValueChanged<ChatOption> onOptionSelected;
+  final void Function(ChatMessage, ChatOption) onOptionSelected;
+  final void Function(ChatMessage, List<ChatOption>) onOptionsConfirmed;
   final ValueChanged<ChatProduct> onProductSelected;
   final ScrollController? controller;
   final bool isLoading;
@@ -59,6 +61,7 @@ class ChatMessageList extends StatelessWidget {
         return ChatMessageBubble(
           message: message,
           onOptionSelected: onOptionSelected,
+          onOptionsConfirmed: onOptionsConfirmed,
           onProductSelected: onProductSelected,
         );
       },

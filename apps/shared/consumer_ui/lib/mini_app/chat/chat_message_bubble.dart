@@ -3,6 +3,7 @@ import 'package:shadcn_ui/shadcn_ui.dart';
 
 import 'chat_audio_player.dart';
 import 'chat_option_chips.dart';
+import 'chat_option_multi_select.dart';
 import 'chat_product_card.dart';
 import 'package:consumer_core/consumer_core.dart';
 
@@ -11,21 +12,25 @@ class ChatMessageBubble extends StatelessWidget {
     super.key,
     required this.message,
     required this.onOptionSelected,
+    required this.onOptionsConfirmed,
     required this.onProductSelected,
   });
 
   final ChatMessage message;
-  final ValueChanged<ChatOption> onOptionSelected;
+  final void Function(ChatMessage, ChatOption) onOptionSelected;
+  final void Function(ChatMessage, List<ChatOption>) onOptionsConfirmed;
   final ValueChanged<ChatProduct> onProductSelected;
 
   @override
   Widget build(BuildContext context) {
     final theme = ShadTheme.of(context);
     final isUser = message.role == ChatRole.user;
-    final bubbleColor =
-        isUser ? theme.colorScheme.primary : theme.colorScheme.muted;
-    final textColor =
-        isUser ? theme.colorScheme.primaryForeground : theme.colorScheme.foreground;
+    final bubbleColor = isUser
+        ? theme.colorScheme.primary
+        : theme.colorScheme.muted;
+    final textColor = isUser
+        ? theme.colorScheme.primaryForeground
+        : theme.colorScheme.foreground;
 
     final hasText = message.text != null && message.text!.trim().isNotEmpty;
     final hasAudio = message.audioBytes != null;
@@ -33,7 +38,9 @@ class ChatMessageBubble extends StatelessWidget {
     return Align(
       alignment: isUser ? Alignment.centerRight : Alignment.centerLeft,
       child: Column(
-        crossAxisAlignment: isUser ? CrossAxisAlignment.end : CrossAxisAlignment.start,
+        crossAxisAlignment: isUser
+            ? CrossAxisAlignment.end
+            : CrossAxisAlignment.start,
         children: [
           if (hasBubble)
             ConstrainedBox(
@@ -45,8 +52,9 @@ class ChatMessageBubble extends StatelessWidget {
                   borderRadius: BorderRadius.circular(16),
                 ),
                 child: Column(
-                  crossAxisAlignment:
-                      isUser ? CrossAxisAlignment.end : CrossAxisAlignment.start,
+                  crossAxisAlignment: isUser
+                      ? CrossAxisAlignment.end
+                      : CrossAxisAlignment.start,
                   children: [
                     if (hasText)
                       Text(
@@ -88,11 +96,22 @@ class ChatMessageBubble extends StatelessWidget {
             ),
           ],
           if (message.options.isNotEmpty) ...[
-            if (hasBubble || message.products.isNotEmpty) const SizedBox(height: 8),
-            ChatOptionChips(
-              options: message.options,
-              onSelected: onOptionSelected,
-            ),
+            if (hasBubble || message.products.isNotEmpty)
+              const SizedBox(height: 8),
+            if (message.isMultiSelect)
+              ChatOptionMultiSelect(
+                options: message.options,
+                confirmLabel: message.confirmLabel,
+                minSelections: message.minSelections,
+                maxSelections: message.maxSelections,
+                onConfirm: (selections) =>
+                    onOptionsConfirmed(message, selections),
+              )
+            else
+              ChatOptionChips(
+                options: message.options,
+                onSelected: (option) => onOptionSelected(message, option),
+              ),
           ],
         ],
       ),

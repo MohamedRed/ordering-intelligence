@@ -18,6 +18,13 @@ func decodeWebAppChatTurnRequest(r *http.Request) (webappChatTurnRequest, int, s
 	payload.AudioMime = strings.TrimSpace(payload.AudioMime)
 	payload.SeededIntro = strings.TrimSpace(payload.SeededIntro)
 	payload.SeededSource = strings.TrimSpace(payload.SeededSource)
+	if payload.ToolResult != nil {
+		payload.ToolResult.ToolCallID = strings.TrimSpace(payload.ToolResult.ToolCallID)
+		payload.ToolResult.Name = strings.TrimSpace(payload.ToolResult.Name)
+		if payload.ToolResult.ToolCallID == "" {
+			return payload, http.StatusBadRequest, "missing_tool_call_id"
+		}
+	}
 	if len(payload.SeededCategories) > 0 {
 		categories := make([]string, 0, len(payload.SeededCategories))
 		for _, raw := range payload.SeededCategories {
@@ -31,7 +38,7 @@ func decodeWebAppChatTurnRequest(r *http.Request) (webappChatTurnRequest, int, s
 	if payload.SessionID == "" {
 		return payload, http.StatusBadRequest, "missing_session"
 	}
-	if payload.Text == "" && payload.AudioBase64 == "" {
+	if payload.Text == "" && payload.AudioBase64 == "" && payload.ToolResult == nil {
 		return payload, http.StatusBadRequest, "missing_text"
 	}
 	if payload.Text == "" && payload.AudioBase64 != "" {

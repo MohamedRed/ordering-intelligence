@@ -1764,12 +1764,67 @@ func (m *sessionManager) SendMessage(ctx context.Context, agentID string, dyn ma
 		return "", sess.conversationID, err
 	}
 
-	response, conversationID, err := readAgentResponse(ctx, sess.conn)
+	reply, conversationID, err := readAgentReply(ctx, sess.conn, false)
 	if conversationID != "" {
 		sess.conversationID = conversationID
 	}
 	sess.lastUsed = time.Now().UTC()
-	return response, sess.conversationID, err
+	return reply.Text, sess.conversationID, err
+}
+
+func (m *sessionManager) SendMessageWithTools(ctx context.Context, agentID string, dyn map[string]any, text string, cfg *serviceConfig) (agentReply, string, error) {
+	key := fmt.Sprintf("%s:%s", agentID, sessionKeyFromDyn(dyn))
+	sess, err := m.getOrCreateSession(ctx, key, agentID, dyn, cfg)
+	if err != nil {
+		return agentReply{}, "", err
+	}
+
+	sess.mu.Lock()
+	defer sess.mu.Unlock()
+
+	if err := sess.conn.WriteJSON(map[string]any{
+		"type": "user_message",
+		"text": text,
+	}); err != nil {
+		m.dropSession(key)
+		return agentReply{}, sess.conversationID, err
+	}
+
+	reply, conversationID, err := readAgentReply(ctx, sess.conn, true)
+	if conversationID != "" {
+		sess.conversationID = conversationID
+	}
+	sess.lastUsed = time.Now().UTC()
+	return reply, sess.conversationID, err
+}
+
+func (m *sessionManager) SendToolResult(ctx context.Context, agentID string, dyn map[string]any, result webappChatToolResult, cfg *serviceConfig) (agentReply, string, error) {
+	key := fmt.Sprintf("%s:%s", agentID, sessionKeyFromDyn(dyn))
+	sess, err := m.getOrCreateSession(ctx, key, agentID, dyn, cfg)
+	if err != nil {
+		return agentReply{}, "", err
+	}
+
+	sess.mu.Lock()
+	defer sess.mu.Unlock()
+
+	payload := map[string]any{
+		"type":         "client_tool_result",
+		"tool_call_id": result.ToolCallID,
+		"result":       result.Result,
+		"is_error":     result.IsError,
+	}
+	if err := sess.conn.WriteJSON(payload); err != nil {
+		m.dropSession(key)
+		return agentReply{}, sess.conversationID, err
+	}
+
+	reply, conversationID, err := readAgentReply(ctx, sess.conn, true)
+	if conversationID != "" {
+		sess.conversationID = conversationID
+	}
+	sess.lastUsed = time.Now().UTC()
+	return reply, sess.conversationID, err
 }
 
 func (m *sessionManager) PrewarmSession(ctx context.Context, agentID string, dyn map[string]any, cfg *serviceConfig) (string, error) {
@@ -1971,46 +2026,8 @@ func fetchSignedURL(ctx context.Context, baseURL, apiKey, agentID string) (strin
 }
 
 func readAgentResponse(ctx context.Context, conn *websocket.Conn) (string, string, error) {
-	deadline := time.Now().Add(18 * time.Second)
-	var conversationID string
-	for {
-		if err := conn.SetReadDeadline(deadline); err != nil {
-			return "", conversationID, err
-		}
-		_, data, err := conn.ReadMessage()
-		if err != nil {
-			return "", conversationID, err
-		}
-		var msg map[string]any
-		if err := json.Unmarshal(data, &msg); err != nil {
-			continue
-		}
-		typeVal, _ := msg["type"].(string)
-		switch typeVal {
-		case "ping":
-			if eventID := getNestedString(msg, "ping_event", "event_id"); eventID != "" {
-				_ = conn.WriteJSON(map[string]any{"type": "pong", "event_id": eventID})
-			}
-		case "conversation_initiation_metadata":
-			conversationID = getNestedString(msg, "conversation_initiation_metadata_event", "conversation_id")
-		case "agent_response":
-			text := getNestedString(msg, "agent_response_event", "agent_response")
-			if strings.TrimSpace(text) != "" {
-				return text, conversationID, nil
-			}
-		case "agent_response_correction":
-			text := getNestedString(msg, "agent_response_correction_event", "agent_response_correction")
-			if strings.TrimSpace(text) != "" {
-				return text, conversationID, nil
-			}
-		}
-
-		select {
-		case <-ctx.Done():
-			return "", conversationID, ctx.Err()
-		default:
-		}
-	}
+	reply, conversationID, err := readAgentReply(ctx, conn, false)
+	return reply.Text, conversationID, err
 }
 
 func sendTelegramMessage(ctx context.Context, token string, chatID int64, threadID string, text string) error {

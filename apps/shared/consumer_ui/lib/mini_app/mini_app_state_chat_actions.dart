@@ -10,7 +10,13 @@ mixin MiniAppStateChatActions
         MiniAppStateChatProductLookup,
         MiniAppStateChatSelection,
         MiniAppStateChatComms {
-  void _handleOptionSelected(ChatOption option) {
+  void _handleOptionSelected(ChatMessage message, ChatOption option) {
+    if (_chatBusy) return;
+    final toolCallId = message.toolCallId?.trim();
+    if (toolCallId != null && toolCallId.isNotEmpty) {
+      _sendChatToolResult(message, [option]);
+      return;
+    }
     final toolName = option.toolName?.trim().toLowerCase() ?? '';
     final payload = option.payload?.trim();
     if (_tryHandleLocalOption(option, toolName, payload)) {
@@ -23,7 +29,21 @@ mixin MiniAppStateChatActions
     _sendChatText(option.label);
   }
 
-  bool _tryHandleLocalOption(ChatOption option, String toolName, String? payload) {
+  void _handleMultiOptionsSelected(
+    ChatMessage message,
+    List<ChatOption> selections,
+  ) {
+    if (_chatBusy) return;
+    final toolCallId = message.toolCallId?.trim();
+    if (toolCallId == null || toolCallId.isEmpty) return;
+    _sendChatToolResult(message, selections);
+  }
+
+  bool _tryHandleLocalOption(
+    ChatOption option,
+    String toolName,
+    String? payload,
+  ) {
     final label = option.label.trim();
     final labelLower = label.toLowerCase();
     if (toolName == 'switch_to_browse') {
@@ -67,5 +87,4 @@ mixin MiniAppStateChatActions
     }
     return false;
   }
-
 }

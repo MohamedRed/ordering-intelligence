@@ -13,8 +13,10 @@ mixin MiniAppStateBuildMenuChat
         MiniAppStateDelivery,
         MiniAppStateChatState,
         MiniAppStateChatSelection,
-        MiniAppStateChatSeed, MiniAppStateChatComms,
-        MiniAppStateChatActions, MiniAppStateChatParticipants,
+        MiniAppStateChatSeed,
+        MiniAppStateChatComms,
+        MiniAppStateChatActions,
+        MiniAppStateChatParticipants,
         MiniAppStateChatAudio {
   Widget _buildChatMenuLayout(SessionInfo session) {
     if (_menu != null) {
@@ -33,6 +35,7 @@ mixin MiniAppStateBuildMenuChat
       scrollController: _chatScrollController,
       onSend: _sendChatText,
       onOptionSelected: _handleOptionSelected,
+      onOptionsConfirmed: _handleMultiOptionsSelected,
       onProductSelected: _handleProductSelected,
       onToggleRecording: _toggleRecording,
       isLoading: _chatBusy,
