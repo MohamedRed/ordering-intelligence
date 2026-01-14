@@ -2,9 +2,6 @@ part of 'mini_app_screen.dart';
 
 mixin MiniAppStateSearch on State<MiniAppScreen>, MiniAppStateFields, MiniAppStateStore {
   void _onSearchChanged() {
-    if (_storeSearchMode) {
-      return;
-    }
     _searchDebounce?.cancel();
     _searchDebounce = Timer(const Duration(milliseconds: 350), _performSearch);
   }

@@ -92,6 +92,11 @@ mixin MiniAppStateStoreSearchChat
     _scrollChatToBottom();
   }
 
+  void _selectStoreFromSearchSuggestion(StoreChoice store) {
+    _exitStoreSearchMode();
+    _selectStore(store);
+  }
+
   void _handleStoreSearchOptionSelected(ChatMessage message, ChatOption option) {
     final payload = option.payload?.trim();
     StoreChoice? store;

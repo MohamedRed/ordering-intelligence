@@ -20,6 +20,7 @@ class ChatView extends StatelessWidget {
     this.isSending = false,
     this.canRecord = true,
     this.placeholder,
+    this.footer,
   });
 
   final List<ChatMessage> messages;
@@ -35,6 +36,7 @@ class ChatView extends StatelessWidget {
   final bool isSending;
   final bool canRecord;
   final String? placeholder;
+  final Widget? footer;
 
   @override
   Widget build(BuildContext context) {
@@ -50,6 +52,7 @@ class ChatView extends StatelessWidget {
             isLoading: isLoading,
           ),
         ),
+        if (footer != null) footer!,
         ChatComposer(
           controller: controller,
           onSend: onSend,
