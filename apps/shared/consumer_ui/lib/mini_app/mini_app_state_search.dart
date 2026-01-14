@@ -2,12 +2,23 @@ part of 'mini_app_screen.dart';
 
 mixin MiniAppStateSearch on State<MiniAppScreen>, MiniAppStateFields, MiniAppStateStore {
   void _onSearchChanged() {
+    if (_storeSearchMode) {
+      return;
+    }
     _searchDebounce?.cancel();
     _searchDebounce = Timer(const Duration(milliseconds: 350), _performSearch);
   }
 
   Future<void> _performSearch() async {
-    final query = _searchController.text.trim();
+    await _runStoreSearch(_searchController.text.trim());
+  }
+
+  Future<List<StoreChoice>> _searchStoresFromChat(String query) async {
+    await _runStoreSearch(query);
+    return _searchResults;
+  }
+
+  Future<void> _runStoreSearch(String query) async {
     if (query.isEmpty) {
       if (!mounted) {
         return;

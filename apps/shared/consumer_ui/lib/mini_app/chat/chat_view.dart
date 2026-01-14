@@ -19,6 +19,7 @@ class ChatView extends StatelessWidget {
     this.isRecording = false,
     this.isSending = false,
     this.canRecord = true,
+    this.placeholder,
   });
 
   final List<ChatMessage> messages;
@@ -33,6 +34,7 @@ class ChatView extends StatelessWidget {
   final bool isRecording;
   final bool isSending;
   final bool canRecord;
+  final String? placeholder;
 
   @override
   Widget build(BuildContext context) {
@@ -55,6 +57,7 @@ class ChatView extends StatelessWidget {
           isRecording: isRecording,
           isSending: isSending,
           canRecord: canRecord,
+          placeholder: placeholder,
         ),
       ],
     );

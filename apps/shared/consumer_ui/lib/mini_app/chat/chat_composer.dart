@@ -10,6 +10,7 @@ class ChatComposer extends StatelessWidget {
     this.isRecording = false,
     this.isSending = false,
     this.canRecord = true,
+    this.placeholder,
   });
 
   final TextEditingController controller;
@@ -18,6 +19,7 @@ class ChatComposer extends StatelessWidget {
   final bool isRecording;
   final bool isSending;
   final bool canRecord;
+  final String? placeholder;
 
   @override
   Widget build(BuildContext context) {
@@ -42,7 +44,7 @@ class ChatComposer extends StatelessWidget {
           Expanded(
             child: ShadInput(
               controller: controller,
-              placeholder: const Text('Ask for a dish or a store...'),
+              placeholder: Text(placeholder ?? 'Ask for a dish or a store...'),
               enabled: !isSending,
               onSubmitted: (_) => onSend(),
             ),

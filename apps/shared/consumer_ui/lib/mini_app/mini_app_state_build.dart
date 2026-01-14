@@ -70,18 +70,27 @@ mixin MiniAppStateBuild
           ),
         );
       }
-      final showRecommended = _searchController.text.trim().isEmpty;
+      if (_storeSearchMode) {
+        return Scaffold(
+          body: wrapSafeArea(
+            StoreSearchChatView(
+              messages: _chatMessages,
+              controller: _searchController,
+              searching: _searching,
+              onSend: _sendStoreSearchMessage,
+              onOptionSelected: _handleStoreSearchOptionSelected,
+              onOptionsConfirmed: _handleStoreSearchOptionsConfirmed,
+              onBack: _exitStoreSearchMode,
+            ),
+          ),
+        );
+      }
       return Scaffold(
         body: wrapSafeArea(
           StorePickerView(
-            searchController: _searchController,
-            searching: _searching,
-            searchError: _searchError,
-            results: _searchResults,
-            recommendedOrders:
-                showRecommended ? _recommendedOrders : const <RecommendedOrder>[],
-            onSelect: _selectStore,
+            recommendedOrders: _recommendedOrders,
             onSelectRecommended: _selectRecommendedOrder,
+            onSearchChat: _enterStoreSearchMode,
             signOutLabel: _signOutLabel,
             onSignOut: _signOutLabel == null ? null : _requestSignOut,
             signingOut: _signingOut,

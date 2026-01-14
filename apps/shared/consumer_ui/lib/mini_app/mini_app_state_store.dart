@@ -14,6 +14,7 @@ mixin MiniAppStateStore
       return;
     }
     setState(() {
+      _storeSearchMode = false;
       _menu = null;
       _menuError = null;
       _loadingMenu = true;
@@ -89,6 +90,7 @@ mixin MiniAppStateStore
       return;
     }
     setState(() {
+      _storeSearchMode = false;
       final nextSession = SessionInfo(
         sessionId: session.sessionId,
         accountId: session.accountId,
