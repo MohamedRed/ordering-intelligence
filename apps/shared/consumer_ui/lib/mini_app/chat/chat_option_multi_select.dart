@@ -80,7 +80,7 @@ class _ChatOptionMultiSelectState extends State<ChatOptionMultiSelect> {
             padding: const EdgeInsets.only(top: 6),
             child: Text(
               _buildHelperText(minSelections, maxSelections),
-              style: theme.textTheme.xsmall.copyWith(
+              style: theme.textTheme.small.copyWith(
                 color: theme.colorScheme.mutedForeground,
               ),
             ),
