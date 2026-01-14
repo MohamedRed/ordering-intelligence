@@ -4,6 +4,7 @@ mixin MiniAppStateStore
     on
         State<MiniAppScreen>,
         MiniAppStateFields,
+        MiniAppStateChatState,
         MiniAppStateMenu,
         MiniAppStateIdentity,
         MiniAppStateDelivery {

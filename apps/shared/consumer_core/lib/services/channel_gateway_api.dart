@@ -13,8 +13,12 @@ import '../models/group_order_invite.dart';
 import '../models/group_order_session.dart';
 import '../models/fuel_order.dart';
 import '../models/menu_models.dart';
+import '../models/off_session_payment.dart';
 import '../models/order_updates_link.dart';
+import '../models/payment_intent.dart';
+import '../models/payment_method.dart';
 import '../models/recommended_order.dart';
+import '../models/setup_intent.dart';
 import '../models/store_models.dart';
 
 part 'channel_gateway_api_session.dart';

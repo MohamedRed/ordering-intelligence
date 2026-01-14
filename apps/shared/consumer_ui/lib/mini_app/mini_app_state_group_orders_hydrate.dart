@@ -11,7 +11,6 @@ mixin MiniAppStateGroupOrdersHydrate
     final session = _session;
     if (session == null || session.storeId == storeId) {
       await _loadMenu(storeId);
-      await _loadStoreRecommendations(storeId);
       return;
     }
     final refreshed = await _platform.refreshSessionForStore(
@@ -26,6 +25,5 @@ mixin MiniAppStateGroupOrdersHydrate
     });
     await _loadIdentity();
     await _loadMenu(storeId);
-    await _loadStoreRecommendations(storeId);
   }
 }
