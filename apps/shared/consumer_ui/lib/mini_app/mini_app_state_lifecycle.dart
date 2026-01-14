@@ -38,6 +38,9 @@ mixin MiniAppStateLifecycle
       _loadingSession = true;
       _sessionError = null;
       _sessionStage = null;
+      _recommendedOrders = [];
+      _recommendedOrdersLoaded = false;
+      _storeSearchSeeded = false;
     });
     try {
       _setSessionStage('session_start');

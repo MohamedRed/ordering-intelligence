@@ -1,6 +1,7 @@
 part of 'mini_app_screen.dart';
 
-mixin MiniAppStateSearch on State<MiniAppScreen>, MiniAppStateFields, MiniAppStateStore {
+mixin MiniAppStateSearch
+    on State<MiniAppScreen>, MiniAppStateFields, MiniAppStateStore {
   void _onSearchChanged() {
     _searchDebounce?.cancel();
     _searchDebounce = Timer(const Duration(milliseconds: 350), _performSearch);
@@ -64,12 +65,18 @@ mixin MiniAppStateSearch on State<MiniAppScreen>, MiniAppStateFields, MiniAppSta
       if (!mounted) {
         return;
       }
-      setState(() => _recommendedOrders = orders);
+      setState(() {
+        _recommendedOrders = orders;
+        _recommendedOrdersLoaded = true;
+      });
     } catch (_) {
       if (!mounted) {
         return;
       }
-      setState(() => _recommendedOrders = []);
+      setState(() {
+        _recommendedOrders = [];
+        _recommendedOrdersLoaded = true;
+      });
     }
   }
 

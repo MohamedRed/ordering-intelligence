@@ -36,6 +36,7 @@ mixin MiniAppStateChatState
 
   void _maybeSeedChat() {
     if (_chatMessages.isNotEmpty) return;
+    if (_session == null || _session!.storeId.isEmpty) return;
     final storeName = _session?.storeName ?? 'this store';
     _chatMessages.add(
       ChatMessage(

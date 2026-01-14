@@ -6,6 +6,7 @@ mixin MiniAppStateBuild
         MiniAppStateFields,
         MiniAppStateSearch,
         MiniAppStateStoreSearchChat,
+        MiniAppStateHomeChat,
         MiniAppStateStore,
         MiniAppStateMenu,
         MiniAppStateCart,
@@ -64,37 +65,23 @@ mixin MiniAppStateBuild
     if (session == null || session.storeId.isEmpty) {
       if (_shouldShowGroupOrderLoading) {
         return Scaffold(
-          body: wrapSafeArea(
-            const Center(
-              child: CircularProgressIndicator(),
-            ),
-          ),
+          body: wrapSafeArea(const Center(child: CircularProgressIndicator())),
         );
       }
-      if (_storeSearchMode) {
-        return Scaffold(
-          body: wrapSafeArea(
-            StoreSearchChatView(
-              messages: _chatMessages,
-              controller: _searchController,
-              searching: _searching,
-              searchResults: _searchResults,
-              searchError: _searchError,
-              onSend: _sendStoreSearchMessage,
-              onOptionSelected: _handleStoreSearchOptionSelected,
-              onOptionsConfirmed: _handleStoreSearchOptionsConfirmed,
-              onSelectSuggestion: _selectStoreFromSearchSuggestion,
-              onBack: _exitStoreSearchMode,
-            ),
-          ),
-        );
-      }
+      _seedHomeChatIfNeeded();
       return Scaffold(
         body: wrapSafeArea(
-          StorePickerView(
-            recommendedOrders: _recommendedOrders,
-            onSelectRecommended: _selectRecommendedOrder,
-            onSearchChat: _enterStoreSearchMode,
+          StoreSearchChatView(
+            messages: _chatMessages,
+            controller: _searchController,
+            searching: _searching,
+            searchResults: _searchResults,
+            searchError: _searchError,
+            onSend: _sendStoreSearchMessage,
+            onOptionSelected: _handleStoreSearchOptionSelected,
+            onOptionsConfirmed: _handleStoreSearchOptionsConfirmed,
+            onSelectSuggestion: _selectStoreFromSearchSuggestion,
+            onBack: _storeSearchMode ? _exitStoreSearchMode : null,
             signOutLabel: _signOutLabel,
             onSignOut: _signOutLabel == null ? null : _requestSignOut,
             signingOut: _signingOut,
@@ -102,9 +89,7 @@ mixin MiniAppStateBuild
         ),
       );
     }
-    return Scaffold(
-      body: wrapSafeArea(_buildMenuLayout(session)),
-    );
+    return Scaffold(body: wrapSafeArea(_buildMenuLayout(session)));
   }
 
   bool get _shouldShowGroupOrderLoading {

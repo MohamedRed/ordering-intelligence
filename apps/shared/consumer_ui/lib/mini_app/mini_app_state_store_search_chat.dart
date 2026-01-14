@@ -6,10 +6,13 @@ mixin MiniAppStateStoreSearchChat
         MiniAppStateFields,
         MiniAppStateSearch,
         MiniAppStateStore,
-        MiniAppStateChatState {
-  void _enterStoreSearchMode() {
+        MiniAppStateChatState,
+        MiniAppStateHomeChat {
+  void _enterStoreSearchMode({bool startGroupOrder = false}) {
     setState(() {
       _storeSearchMode = true;
+      _storeSearchSeeded = false;
+      _pendingStartGroupOrder = startGroupOrder;
       _searchResults = [];
       _searchError = null;
       _searching = false;
@@ -22,6 +25,8 @@ mixin MiniAppStateStoreSearchChat
   void _exitStoreSearchMode() {
     setState(() {
       _storeSearchMode = false;
+      _storeSearchSeeded = false;
+      _pendingStartGroupOrder = false;
       _searchResults = [];
       _searchError = null;
       _searching = false;
@@ -67,10 +72,9 @@ mixin MiniAppStateStoreSearchChat
       return;
     }
     final visible = results.take(6).toList();
-    final hint =
-        results.length > visible.length
-            ? 'Select a store (showing top ${visible.length}).'
-            : 'Select a store from the results.';
+    final hint = results.length > visible.length
+        ? 'Select a store (showing top ${visible.length}).'
+        : 'Select a store from the results.';
     setState(() {
       _chatMessages.add(
         ChatMessage(
@@ -97,7 +101,24 @@ mixin MiniAppStateStoreSearchChat
     _selectStore(store);
   }
 
-  void _handleStoreSearchOptionSelected(ChatMessage message, ChatOption option) {
+  void _handleStoreSearchOptionSelected(
+    ChatMessage message,
+    ChatOption option,
+  ) {
+    final toolName = option.toolName?.trim().toLowerCase() ?? '';
+    if (toolName == 'start_single_order') {
+      _enterStoreSearchMode(startGroupOrder: false);
+      return;
+    }
+    if (toolName == 'start_group_order') {
+      _enterStoreSearchMode(startGroupOrder: true);
+      return;
+    }
+    if (toolName == 'select_recent_order') {
+      if (_selectRecommendedFromPayload(option.payload)) {
+        return;
+      }
+    }
     final payload = option.payload?.trim();
     StoreChoice? store;
     for (final result in _searchResults) {

@@ -17,7 +17,10 @@ class StoreSearchChatView extends StatelessWidget {
     required this.onOptionSelected,
     required this.onOptionsConfirmed,
     required this.onSelectSuggestion,
-    required this.onBack,
+    this.onBack,
+    this.signOutLabel,
+    this.onSignOut,
+    this.signingOut = false,
   });
 
   final List<ChatMessage> messages;
@@ -29,7 +32,10 @@ class StoreSearchChatView extends StatelessWidget {
   final void Function(ChatMessage, ChatOption) onOptionSelected;
   final void Function(ChatMessage, List<ChatOption>) onOptionsConfirmed;
   final ValueChanged<StoreChoice> onSelectSuggestion;
-  final VoidCallback onBack;
+  final VoidCallback? onBack;
+  final String? signOutLabel;
+  final VoidCallback? onSignOut;
+  final bool signingOut;
 
   @override
   Widget build(BuildContext context) {
@@ -41,17 +47,33 @@ class StoreSearchChatView extends StatelessWidget {
         children: [
           Row(
             children: [
-              Expanded(child: Text('Search stores', style: theme.textTheme.h2)),
-              ShadButton.outline(
-                size: ShadButtonSize.sm,
-                onPressed: onBack,
-                child: const Text('Back'),
+              Expanded(
+                child: Text('Start an order', style: theme.textTheme.h2),
               ),
+              if (onBack != null)
+                ShadButton.outline(
+                  size: ShadButtonSize.sm,
+                  onPressed: onBack,
+                  child: const Text('Back'),
+                ),
+              if (onBack != null && onSignOut != null) const SizedBox(width: 8),
+              if (onSignOut != null && signOutLabel != null)
+                ShadButton.outline(
+                  size: ShadButtonSize.sm,
+                  onPressed: signingOut ? null : onSignOut,
+                  child: signingOut
+                      ? const SizedBox(
+                          width: 14,
+                          height: 14,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        )
+                      : Text(signOutLabel!),
+                ),
             ],
           ),
           const SizedBox(height: 6),
           Text(
-            'Type a store name and pick one from the results.',
+            'Pick a recent order or search by store name.',
             style: theme.textTheme.muted,
           ),
           const SizedBox(height: 12),

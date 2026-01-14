@@ -20,7 +20,9 @@ mixin MiniAppStateFields on State<MiniAppScreen> {
   String? _searchError;
   List<StoreChoice> _searchResults = [];
   bool _storeSearchMode = false;
+  bool _storeSearchSeeded = false;
   List<RecommendedOrder> _recommendedOrders = [];
+  bool _recommendedOrdersLoaded = false;
   CustomerProfile? _customerProfile;
   bool _loadingIdentity = false;
   String? _identityError;

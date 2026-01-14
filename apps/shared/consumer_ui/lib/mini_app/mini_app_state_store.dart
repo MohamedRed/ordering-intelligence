@@ -7,7 +7,8 @@ mixin MiniAppStateStore
         MiniAppStateChatState,
         MiniAppStateMenu,
         MiniAppStateIdentity,
-        MiniAppStateDelivery {
+        MiniAppStateDelivery,
+        MiniAppStateGroupOrdersActions {
   Future<void> _selectStore(StoreChoice store) async {
     final session = _session;
     if (session == null) {
@@ -15,6 +16,7 @@ mixin MiniAppStateStore
     }
     setState(() {
       _storeSearchMode = false;
+      _storeSearchSeeded = false;
       _menu = null;
       _menuError = null;
       _loadingMenu = true;
@@ -73,6 +75,10 @@ mixin MiniAppStateStore
       });
       await _loadIdentity();
       await _loadMenu(store.storeId);
+      if (_pendingStartGroupOrder) {
+        _pendingStartGroupOrder = false;
+        await _createGroupOrder();
+      }
     } catch (e) {
       if (!mounted) {
         return;
@@ -91,6 +97,8 @@ mixin MiniAppStateStore
     }
     setState(() {
       _storeSearchMode = false;
+      _storeSearchSeeded = false;
+      _pendingStartGroupOrder = false;
       final nextSession = SessionInfo(
         sessionId: session.sessionId,
         accountId: session.accountId,
