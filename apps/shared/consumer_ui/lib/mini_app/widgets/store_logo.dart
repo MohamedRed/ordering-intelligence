@@ -2,17 +2,23 @@ import 'package:flutter/material.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
 
 class StoreLogo extends StatelessWidget {
-  const StoreLogo({super.key, required this.name, required this.logoUrl});
+  const StoreLogo({
+    super.key,
+    required this.name,
+    required this.logoUrl,
+    this.size = 40,
+  });
 
   final String name;
   final String logoUrl;
+  final double size;
 
   @override
   Widget build(BuildContext context) {
     final trimmed = name.trim();
     final initials = trimmed.isEmpty ? '?' : trimmed[0];
     final fallback = CircleAvatar(
-      radius: 20,
+      radius: size / 2,
       backgroundColor: ShadTheme.of(context).colorScheme.muted,
       child: Text(
         initials.toUpperCase(),
@@ -23,11 +29,11 @@ class StoreLogo extends StatelessWidget {
       return fallback;
     }
     return ClipRRect(
-      borderRadius: BorderRadius.circular(10),
+      borderRadius: BorderRadius.circular(size / 4),
       child: Image.network(
         logoUrl,
-        width: 40,
-        height: 40,
+        width: size,
+        height: size,
         fit: BoxFit.cover,
         errorBuilder: (context, error, stackTrace) => fallback,
       ),

@@ -22,26 +22,38 @@ class StorePickerResults extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    if (recommendedOrders.isEmpty && searchResults.isEmpty) {
+    final singleOrders =
+        recommendedOrders.where((order) => !order.isGroupOrder).toList();
+    final groupOrders =
+        recommendedOrders.where((order) => order.isGroupOrder).toList();
+    if (singleOrders.isEmpty && groupOrders.isEmpty && searchResults.isEmpty) {
       return const CenteredMessage(
         title: 'No results yet',
-        description: 'Search for a restaurant to begin ordering.',
+        description: 'Search for a store to begin ordering.',
       );
     }
     final children = <Widget>[];
-    if (recommendedOrders.isNotEmpty) {
-      children.add(
-        RecommendedOrdersSection(
-          title: 'Recommended from past orders',
-          orders: recommendedOrders,
-          onSelect: onSelectRecommended,
-        ),
-      );
-    }
+    children.add(
+      RecommendedOrdersSection(
+        title: 'Recent single orders',
+        orders: singleOrders,
+        onSelect: onSelectRecommended,
+        inline: true,
+        emptyLabel: 'No recent single orders yet.',
+      ),
+    );
+    children.add(const SizedBox(height: 12));
+    children.add(
+      RecommendedOrdersSection(
+        title: 'Recent group orders',
+        orders: groupOrders,
+        onSelect: onSelectRecommended,
+        inline: true,
+        emptyLabel: 'No group orders yet.',
+      ),
+    );
     if (searchResults.isNotEmpty) {
-      if (children.isNotEmpty) {
-        children.add(const SizedBox(height: 8));
-      }
+      children.add(const SizedBox(height: 16));
       children.add(
         Text('Search results', style: ShadTheme.of(context).textTheme.large),
       );

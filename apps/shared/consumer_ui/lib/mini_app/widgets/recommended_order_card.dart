@@ -67,6 +67,12 @@ class RecommendedOrderCard extends StatelessWidget {
         RegExp(r'\b\d+\b').hasMatch(order.title) &&
         (titleLower.contains('item') || titleLower.contains('article'));
     final orderedAt = DateTime.tryParse(order.orderedAtIso);
+    if (order.isGroupOrder) {
+      pieces.add('Group order');
+      if (order.participantCount > 0) {
+        pieces.add('${order.participantCount} people');
+      }
+    }
     if (orderedAt != null) {
       final dateLabel = MaterialLocalizations.of(context).formatShortDate(orderedAt);
       pieces.add('Ordered $dateLabel');

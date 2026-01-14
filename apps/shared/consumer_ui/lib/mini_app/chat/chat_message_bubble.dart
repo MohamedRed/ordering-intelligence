@@ -11,10 +11,12 @@ class ChatMessageBubble extends StatelessWidget {
     super.key,
     required this.message,
     required this.onOptionSelected,
+    required this.onProductSelected,
   });
 
   final ChatMessage message;
   final ValueChanged<ChatOption> onOptionSelected;
+  final ValueChanged<ChatProduct> onProductSelected;
 
   @override
   Widget build(BuildContext context) {
@@ -27,55 +29,72 @@ class ChatMessageBubble extends StatelessWidget {
 
     final hasText = message.text != null && message.text!.trim().isNotEmpty;
     final hasAudio = message.audioBytes != null;
+    final hasBubble = hasText || hasAudio;
     return Align(
       alignment: isUser ? Alignment.centerRight : Alignment.centerLeft,
-      child: ConstrainedBox(
-        constraints: const BoxConstraints(maxWidth: 320),
-        child: Container(
-          padding: const EdgeInsets.all(12),
-          decoration: BoxDecoration(
-            color: bubbleColor,
-            borderRadius: BorderRadius.circular(16),
-          ),
-          child: Column(
-            crossAxisAlignment:
-                isUser ? CrossAxisAlignment.end : CrossAxisAlignment.start,
-            children: [
-              if (hasText)
-                Text(
-                  message.text!,
-                  style: theme.textTheme.small.copyWith(color: textColor),
+      child: Column(
+        crossAxisAlignment: isUser ? CrossAxisAlignment.end : CrossAxisAlignment.start,
+        children: [
+          if (hasBubble)
+            ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 320),
+              child: Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: bubbleColor,
+                  borderRadius: BorderRadius.circular(16),
                 ),
-              if (hasAudio) ...[
-                if (hasText) const SizedBox(height: 6),
-                ChatAudioPlayer(
-                  bytes: message.audioBytes!,
-                  mimeType: message.audioMime,
-                  foregroundColor: textColor,
-                  showLabel: !hasText,
+                child: Column(
+                  crossAxisAlignment:
+                      isUser ? CrossAxisAlignment.end : CrossAxisAlignment.start,
+                  children: [
+                    if (hasText)
+                      Text(
+                        message.text!,
+                        style: theme.textTheme.small.copyWith(color: textColor),
+                      ),
+                    if (hasAudio) ...[
+                      if (hasText) const SizedBox(height: 6),
+                      ChatAudioPlayer(
+                        bytes: message.audioBytes!,
+                        mimeType: message.audioMime,
+                        foregroundColor: textColor,
+                        showLabel: !hasText,
+                      ),
+                    ],
+                  ],
                 ),
-              ],
-              if (message.products.isNotEmpty) ...[
-                const SizedBox(height: 8),
-                Column(
-                  children: message.products
-                      .map((product) => Padding(
-                            padding: const EdgeInsets.only(bottom: 8),
-                            child: ChatProductCard(product: product),
-                          ))
-                      .toList(),
-                ),
-              ],
-              if (message.options.isNotEmpty) ...[
-                const SizedBox(height: 8),
-                ChatOptionChips(
-                  options: message.options,
-                  onSelected: onOptionSelected,
-                ),
-              ],
-            ],
-          ),
-        ),
+              ),
+            ),
+          if (message.products.isNotEmpty) ...[
+            if (hasBubble) const SizedBox(height: 8),
+            SizedBox(
+              height: 96,
+              child: ListView.separated(
+                scrollDirection: Axis.horizontal,
+                itemCount: message.products.length,
+                separatorBuilder: (_, __) => const SizedBox(width: 10),
+                itemBuilder: (context, index) {
+                  final product = message.products[index];
+                  return SizedBox(
+                    width: 240,
+                    child: ChatProductCard(
+                      product: product,
+                      onTap: () => onProductSelected(product),
+                    ),
+                  );
+                },
+              ),
+            ),
+          ],
+          if (message.options.isNotEmpty) ...[
+            if (hasBubble || message.products.isNotEmpty) const SizedBox(height: 8),
+            ChatOptionChips(
+              options: message.options,
+              onSelected: onOptionSelected,
+            ),
+          ],
+        ],
       ),
     );
   }

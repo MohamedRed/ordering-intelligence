@@ -1,7 +1,5 @@
 import 'dart:typed_data';
 
-enum MiniAppSegment { chat, browse }
-
 enum ChatRole { user, assistant }
 
 class ChatProduct {

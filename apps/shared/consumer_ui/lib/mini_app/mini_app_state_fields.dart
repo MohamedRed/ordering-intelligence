@@ -7,8 +7,6 @@ mixin MiniAppStateFields on State<MiniAppScreen> {
 
   final TextEditingController _searchController = TextEditingController();
   final TextEditingController _notesController = TextEditingController();
-  final ScrollController _menuScrollController = ScrollController();
-  final GlobalKey _menuItemsAnchorKey = GlobalKey();
   Timer? _searchDebounce;
 
   SessionInfo? _session;
@@ -22,7 +20,6 @@ mixin MiniAppStateFields on State<MiniAppScreen> {
   String? _searchError;
   List<StoreChoice> _searchResults = [];
   List<RecommendedOrder> _recommendedOrders = [];
-  List<RecommendedOrder> _storeRecommendations = [];
   CustomerProfile? _customerProfile;
   bool _loadingIdentity = false;
   String? _identityError;
@@ -35,6 +32,7 @@ mixin MiniAppStateFields on State<MiniAppScreen> {
   bool _pendingStartGroupOrder = false;
   GroupOrderSession? _groupOrder;
   String? _groupOrderParticipantId;
+  String? _groupOrderSelectedParticipantId;
   String? _groupOrderError;
   bool _groupOrderBusy = false;
   bool _groupOrderCollapsed = true;
@@ -47,6 +45,7 @@ mixin MiniAppStateFields on State<MiniAppScreen> {
   String? _menuError;
   List<String> _categories = [];
   String _activeCategory = '';
+  ChatProduct? _selectedProduct;
 
   List<CartItem> _cart = [];
   StateSetter? _cartSheetSetState;

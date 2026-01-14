@@ -20,6 +20,7 @@ mixin MiniAppStateGroupOrdersActions
       setState(() {
         _groupOrder = created;
         _groupOrderParticipantId = session.userId;
+        _groupOrderSelectedParticipantId = session.userId;
         _groupOrderCollapsed = false;
         if (created.paymentMode.isNotEmpty) {
           _groupOrderPaymentMode = created.paymentMode;

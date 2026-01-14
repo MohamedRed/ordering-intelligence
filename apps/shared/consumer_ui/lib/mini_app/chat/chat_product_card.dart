@@ -39,14 +39,29 @@ class ChatProductCard extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(product.name, style: theme.textTheme.small),
+                  Text(
+                    product.name,
+                    style: theme.textTheme.small,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
                   if (product.description.isNotEmpty) ...[
                     const SizedBox(height: 4),
-                    Text(product.description, style: theme.textTheme.muted),
+                    Text(
+                      product.description,
+                      style: theme.textTheme.muted,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
                   ],
                   if (product.priceLabel.isNotEmpty) ...[
                     const SizedBox(height: 6),
-                    Text(product.priceLabel, style: theme.textTheme.small),
+                    Text(
+                      product.priceLabel,
+                      style: theme.textTheme.small,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
                   ],
                 ],
               ),

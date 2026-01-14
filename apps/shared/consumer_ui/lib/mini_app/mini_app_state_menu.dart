@@ -37,26 +37,4 @@ mixin MiniAppStateMenu on State<MiniAppScreen>, MiniAppStateFields {
       });
     }
   }
-
-  Future<void> _loadStoreRecommendations(String storeId) async {
-    final session = _session;
-    if (session == null) {
-      return;
-    }
-    try {
-      final orders = await _api.fetchStoreRecommendations(
-        sessionId: session.sessionId,
-        storeId: storeId,
-      );
-      if (!mounted) {
-        return;
-      }
-      setState(() => _storeRecommendations = orders);
-    } catch (_) {
-      if (!mounted) {
-        return;
-      }
-      setState(() => _storeRecommendations = []);
-    }
-  }
 }

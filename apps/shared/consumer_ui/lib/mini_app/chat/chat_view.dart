@@ -10,6 +10,7 @@ class ChatView extends StatelessWidget {
     required this.messages,
     required this.onSend,
     required this.onOptionSelected,
+    required this.onProductSelected,
     required this.onToggleRecording,
     required this.controller,
     this.scrollController,
@@ -22,6 +23,7 @@ class ChatView extends StatelessWidget {
   final List<ChatMessage> messages;
   final VoidCallback onSend;
   final ValueChanged<ChatOption> onOptionSelected;
+  final ValueChanged<ChatProduct> onProductSelected;
   final VoidCallback onToggleRecording;
   final TextEditingController controller;
   final ScrollController? scrollController;
@@ -38,6 +40,7 @@ class ChatView extends StatelessWidget {
           child: ChatMessageList(
             messages: messages,
             onOptionSelected: onOptionSelected,
+            onProductSelected: onProductSelected,
             controller: scrollController,
             isLoading: isLoading,
           ),

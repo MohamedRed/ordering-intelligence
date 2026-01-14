@@ -30,7 +30,6 @@ mixin MiniAppStateLifecycle
     _searchDebounce?.cancel();
     _searchController.dispose();
     _notesController.dispose();
-    _menuScrollController.dispose();
     super.dispose();
   }
 
@@ -84,8 +83,6 @@ mixin MiniAppStateLifecycle
         await _loadMenu(session.storeId);
         _setSessionStage('load_delivery_settings');
         await _refreshDeliverySettings(session.storeId);
-        _setSessionStage('load_store_recommendations');
-        await _loadStoreRecommendations(session.storeId);
       }
     } catch (e) {
       if (!mounted) {

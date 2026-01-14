@@ -3,13 +3,12 @@ import 'dart:typed_data';
 
 import 'package:consumer_core/consumer_core.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/rendering.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
 
 import '../utils/audio_recorder.dart';
 import 'chat/chat_header_card.dart';
-import 'chat/chat_segmented_control.dart';
 import 'chat/chat_view.dart';
+import 'chat/chat_context_bar.dart';
 import 'gas/gas_order_confirmation.dart';
 import 'gas/gas_order_view.dart';
 import 'mini_app_platform.dart';
@@ -19,7 +18,6 @@ import 'widgets/cart_sheet.dart';
 import 'widgets/centered_message.dart';
 import 'widgets/delivery_options_section.dart';
 import 'widgets/group_order_panel.dart';
-import 'widgets/menu_view.dart';
 import 'widgets/modifier_dialog.dart';
 import 'widgets/order_confirmation.dart';
 import 'widgets/payment_methods_panel.dart';
@@ -41,6 +39,12 @@ part 'mini_app_state_group_orders_share.dart';
 part 'mini_app_state_group_orders_view.dart';
 part 'mini_app_state_chat.dart';
 part 'mini_app_state_chat_actions.dart';
+part 'mini_app_state_chat_comms.dart';
+part 'mini_app_state_chat_participants.dart';
+part 'mini_app_state_chat_product_lookup.dart';
+part 'mini_app_state_chat_products.dart';
+part 'mini_app_state_chat_selection.dart';
+part 'mini_app_state_chat_seed.dart';
 part 'mini_app_state_chat_audio.dart';
 part 'mini_app_state_gas.dart';
 part 'mini_app_state_gas_actions.dart';
@@ -55,6 +59,8 @@ part 'mini_app_state_identity_targets.dart';
 part 'mini_app_state_identity_ui.dart';
 part 'mini_app_state_sign_out.dart';
 part 'mini_app_state_lifecycle.dart';
+part 'mini_app_state_build_menu_gas.dart';
+part 'mini_app_state_build_menu_chat.dart';
 part 'mini_app_state_build_menu.dart';
 part 'mini_app_state_build.dart';
 
@@ -95,9 +101,17 @@ class _MiniAppScreenState extends State<MiniAppScreen>
         MiniAppStateStore,
         MiniAppStateSearch,
         MiniAppStateChatState,
+        MiniAppStateChatProducts,
+        MiniAppStateChatSelection,
+        MiniAppStateChatSeed,
+        MiniAppStateChatProductLookup,
+        MiniAppStateChatComms,
+        MiniAppStateChatParticipants,
         MiniAppStateChatActions,
         MiniAppStateChatAudio,
         MiniAppStateLifecycle,
+        MiniAppStateBuildMenuGas,
+        MiniAppStateBuildMenuChat,
         MiniAppStateBuildMenu,
         MiniAppStateBuild {
   @override

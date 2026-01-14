@@ -16,6 +16,8 @@ class RecommendedOrder {
   final List<RecommendedOrderItem> items;
   final FuelOrderDraft? fuel;
   final String currency;
+  final bool isGroupOrder;
+  final int participantCount;
 
   const RecommendedOrder({
     required this.storeId,
@@ -29,6 +31,8 @@ class RecommendedOrder {
     required this.items,
     this.fuel,
     this.currency = '',
+    this.isGroupOrder = false,
+    this.participantCount = 0,
   });
 
   factory RecommendedOrder.fromJson(Map<String, dynamic> json) {
@@ -49,6 +53,28 @@ class RecommendedOrder {
         ? rawItemCount
         : int.tryParse(rawItemCount.toString()) ?? 0;
     final itemCount = parsedItemCount == 0 && fuel != null ? 1 : parsedItemCount;
+    final rawGroupFlag = json['isGroupOrder'] ?? json['groupOrder'] ?? json['group_order'];
+    var isGroupOrder = false;
+    if (rawGroupFlag is bool) {
+      isGroupOrder = rawGroupFlag;
+    } else if (rawGroupFlag is String) {
+      isGroupOrder = rawGroupFlag.toLowerCase() == 'true';
+    }
+    final orderType = (json['orderType'] ?? json['type'] ?? '').toString().toLowerCase();
+    if (orderType == 'group' || orderType == 'group_order') {
+      isGroupOrder = true;
+    }
+    var participantCount = 0;
+    final rawParticipants = json['participants'];
+    if (rawParticipants is List) {
+      participantCount = rawParticipants.length;
+    }
+    final rawParticipantCount = json['participantCount'] ?? json['participant_count'];
+    if (rawParticipantCount != null) {
+      participantCount = rawParticipantCount is int
+          ? rawParticipantCount
+          : int.tryParse(rawParticipantCount.toString()) ?? participantCount;
+    }
     return RecommendedOrder(
       storeId: (json['storeId'] ?? '').toString(),
       storeName: (json['storeName'] ?? '').toString(),
@@ -61,6 +87,8 @@ class RecommendedOrder {
       items: parsedItems,
       fuel: fuel,
       currency: (json['currency'] ?? '').toString(),
+      isGroupOrder: isGroupOrder,
+      participantCount: participantCount,
     );
   }
 

@@ -9,12 +9,14 @@ class ChatMessageList extends StatelessWidget {
     super.key,
     required this.messages,
     required this.onOptionSelected,
+    required this.onProductSelected,
     this.controller,
     this.isLoading = false,
   });
 
   final List<ChatMessage> messages;
   final ValueChanged<ChatOption> onOptionSelected;
+  final ValueChanged<ChatProduct> onProductSelected;
   final ScrollController? controller;
   final bool isLoading;
 
@@ -24,7 +26,7 @@ class ChatMessageList extends StatelessWidget {
     if (messages.isEmpty) {
       return Center(
         child: Text(
-          'Ask me what you want to order.',
+          'Start with a category or ask a question.',
           style: theme.textTheme.muted,
           textAlign: TextAlign.center,
         ),
@@ -57,6 +59,7 @@ class ChatMessageList extends StatelessWidget {
         return ChatMessageBubble(
           message: message,
           onOptionSelected: onOptionSelected,
+          onProductSelected: onProductSelected,
         );
       },
     );

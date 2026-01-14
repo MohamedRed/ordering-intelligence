@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
 
+import 'store_inline_suggestions.dart';
 import 'store_picker_results.dart';
 import 'package:consumer_core/consumer_core.dart';
 
@@ -32,6 +33,7 @@ class StorePickerView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final hasQuery = searchController.text.trim().isNotEmpty;
     return Padding(
       padding: const EdgeInsets.all(20),
       child: Column(
@@ -41,7 +43,7 @@ class StorePickerView extends StatelessWidget {
             children: [
               Expanded(
                 child: Text(
-                  'Choose a restaurant',
+                  'Find a store',
                   style: ShadTheme.of(context).textTheme.h2,
                 ),
               ),
@@ -61,14 +63,14 @@ class StorePickerView extends StatelessWidget {
           ),
           const SizedBox(height: 6),
           Text(
-            'Type the business name to get started.',
+            'Pick a recent order or search by business name.',
             style: ShadTheme.of(context).textTheme.muted,
           ),
           const SizedBox(height: 16),
           TextField(
             controller: searchController,
             decoration: InputDecoration(
-              hintText: 'Search restaurants',
+              hintText: 'Search stores',
               border: const OutlineInputBorder(),
               prefixIcon: const Icon(Icons.search),
               suffixIcon: searching
@@ -88,6 +90,14 @@ class StorePickerView extends StatelessWidget {
             ShadAlert.destructive(
               title: const Text('Search failed'),
               description: Text(searchError!),
+            ),
+          ],
+          if (hasQuery && results.isNotEmpty) ...[
+            const SizedBox(height: 12),
+            StoreInlineSuggestions(
+              results: results,
+              onSelect: onSelect,
+              title: 'Quick picks',
             ),
           ],
           const SizedBox(height: 16),

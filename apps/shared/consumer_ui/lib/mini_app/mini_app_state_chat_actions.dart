@@ -1,13 +1,21 @@
 part of 'mini_app_screen.dart';
 
-mixin MiniAppStateChatActions on MiniAppStateChatState {
+mixin MiniAppStateChatActions
+    on
+        MiniAppStateChatState,
+        MiniAppStateFields,
+        MiniAppStateMenu,
+        MiniAppStateCart,
+        MiniAppStateDelivery,
+        MiniAppStateChatProductLookup,
+        MiniAppStateChatSelection,
+        MiniAppStateChatComms {
   void _handleOptionSelected(ChatOption option) {
-    final toolName = option.toolName?.trim() ?? '';
-    if (toolName == 'switch_to_browse') {
-      _setActiveSegment(MiniAppSegment.browse);
+    final toolName = option.toolName?.trim().toLowerCase() ?? '';
+    final payload = option.payload?.trim();
+    if (_tryHandleLocalOption(option, toolName, payload)) {
       return;
     }
-    final payload = option.payload?.trim();
     if (payload != null && payload.isNotEmpty) {
       _sendChatText(payload);
       return;
@@ -15,64 +23,49 @@ mixin MiniAppStateChatActions on MiniAppStateChatState {
     _sendChatText(option.label);
   }
 
-  Future<void> _sendChatText([String? value]) async {
-    final session = _session;
-    if (session == null) return;
-    final text = (value ?? _chatController.text).trim();
-    if (text.isEmpty) return;
-    setState(() {
-      _chatBusy = true;
-      _chatMessages.add(ChatMessage(id: _chatId(), role: ChatRole.user, text: text));
-      _chatController.clear();
-    });
-    _scrollChatToBottom();
-    try {
-      final response =
-          await _api.sendChatTurn(sessionId: session.sessionId, text: text);
-      _applyChatResponse(response);
-    } catch (_) {
-      _appendAssistantMessage('Sorry, I had trouble responding. Please try again.');
-    } finally {
-      if (mounted) setState(() => _chatBusy = false);
+  bool _tryHandleLocalOption(ChatOption option, String toolName, String? payload) {
+    final label = option.label.trim();
+    final labelLower = label.toLowerCase();
+    if (toolName == 'switch_to_browse') {
+      _appendAssistantMessage('Browse is now in chat. Pick a category above.');
+      return true;
     }
-  }
-
-  void _applyChatResponse(ChatResponse response) {
-    if (response.messages.isNotEmpty) {
-      setState(() => _chatMessages.addAll(response.messages));
-    }
-    _handleToolCalls(response.toolCalls);
-    _scrollChatToBottom();
-  }
-
-  void _handleToolCalls(List<ChatToolCall> toolCalls) {
-    for (final tool in toolCalls) {
-      if (tool.name == 'switch_to_browse') {
-        _setActiveSegment(MiniAppSegment.browse);
+    if (_deliveryEnabled) {
+      if (toolName == 'delivery' || labelLower == 'delivery') {
+        _toggleDelivery(true);
+        _appendUserMessage('Delivery');
+        return true;
+      }
+      if (toolName == 'pickup' || labelLower == 'pickup') {
+        _toggleDelivery(false);
+        _appendUserMessage('Pickup');
+        return true;
       }
     }
+    if (toolName == 'select_category' || toolName == 'category') {
+      _handleCategorySelected(label, fromOption: true);
+      return true;
+    }
+    if (toolName == 'select_product' || toolName == 'product') {
+      final product = _resolveChatProduct(option, payload);
+      if (product != null) {
+        _handleProductSelected(product);
+        return true;
+      }
+    }
+    if (_categories.isNotEmpty) {
+      final normalized = _normalizeCategory(option.label);
+      if (normalized != null) {
+        _handleCategorySelected(normalized, fromOption: true);
+        return true;
+      }
+    }
+    final fallbackProduct = _resolveChatProduct(option, payload);
+    if (fallbackProduct != null) {
+      _handleProductSelected(fallbackProduct);
+      return true;
+    }
+    return false;
   }
 
-  void _appendAssistantMessage(String text) {
-    if (!mounted) return;
-    setState(() {
-      _chatMessages.add(ChatMessage(
-        id: _chatId(),
-        role: ChatRole.assistant,
-        text: text,
-      ));
-    });
-    _scrollChatToBottom();
-  }
-
-  void _scrollChatToBottom() {
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!_chatScrollController.hasClients) return;
-      _chatScrollController.animateTo(
-        _chatScrollController.position.maxScrollExtent,
-        duration: const Duration(milliseconds: 200),
-        curve: Curves.easeOut,
-      );
-    });
-  }
 }

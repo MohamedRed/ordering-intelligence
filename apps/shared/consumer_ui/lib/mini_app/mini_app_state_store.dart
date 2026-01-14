@@ -18,12 +18,14 @@ mixin MiniAppStateStore
       _loadingMenu = true;
       _categories = [];
       _activeCategory = '';
+      _selectedProduct = null;
+      _chatMessages.clear();
       _cart = [];
       _orderConfirmation = null;
       _groupOrder = null;
       _groupOrderParticipantId = null;
+      _groupOrderSelectedParticipantId = null;
       _groupOrderError = null;
-      _storeRecommendations = [];
       _searchResults = [];
       _searchError = null;
       _searchController.clear();
@@ -63,7 +65,6 @@ mixin MiniAppStateStore
       });
       await _loadIdentity();
       await _loadMenu(store.storeId);
-      await _loadStoreRecommendations(store.storeId);
     } catch (e) {
       if (!mounted) {
         return;
@@ -105,12 +106,14 @@ mixin MiniAppStateStore
       _menuError = null;
       _categories = [];
       _activeCategory = '';
+      _selectedProduct = null;
+      _chatMessages.clear();
       _cart = [];
       _orderConfirmation = null;
       _groupOrder = null;
       _groupOrderParticipantId = null;
+      _groupOrderSelectedParticipantId = null;
       _groupOrderError = null;
-      _storeRecommendations = [];
       _searchResults = [];
       _searchError = null;
       _searchController.clear();

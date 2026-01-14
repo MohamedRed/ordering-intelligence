@@ -10,7 +10,6 @@ mixin MiniAppStateChatState
   final TextEditingController _chatController = TextEditingController();
   final ScrollController _chatScrollController = ScrollController();
   final List<ChatMessage> _chatMessages = [];
-  MiniAppSegment _activeSegment = MiniAppSegment.chat;
   bool _chatBusy = false;
   bool _chatRecording = false;
   AudioRecorder? _audioRecorder;
@@ -29,20 +28,38 @@ mixin MiniAppStateChatState
     super.dispose();
   }
 
-  void _setActiveSegment(MiniAppSegment segment) {
-    if (segment == _activeSegment) return;
-    setState(() => _activeSegment = segment);
-  }
-
   void _maybeSeedChat() {
     if (_chatMessages.isNotEmpty) return;
     final storeName = _session?.storeName ?? 'this store';
     _chatMessages.add(ChatMessage(
       id: _chatId(),
       role: ChatRole.assistant,
-      text: 'Hi! Ask me anything about $storeName or what you want to order.',
+      text: 'Hi! Ask me anything about $storeName or pick a quick option below.',
     ));
   }
 
   String _chatId() => DateTime.now().microsecondsSinceEpoch.toString();
+
+  void _appendAssistantMessage(String text) {
+    if (!mounted) return;
+    setState(() {
+      _chatMessages.add(ChatMessage(
+        id: _chatId(),
+        role: ChatRole.assistant,
+        text: text,
+      ));
+    });
+    _scrollChatToBottom();
+  }
+
+  void _scrollChatToBottom() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!_chatScrollController.hasClients) return;
+      _chatScrollController.animateTo(
+        _chatScrollController.position.maxScrollExtent,
+        duration: const Duration(milliseconds: 200),
+        curve: Curves.easeOut,
+      );
+    });
+  }
 }

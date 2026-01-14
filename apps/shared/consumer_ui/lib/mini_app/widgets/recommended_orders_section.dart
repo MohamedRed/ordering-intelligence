@@ -12,6 +12,7 @@ class RecommendedOrdersSection extends StatelessWidget {
     this.onSelect,
     this.showStoreName = true,
     this.inline = false,
+    this.emptyLabel,
   });
 
   final String title;
@@ -19,9 +20,23 @@ class RecommendedOrdersSection extends StatelessWidget {
   final ValueChanged<RecommendedOrder>? onSelect;
   final bool showStoreName;
   final bool inline;
+  final String? emptyLabel;
 
   @override
   Widget build(BuildContext context) {
+    if (orders.isEmpty) {
+      if (emptyLabel == null) {
+        return const SizedBox.shrink();
+      }
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(title, style: ShadTheme.of(context).textTheme.large),
+          const SizedBox(height: 8),
+          Text(emptyLabel!, style: ShadTheme.of(context).textTheme.muted),
+        ],
+      );
+    }
     if (inline) {
       return _buildInline(context);
     }
