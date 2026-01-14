@@ -34,6 +34,17 @@ class ChatHeaderCard extends StatelessWidget {
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              if (onOpenMenu != null) ...[
+                ShadButton.outline(
+                  size: ShadButtonSize.sm,
+                  onPressed: () {
+                    haptics.selection();
+                    onOpenMenu?.call();
+                  },
+                  child: const Icon(Icons.menu, size: 18),
+                ),
+                const SizedBox(width: 8),
+              ],
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -54,30 +65,14 @@ class ChatHeaderCard extends StatelessWidget {
                   ],
                 ),
               ),
-              if (onChangeStore != null || onOpenMenu != null)
-                Row(
-                  children: [
-                    if (onChangeStore != null)
-                      ShadButton.outline(
-                        size: ShadButtonSize.sm,
-                        onPressed: () {
-                          haptics.selection();
-                          onChangeStore?.call();
-                        },
-                        child: const Text('Change'),
-                      ),
-                    if (onOpenMenu != null) ...[
-                      const SizedBox(width: 8),
-                      ShadButton.outline(
-                        size: ShadButtonSize.sm,
-                        onPressed: () {
-                          haptics.selection();
-                          onOpenMenu?.call();
-                        },
-                        child: const Icon(Icons.menu, size: 18),
-                      ),
-                    ],
-                  ],
+              if (onChangeStore != null)
+                ShadButton.outline(
+                  size: ShadButtonSize.sm,
+                  onPressed: () {
+                    haptics.selection();
+                    onChangeStore?.call();
+                  },
+                  child: const Text('Change'),
                 ),
             ],
           ),

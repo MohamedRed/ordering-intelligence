@@ -45,6 +45,13 @@ class StoreSearchChatView extends StatelessWidget {
             padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
             child: Row(
               children: [
+                if (onOpenMenu != null)
+                  ShadButton.outline(
+                    size: ShadButtonSize.sm,
+                    onPressed: onOpenMenu,
+                    child: const Icon(Icons.menu, size: 18),
+                  ),
+                if (onOpenMenu != null) const SizedBox(width: 8),
                 if (onBack != null)
                   ShadButton.outline(
                     size: ShadButtonSize.sm,
@@ -52,12 +59,6 @@ class StoreSearchChatView extends StatelessWidget {
                     child: const Text('Back'),
                   ),
                 const Spacer(),
-                if (onOpenMenu != null)
-                  ShadButton.outline(
-                    size: ShadButtonSize.sm,
-                    onPressed: onOpenMenu,
-                    child: const Icon(Icons.menu, size: 18),
-                  ),
               ],
             ),
           ),
