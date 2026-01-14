@@ -500,6 +500,44 @@ def main():
         },
     ]
 
+    customers = [
+        {
+            "id": demo_customer_id,
+            "fields": {
+                "customerId": demo_customer_id,
+                "displayName": "Dev User",
+                "status": "active",
+                "createdAt": now,
+                "updatedAt": now,
+                "firstSeenAt": now,
+                "lastSeenAt": now,
+                "firstSeenChannel": "telegram",
+                "lastSeenChannel": "telegram",
+                "firstSeenStoreId": "demo-store",
+                "lastSeenStoreId": "demo-store",
+                "firstSeenPlatform": "web",
+                "lastSeenPlatform": "web",
+                "firstSeenProvider": "telegram_webapp",
+                "lastSeenProvider": "telegram_webapp",
+            },
+        }
+    ]
+
+    identities = [
+        {
+            "id": "telegram:dev-user",
+            "fields": {
+                "customerId": demo_customer_id,
+                "channel": "telegram",
+                "userId": "dev-user",
+                "displayName": "Dev User",
+                "linkedAt": now,
+                "lastSeenAt": now,
+                "verifiedAt": now,
+            },
+        }
+    ]
+
     tenants = []
     for store_id, tenant in demo_tenants.items():
         tenants.append(
@@ -532,6 +570,12 @@ def main():
 
     for menu in menus:
         _patch_doc(base_url, token, "menus", menu["id"], menu["fields"])
+
+    for customer in customers:
+        _patch_doc(base_url, token, "customers", customer["id"], customer["fields"])
+
+    for identity in identities:
+        _patch_doc(base_url, token, "customer_identities", identity["id"], identity["fields"])
 
     for group in group_orders:
         _patch_doc(base_url, token, "group_orders", group["id"], group["fields"])
