@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"log"
 	"strings"
 	"time"
 
@@ -26,7 +27,16 @@ func resolveCustomerForIdentity(
 
 	identity, found, err := fetchIdentity(ctx, client, channel, userID)
 	if err != nil {
-		return customerRecord{}, nil, err
+		log.Printf("fetch identity failed channel=%s user=%s: %v", channel, userID, err)
+		found = false
+	}
+	if !found {
+		if fallback, ok, err := findIdentityByFields(ctx, client, channel, userID); err == nil && ok {
+			identity = fallback
+			found = true
+		} else if err != nil {
+			log.Printf("fallback identity lookup failed channel=%s user=%s: %v", channel, userID, err)
+		}
 	}
 	if found {
 		customer, err := resolveActiveCustomer(ctx, client, identity.CustomerID)
@@ -37,9 +47,11 @@ func resolveCustomerForIdentity(
 		identity.DisplayName = chooseDisplayName(identity.DisplayName, displayName)
 		identity.LastSeenAt = time.Now().UTC()
 		if err := upsertIdentity(ctx, client, identity); err != nil {
-			return customerRecord{}, nil, err
+			log.Printf("upsert identity failed customer=%s channel=%s user=%s: %v", customer.CustomerID, channel, userID, err)
 		}
-		_ = touchCustomer(ctx, client, customer, displayName, seen)
+		if err := touchCustomer(ctx, client, customer, displayName, seen); err != nil {
+			log.Printf("touch customer failed customer=%s: %v", customer.CustomerID, err)
+		}
 		linked, _ := listIdentitiesByCustomer(ctx, client, customer.CustomerID)
 		return customer, linked, nil
 	}
@@ -60,7 +72,7 @@ func resolveCustomerForIdentity(
 		VerifiedAt:  time.Now().UTC(),
 	}
 	if err := upsertIdentity(ctx, client, identity); err != nil {
-		return customerRecord{}, nil, err
+		log.Printf("upsert identity failed customer=%s channel=%s user=%s: %v", customer.CustomerID, channel, userID, err)
 	}
 	writeCustomerEvent(ctx, client, customer.CustomerID, "customer_created", channel, userID, nil)
 	return customer, []customerIdentity{identity}, nil

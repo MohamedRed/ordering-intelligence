@@ -35,6 +35,31 @@ func fetchIdentity(ctx context.Context, client *cloudfirestore.Client, channel, 
 	return identity, true, nil
 }
 
+func findIdentityByFields(ctx context.Context, client *cloudfirestore.Client, channel, userID string) (customerIdentity, bool, error) {
+	channel = normalizeChannel(channel)
+	userID = strings.TrimSpace(userID)
+	if channel == "" || userID == "" {
+		return customerIdentity{}, false, nil
+	}
+	iter := client.Collection(identitiesCollection).
+		Where("channel", "==", channel).
+		Where("userId", "==", userID).
+		Limit(1).
+		Documents(ctx)
+	doc, err := iter.Next()
+	if err != nil {
+		if err == iterator.Done {
+			return customerIdentity{}, false, nil
+		}
+		return customerIdentity{}, false, err
+	}
+	var identity customerIdentity
+	if err := doc.DataTo(&identity); err != nil {
+		return customerIdentity{}, false, err
+	}
+	return identity, true, nil
+}
+
 func upsertIdentity(ctx context.Context, client *cloudfirestore.Client, identity customerIdentity) error {
 	docID := identityDocID(identity.Channel, identity.UserID)
 	if docID == "" {
