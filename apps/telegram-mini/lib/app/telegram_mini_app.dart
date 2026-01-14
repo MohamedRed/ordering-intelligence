@@ -3,7 +3,8 @@ import 'package:shadcn_ui/shadcn_ui.dart';
 
 import 'package:consumer_ui/consumer_ui.dart';
 
-import '../platform/web_mini_app_platform.dart';
+import '../platform/web_mini_app_platform_stub.dart'
+    if (dart.library.html) '../platform/web_mini_app_platform.dart';
 import '../telegram/telegram_webapp.dart';
 class TelegramMiniApp extends StatefulWidget {
   const TelegramMiniApp({super.key});

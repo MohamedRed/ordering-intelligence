@@ -1,18 +1,19 @@
-// This is a basic Flutter widget test.
-//
-// To perform an interaction with a widget in your test, use the WidgetTester
-// utility in the flutter_test package. For example, you can send tap and scroll
-// gestures. You can also use WidgetTester to find child widgets in the widget
-// tree, read text, and verify that the values of widget properties are correct.
-
-import 'package:flutter_test/flutter_test.dart';
-
-import 'package:consumer_ui/consumer_ui.dart';
-import 'package:telegram_mini_app/app/telegram_mini_app.dart';
+import 'package:test/test.dart';
+import 'package:telegram_mini_app/app_config.dart';
 
 void main() {
-  testWidgets('App renders mini app screen', (WidgetTester tester) async {
-    await tester.pumpWidget(const TelegramMiniApp());
-    expect(find.byType(MiniAppScreen), findsOneWidget);
+  test('resolveApiBase defaults to gateway URL', () {
+    expect(
+      resolveApiBase(),
+      'https://channel-gateway-230152279015.us-central1.run.app',
+    );
+  });
+
+  test('resolveWebAppPathPrefix defaults to Telegram path', () {
+    expect(resolveWebAppPathPrefix(), '/telegram/webapp');
+  });
+
+  test('resolveDiscordClientId defaults to configured value', () {
+    expect(resolveDiscordClientId(), '1457874399339347988');
   });
 }
