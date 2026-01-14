@@ -11,18 +11,37 @@ class StoreInlineSuggestions extends StatelessWidget {
     required this.onSelect,
     this.title = 'Suggestions',
     this.maxItems = 8,
+    this.axis = Axis.horizontal,
   });
 
   final List<StoreChoice> results;
   final ValueChanged<StoreChoice> onSelect;
   final String title;
   final int maxItems;
+  final Axis axis;
 
   @override
   Widget build(BuildContext context) {
     final visible = results.take(maxItems).toList();
     if (visible.isEmpty) {
       return const SizedBox.shrink();
+    }
+    if (axis == Axis.vertical) {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(title, style: ShadTheme.of(context).textTheme.muted),
+          const SizedBox(height: 8),
+          for (var index = 0; index < visible.length; index++) ...[
+            _StoreSuggestionCard(
+              store: visible[index],
+              onTap: () => onSelect(visible[index]),
+              expand: true,
+            ),
+            if (index < visible.length - 1) const SizedBox(height: 10),
+          ],
+        ],
+      );
     }
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -53,10 +72,12 @@ class _StoreSuggestionCard extends StatelessWidget {
   const _StoreSuggestionCard({
     required this.store,
     required this.onTap,
+    this.expand = false,
   });
 
   final StoreChoice store;
   final VoidCallback onTap;
+  final bool expand;
 
   @override
   Widget build(BuildContext context) {
@@ -66,7 +87,7 @@ class _StoreSuggestionCard extends StatelessWidget {
       onTap: onTap,
       borderRadius: BorderRadius.circular(16),
       child: Container(
-        width: 200,
+        width: expand ? double.infinity : 200,
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
         decoration: BoxDecoration(
           color: theme.colorScheme.muted,
@@ -75,11 +96,7 @@ class _StoreSuggestionCard extends StatelessWidget {
         ),
         child: Row(
           children: [
-            StoreLogo(
-              name: name,
-              logoUrl: store.logoUrl,
-              size: 28,
-            ),
+            StoreLogo(name: name, logoUrl: store.logoUrl, size: 28),
             const SizedBox(width: 10),
             Expanded(
               child: Text(

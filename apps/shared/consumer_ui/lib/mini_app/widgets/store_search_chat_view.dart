@@ -41,12 +41,7 @@ class StoreSearchChatView extends StatelessWidget {
         children: [
           Row(
             children: [
-              Expanded(
-                child: Text(
-                  'Search stores',
-                  style: theme.textTheme.h2,
-                ),
-              ),
+              Expanded(child: Text('Search stores', style: theme.textTheme.h2)),
               ShadButton.outline(
                 size: ShadButtonSize.sm,
                 onPressed: onBack,
@@ -109,9 +104,13 @@ class StoreSearchChatView extends StatelessWidget {
               onSelect: onSelectSuggestion,
               title: 'Suggestions',
               maxItems: 6,
+              axis: Axis.vertical,
             ),
           ],
-          if (hasQuery && searchResults.isEmpty && !searching && searchError == null)
+          if (hasQuery &&
+              searchResults.isEmpty &&
+              !searching &&
+              searchError == null)
             Padding(
               padding: const EdgeInsets.only(top: 6),
               child: Text(
