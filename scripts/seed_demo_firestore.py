@@ -84,15 +84,31 @@ def main():
     now = _now()
 
     demo_customer_id = "demo-customer-1"
-    demo_tenant_id = "demo-tenant"
+    demo_tenants = {
+        "demo-store": {
+            "id": "demo-tenant-pizza",
+            "name": "Demo Pizzeria",
+            "business_type": "restaurant",
+        },
+        "demo-gas": {
+            "id": "demo-tenant-gas",
+            "name": "Demo Fuel Station",
+            "business_type": "gas_station",
+        },
+        "demo-bakery": {
+            "id": "demo-tenant-bakery",
+            "name": "Demo Bakery",
+            "business_type": "restaurant",
+        },
+    }
 
     stores = [
         {
             "id": "demo-store",
             "fields": {
                 "store_id": "demo-store",
-                "name": "Demo Pizzeria",
-                "tenant_id": demo_tenant_id,
+                "name": demo_tenants["demo-store"]["name"],
+                "tenant_id": demo_tenants["demo-store"]["id"],
                 "business_type": "restaurant",
                 "currency": "eur",
                 "logo_url": "https://cdn.liive.app/demo/demo-pizza.png",
@@ -112,8 +128,8 @@ def main():
             "id": "demo-gas",
             "fields": {
                 "store_id": "demo-gas",
-                "name": "Demo Fuel Station",
-                "tenant_id": demo_tenant_id,
+                "name": demo_tenants["demo-gas"]["name"],
+                "tenant_id": demo_tenants["demo-gas"]["id"],
                 "business_type": "gas_station",
                 "currency": "eur",
                 "fuel_default_prepay_cents": 5000,
@@ -134,8 +150,8 @@ def main():
             "id": "demo-bakery",
             "fields": {
                 "store_id": "demo-bakery",
-                "name": "Demo Bakery",
-                "tenant_id": demo_tenant_id,
+                "name": demo_tenants["demo-bakery"]["name"],
+                "tenant_id": demo_tenants["demo-bakery"]["id"],
                 "business_type": "restaurant",
                 "currency": "eur",
                 "logo_url": "https://cdn.liive.app/demo/demo-bakery.png",
@@ -163,7 +179,7 @@ def main():
                 "callSid": "demo-call-1",
                 "channel": "telegram",
                 "customerName": "Alex Demo",
-                "tenantId": demo_tenant_id,
+                "tenantId": demo_tenants["demo-store"]["id"],
                 "customerId": demo_customer_id,
                 "callerId": "+33123456789",
                 "notes": "No olives.",
@@ -208,7 +224,7 @@ def main():
                 "callSid": "demo-call-2",
                 "channel": "telegram",
                 "customerName": "Alex Demo",
-                "tenantId": demo_tenant_id,
+                "tenantId": demo_tenants["demo-gas"]["id"],
                 "customerId": demo_customer_id,
                 "callerId": "+33123456789",
                 "notes": "",
@@ -247,7 +263,7 @@ def main():
                 "id": "demo-group-order-1",
                 "joinCode": "DEMO123",
                 "storeId": "demo-store",
-                "tenantId": demo_tenant_id,
+                "tenantId": demo_tenants["demo-store"]["id"],
                 "customerId": demo_customer_id,
                 "status": "submitted",
                 "fulfillmentType": "pickup",
@@ -379,8 +395,32 @@ def main():
         }
     ]
 
+    tenants = []
+    for store_id, tenant in demo_tenants.items():
+        tenants.append(
+            {
+                "id": tenant["id"],
+                "fields": {
+                    "id": tenant["id"],
+                    "name": tenant["name"],
+                    "primaryUser": "demo@liive.app",
+                    "status": "active",
+                    "featureFlags": {},
+                    "storeId": store_id,
+                    "businessType": tenant["business_type"],
+                    "timezone": "Europe/Paris",
+                    "phone": "+33123456789",
+                    "createdAt": now,
+                    "updatedAt": now,
+                },
+            }
+        )
+
     for store in stores:
         _patch_doc(base_url, token, "stores", store["id"], store["fields"])
+
+    for tenant in tenants:
+        _patch_doc(base_url, token, "tenants", tenant["id"], tenant["fields"])
 
     for order in orders:
         _patch_doc(base_url, token, "orders", order["id"], order["fields"])
