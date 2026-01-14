@@ -42,13 +42,13 @@ class StoreSearchChatView extends StatelessWidget {
     final theme = ShadTheme.of(context);
     final showHeaderActions =
         onBack != null || (onSignOut != null && signOutLabel != null);
-    return Padding(
-      padding: const EdgeInsets.all(20),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          if (showHeaderActions) ...[
-            Row(
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        if (showHeaderActions)
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+            child: Row(
               children: [
                 if (onBack != null)
                   ShadButton.outline(
@@ -71,26 +71,24 @@ class StoreSearchChatView extends StatelessWidget {
                   ),
               ],
             ),
-            const SizedBox(height: 12),
-          ],
-          Expanded(
-            child: ChatView(
-              messages: messages,
-              controller: controller,
-              onSend: onSend,
-              onOptionSelected: onOptionSelected,
-              onOptionsConfirmed: onOptionsConfirmed,
-              onProductSelected: (_) {},
-              onToggleRecording: () {},
-              isLoading: searching,
-              isSending: searching,
-              canRecord: false,
-              placeholder: 'Search stores...',
-              footer: _buildSuggestions(context),
-            ),
           ),
-        ],
-      ),
+        Expanded(
+          child: ChatView(
+            messages: messages,
+            controller: controller,
+            onSend: onSend,
+            onOptionSelected: onOptionSelected,
+            onOptionsConfirmed: onOptionsConfirmed,
+            onProductSelected: (_) {},
+            onToggleRecording: () {},
+            isLoading: searching,
+            isSending: searching,
+            canRecord: false,
+            placeholder: 'Search stores...',
+            footer: _buildSuggestions(context),
+          ),
+        ),
+      ],
     );
   }
 

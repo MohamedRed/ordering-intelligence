@@ -35,94 +35,86 @@ class ChatMessageBubble extends StatelessWidget {
     final hasText = message.text != null && message.text!.trim().isNotEmpty;
     final hasAudio = message.audioBytes != null;
     final hasBubble = hasText || hasAudio;
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final bubbleWidth = constraints.maxWidth;
-        return Align(
-          alignment: isUser ? Alignment.centerRight : Alignment.centerLeft,
-          child: Column(
-            crossAxisAlignment: isUser
-                ? CrossAxisAlignment.end
-                : CrossAxisAlignment.start,
-            children: [
-              if (hasBubble)
-                ConstrainedBox(
-                  constraints: BoxConstraints(maxWidth: bubbleWidth),
-                  child: Container(
-                    width: bubbleWidth,
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      color: bubbleColor,
-                      borderRadius: BorderRadius.circular(16),
-                    ),
-                    child: Column(
-                      crossAxisAlignment: isUser
-                          ? CrossAxisAlignment.end
-                          : CrossAxisAlignment.start,
-                      children: [
-                        if (hasText)
-                          Text(
-                            message.text!,
-                            style: theme.textTheme.small.copyWith(
-                              color: textColor,
-                            ),
-                          ),
-                        if (hasAudio) ...[
-                          if (hasText) const SizedBox(height: 6),
-                          ChatAudioPlayer(
-                            bytes: message.audioBytes!,
-                            mimeType: message.audioMime,
-                            foregroundColor: textColor,
-                            showLabel: !hasText,
-                          ),
-                        ],
-                      ],
-                    ),
-                  ),
+    return Align(
+      alignment: isUser ? Alignment.centerRight : Alignment.centerLeft,
+      child: Column(
+        crossAxisAlignment: isUser
+            ? CrossAxisAlignment.end
+            : CrossAxisAlignment.start,
+        children: [
+          if (hasBubble)
+            ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 320),
+              child: Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: bubbleColor,
+                  borderRadius: BorderRadius.circular(16),
                 ),
-              if (message.products.isNotEmpty) ...[
-                if (hasBubble) const SizedBox(height: 8),
-                SizedBox(
-                  height: 96,
-                  child: ListView.separated(
-                    scrollDirection: Axis.horizontal,
-                    itemCount: message.products.length,
-                    separatorBuilder: (_, __) => const SizedBox(width: 10),
-                    itemBuilder: (context, index) {
-                      final product = message.products[index];
-                      return SizedBox(
-                        width: 240,
-                        child: ChatProductCard(
-                          product: product,
-                          onTap: () => onProductSelected(product),
-                        ),
-                      );
-                    },
-                  ),
+                child: Column(
+                  crossAxisAlignment: isUser
+                      ? CrossAxisAlignment.end
+                      : CrossAxisAlignment.start,
+                  children: [
+                    if (hasText)
+                      Text(
+                        message.text!,
+                        style: theme.textTheme.small.copyWith(color: textColor),
+                      ),
+                    if (hasAudio) ...[
+                      if (hasText) const SizedBox(height: 6),
+                      ChatAudioPlayer(
+                        bytes: message.audioBytes!,
+                        mimeType: message.audioMime,
+                        foregroundColor: textColor,
+                        showLabel: !hasText,
+                      ),
+                    ],
+                  ],
                 ),
-              ],
-              if (message.options.isNotEmpty) ...[
-                if (hasBubble || message.products.isNotEmpty)
-                  const SizedBox(height: 8),
-                if (message.isMultiSelect)
-                  ChatOptionMultiSelect(
-                    options: message.options,
-                    confirmLabel: message.confirmLabel,
-                    minSelections: message.minSelections,
-                    maxSelections: message.maxSelections,
-                    onConfirm: (selections) =>
-                        onOptionsConfirmed(message, selections),
-                  )
-                else
-                  ChatOptionChips(
-                    options: message.options,
-                    onSelected: (option) => onOptionSelected(message, option),
-                  ),
-              ],
-            ],
-          ),
-        );
-      },
+              ),
+            ),
+          if (message.products.isNotEmpty) ...[
+            if (hasBubble) const SizedBox(height: 8),
+            SizedBox(
+              height: 96,
+              child: ListView.separated(
+                scrollDirection: Axis.horizontal,
+                itemCount: message.products.length,
+                separatorBuilder: (_, __) => const SizedBox(width: 10),
+                itemBuilder: (context, index) {
+                  final product = message.products[index];
+                  return SizedBox(
+                    width: 240,
+                    child: ChatProductCard(
+                      product: product,
+                      onTap: () => onProductSelected(product),
+                    ),
+                  );
+                },
+              ),
+            ),
+          ],
+          if (message.options.isNotEmpty) ...[
+            if (hasBubble || message.products.isNotEmpty)
+              const SizedBox(height: 8),
+            if (message.isMultiSelect)
+              ChatOptionMultiSelect(
+                options: message.options,
+                confirmLabel: message.confirmLabel,
+                minSelections: message.minSelections,
+                maxSelections: message.maxSelections,
+                onConfirm: (selections) =>
+                    onOptionsConfirmed(message, selections),
+              )
+            else
+              ChatOptionChips(
+                options: message.options,
+                onSelected: (option) => onOptionSelected(message, option),
+              ),
+          ],
+        ],
+      ),
     );
   }
 }
