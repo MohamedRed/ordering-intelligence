@@ -395,6 +395,111 @@ def main():
         }
     ]
 
+    menus = [
+        {
+            "id": "demo-store",
+            "fields": {
+                "storeId": "demo-store",
+                "items": [
+                    {
+                        "id": "pizza-margherita",
+                        "name": "Margherita",
+                        "priceCents": 1200,
+                        "available": True,
+                        "category": "Pizza",
+                        "description": "Tomato, mozzarella, basil",
+                        "modifiers": [],
+                    },
+                    {
+                        "id": "pizza-pepperoni",
+                        "name": "Pepperoni",
+                        "priceCents": 1400,
+                        "available": True,
+                        "category": "Pizza",
+                        "description": "Pepperoni, mozzarella",
+                        "modifiers": [],
+                    },
+                    {
+                        "id": "tiramisu",
+                        "name": "Tiramisu",
+                        "priceCents": 600,
+                        "available": True,
+                        "category": "Dessert",
+                        "description": "Classic tiramisu",
+                        "modifiers": [],
+                    },
+                ],
+                "bundleRules": [],
+                "updatedAt": now,
+            },
+        },
+        {
+            "id": "demo-bakery",
+            "fields": {
+                "storeId": "demo-bakery",
+                "items": [
+                    {
+                        "id": "croissant",
+                        "name": "Butter Croissant",
+                        "priceCents": 350,
+                        "available": True,
+                        "category": "Bakery",
+                        "description": "Freshly baked",
+                        "modifiers": [],
+                    },
+                    {
+                        "id": "pain-au-chocolat",
+                        "name": "Pain au chocolat",
+                        "priceCents": 380,
+                        "available": True,
+                        "category": "Bakery",
+                        "description": "Chocolate filled",
+                        "modifiers": [],
+                    },
+                    {
+                        "id": "baguette",
+                        "name": "Baguette",
+                        "priceCents": 220,
+                        "available": True,
+                        "category": "Bakery",
+                        "description": "Traditional baguette",
+                        "modifiers": [],
+                    },
+                ],
+                "bundleRules": [],
+                "updatedAt": now,
+            },
+        },
+        {
+            "id": "demo-gas",
+            "fields": {
+                "storeId": "demo-gas",
+                "items": [
+                    {
+                        "id": "diesel",
+                        "name": "Diesel",
+                        "priceCents": 190,
+                        "available": True,
+                        "category": "Fuel",
+                        "description": "Per liter",
+                        "modifiers": [],
+                    },
+                    {
+                        "id": "unleaded-95",
+                        "name": "Unleaded 95",
+                        "priceCents": 175,
+                        "available": True,
+                        "category": "Fuel",
+                        "description": "Per liter",
+                        "modifiers": [],
+                    },
+                ],
+                "bundleRules": [],
+                "updatedAt": now,
+            },
+        },
+    ]
+
     tenants = []
     for store_id, tenant in demo_tenants.items():
         tenants.append(
@@ -424,6 +529,9 @@ def main():
 
     for order in orders:
         _patch_doc(base_url, token, "orders", order["id"], order["fields"])
+
+    for menu in menus:
+        _patch_doc(base_url, token, "menus", menu["id"], menu["fields"])
 
     for group in group_orders:
         _patch_doc(base_url, token, "group_orders", group["id"], group["fields"])
