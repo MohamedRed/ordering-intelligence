@@ -87,7 +87,6 @@ mixin MiniAppStateBuild
                 onOptionSelected: _handleStoreSearchOptionSelected,
                 onOptionsConfirmed: _handleStoreSearchOptionsConfirmed,
                 onSelectSuggestion: _selectStoreFromSearchSuggestion,
-                onBack: _storeSearchMode ? _exitStoreSearchMode : null,
                 onOpenMenu: onOpenMenu,
               );
             },

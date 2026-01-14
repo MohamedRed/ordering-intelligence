@@ -17,26 +17,11 @@ mixin MiniAppStateStoreSearchChat
       _searchError = null;
       _searching = false;
       _searchController.clear();
-      _chatMessages.clear();
     });
     _seedStoreSearchChat();
   }
 
-  void _exitStoreSearchMode() {
-    setState(() {
-      _storeSearchMode = false;
-      _storeSearchSeeded = false;
-      _pendingStartGroupOrder = false;
-      _searchResults = [];
-      _searchError = null;
-      _searching = false;
-      _searchController.clear();
-      _chatMessages.clear();
-    });
-  }
-
   void _seedStoreSearchChat() {
-    if (_chatMessages.isNotEmpty) return;
     setState(() {
       _chatMessages.add(
         ChatMessage(
@@ -97,7 +82,6 @@ mixin MiniAppStateStoreSearchChat
   }
 
   void _selectStoreFromSearchSuggestion(StoreChoice store) {
-    _exitStoreSearchMode();
     _selectStore(store);
   }
 
@@ -133,7 +117,6 @@ mixin MiniAppStateStoreSearchChat
       _appendAssistantMessage('That store is no longer available. Try again.');
       return;
     }
-    _exitStoreSearchMode();
     _selectStore(store);
   }
 
