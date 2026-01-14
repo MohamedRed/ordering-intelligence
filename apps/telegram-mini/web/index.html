@@ -48,11 +48,14 @@
     (function () {
       var meta = document.querySelector('meta[name="webapp-version"]');
       var version = meta ? meta.content : '';
-      window.__webappVersion = version;
+      var host = (window.location.hostname || '').toLowerCase();
+      var isLocalhost =
+        host === 'localhost' || host === '127.0.0.1' || host === '[::1]';
+      window.__webappVersion = isLocalhost ? '' : version;
       window.flutterConfiguration = {
         fontFallbackBaseUrl: '/assets/fonts/',
       };
-      if (!version) {
+      if (!version || isLocalhost) {
         return;
       }
       try {
