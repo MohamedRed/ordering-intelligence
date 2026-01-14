@@ -3,11 +3,13 @@ steps:
     args:
       - "build"
       - "-t"
-      - "us-central1-docker.pkg.dev/$PROJECT_ID/services/customer-profile-service:latest"
+      - "${_REGION}-docker.pkg.dev/$PROJECT_ID/services/customer-profile-service:latest"
       - "-f"
       - "backend/services/customer-profile-service/Dockerfile"
       - "."
 images:
-  - "us-central1-docker.pkg.dev/$PROJECT_ID/services/customer-profile-service:latest"
+  - "${_REGION}-docker.pkg.dev/$PROJECT_ID/services/customer-profile-service:latest"
 
+substitutions:
+  _REGION: europe-west1
 
