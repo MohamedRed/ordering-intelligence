@@ -10,6 +10,7 @@ mixin MiniAppStateChatActions
         MiniAppStateDelivery,
         MiniAppStateChatProductLookup,
         MiniAppStateChatSelection,
+        MiniAppStateChatSeed,
         MiniAppStateChatComms {
   void _handleOptionSelected(ChatMessage message, ChatOption option) {
     if (_chatBusy) return;
@@ -53,7 +54,24 @@ mixin MiniAppStateChatActions
     }
     if (toolName == 'continue_browsing') {
       _appendUserMessage('Yes');
-      _appendAssistantMessage('Great. Pick another item or ask me a question.');
+      final options = _buildCategoryOptions();
+      if (options.isEmpty) {
+        _appendAssistantMessage(
+          'Great. Pick another item or ask me a question.',
+        );
+      } else {
+        setState(() {
+          _chatMessages.add(
+            ChatMessage(
+              id: _chatId(),
+              role: ChatRole.assistant,
+              text: 'Pick a category to continue.',
+              options: options,
+            ),
+          );
+        });
+        _scrollChatToBottom();
+      }
       return true;
     }
     if (toolName == 'open_cart') {
