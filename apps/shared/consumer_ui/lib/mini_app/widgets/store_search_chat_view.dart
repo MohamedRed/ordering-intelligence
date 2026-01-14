@@ -40,43 +40,39 @@ class StoreSearchChatView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = ShadTheme.of(context);
+    final showHeaderActions =
+        onBack != null || (onSignOut != null && signOutLabel != null);
     return Padding(
       padding: const EdgeInsets.all(20),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            children: [
-              Expanded(
-                child: Text('Start an order', style: theme.textTheme.h2),
-              ),
-              if (onBack != null)
-                ShadButton.outline(
-                  size: ShadButtonSize.sm,
-                  onPressed: onBack,
-                  child: const Text('Back'),
-                ),
-              if (onBack != null && onSignOut != null) const SizedBox(width: 8),
-              if (onSignOut != null && signOutLabel != null)
-                ShadButton.outline(
-                  size: ShadButtonSize.sm,
-                  onPressed: signingOut ? null : onSignOut,
-                  child: signingOut
-                      ? const SizedBox(
-                          width: 14,
-                          height: 14,
-                          child: CircularProgressIndicator(strokeWidth: 2),
-                        )
-                      : Text(signOutLabel!),
-                ),
-            ],
-          ),
-          const SizedBox(height: 6),
-          Text(
-            'Pick a recent order or search by store name.',
-            style: theme.textTheme.muted,
-          ),
-          const SizedBox(height: 12),
+          if (showHeaderActions) ...[
+            Row(
+              children: [
+                if (onBack != null)
+                  ShadButton.outline(
+                    size: ShadButtonSize.sm,
+                    onPressed: onBack,
+                    child: const Text('Back'),
+                  ),
+                const Spacer(),
+                if (onSignOut != null && signOutLabel != null)
+                  ShadButton.outline(
+                    size: ShadButtonSize.sm,
+                    onPressed: signingOut ? null : onSignOut,
+                    child: signingOut
+                        ? const SizedBox(
+                            width: 14,
+                            height: 14,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          )
+                        : Text(signOutLabel!),
+                  ),
+              ],
+            ),
+            const SizedBox(height: 12),
+          ],
           Expanded(
             child: ChatView(
               messages: messages,
