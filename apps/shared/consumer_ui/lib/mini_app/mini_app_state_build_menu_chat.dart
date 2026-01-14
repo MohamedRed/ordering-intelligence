@@ -8,7 +8,6 @@ mixin MiniAppStateBuildMenuChat
         MiniAppStateStore,
         MiniAppStateCart,
         MiniAppStateCartSheet,
-        MiniAppStateSignOut,
         MiniAppStateGroupOrdersView,
         MiniAppStateDelivery,
         MiniAppStateChatState,
@@ -18,7 +17,7 @@ mixin MiniAppStateBuildMenuChat
         MiniAppStateChatActions,
         MiniAppStateChatParticipants,
         MiniAppStateChatAudio {
-  Widget _buildChatMenuLayout(SessionInfo session) {
+  Widget _buildChatMenuLayout(SessionInfo session, {VoidCallback? onOpenMenu}) {
     if (_menu != null) {
       _seedMenuChatIfNeeded();
     }
@@ -53,9 +52,7 @@ mixin MiniAppStateBuildMenuChat
           cartLabel: cartLabel,
           onOpenCart: _cartItemCount == 0 ? null : _openCartSheet,
           onChangeStore: _changeStore,
-          signOutLabel: _signOutLabel,
-          onSignOut: _signOutLabel == null ? null : _requestSignOut,
-          signingOut: _signingOut,
+          onOpenMenu: onOpenMenu,
         ),
         const SizedBox(height: 12),
         if (_menuError != null) ...[

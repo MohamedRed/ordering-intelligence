@@ -68,28 +68,48 @@ mixin MiniAppStateBuild
           body: wrapSafeArea(const Center(child: CircularProgressIndicator())),
         );
       }
+      final drawer = _buildMiniAppDrawer();
       _seedHomeChatIfNeeded();
       return Scaffold(
         body: wrapSafeArea(
-          StoreSearchChatView(
-            messages: _chatMessages,
-            controller: _searchController,
-            searching: _searching,
-            searchResults: _searchResults,
-            searchError: _searchError,
-            onSend: _sendStoreSearchMessage,
-            onOptionSelected: _handleStoreSearchOptionSelected,
-            onOptionsConfirmed: _handleStoreSearchOptionsConfirmed,
-            onSelectSuggestion: _selectStoreFromSearchSuggestion,
-            onBack: _storeSearchMode ? _exitStoreSearchMode : null,
-            signOutLabel: _signOutLabel,
-            onSignOut: _signOutLabel == null ? null : _requestSignOut,
-            signingOut: _signingOut,
+          Builder(
+            builder: (context) {
+              final onOpenMenu = drawer == null
+                  ? null
+                  : () => Scaffold.of(context).openDrawer();
+              return StoreSearchChatView(
+                messages: _chatMessages,
+                controller: _searchController,
+                searching: _searching,
+                searchResults: _searchResults,
+                searchError: _searchError,
+                onSend: _sendStoreSearchMessage,
+                onOptionSelected: _handleStoreSearchOptionSelected,
+                onOptionsConfirmed: _handleStoreSearchOptionsConfirmed,
+                onSelectSuggestion: _selectStoreFromSearchSuggestion,
+                onBack: _storeSearchMode ? _exitStoreSearchMode : null,
+                onOpenMenu: onOpenMenu,
+              );
+            },
           ),
         ),
+        drawer: drawer,
       );
     }
-    return Scaffold(body: wrapSafeArea(_buildMenuLayout(session)));
+    final drawer = _buildMiniAppDrawer();
+    return Scaffold(
+      body: wrapSafeArea(
+        Builder(
+          builder: (context) {
+            final onOpenMenu = drawer == null
+                ? null
+                : () => Scaffold.of(context).openDrawer();
+            return _buildMenuLayout(session, onOpenMenu: onOpenMenu);
+          },
+        ),
+      ),
+      drawer: drawer,
+    );
   }
 
   bool get _shouldShowGroupOrderLoading {
@@ -100,5 +120,17 @@ mixin MiniAppStateBuild
     return (_pendingInviteId?.isNotEmpty ?? false) ||
         (_pendingJoinCode?.isNotEmpty ?? false) ||
         (_pendingGroupOrderId?.isNotEmpty ?? false);
+  }
+
+  Widget? _buildMiniAppDrawer() {
+    final label = _signOutLabel;
+    if (label == null) return null;
+    return MiniAppDrawer(
+      signOutLabel: label,
+      onSignOut: _requestSignOut,
+      signingOut: _signingOut,
+      displayName: _session?.displayName,
+      subtitle: _session?.storeName,
+    );
   }
 }

@@ -12,9 +12,7 @@ class ChatHeaderCard extends StatelessWidget {
     this.cartLabel,
     this.onOpenCart,
     this.onChangeStore,
-    this.signOutLabel,
-    this.onSignOut,
-    this.signingOut = false,
+    this.onOpenMenu,
   });
 
   final String storeName;
@@ -22,9 +20,7 @@ class ChatHeaderCard extends StatelessWidget {
   final String? cartLabel;
   final VoidCallback? onOpenCart;
   final VoidCallback? onChangeStore;
-  final String? signOutLabel;
-  final VoidCallback? onSignOut;
-  final bool signingOut;
+  final VoidCallback? onOpenMenu;
 
   @override
   Widget build(BuildContext context) {
@@ -58,7 +54,7 @@ class ChatHeaderCard extends StatelessWidget {
                   ],
                 ),
               ),
-              if (onChangeStore != null || onSignOut != null)
+              if (onChangeStore != null || onOpenMenu != null)
                 Row(
                   children: [
                     if (onChangeStore != null)
@@ -70,23 +66,15 @@ class ChatHeaderCard extends StatelessWidget {
                         },
                         child: const Text('Change'),
                       ),
-                    if (onSignOut != null && signOutLabel != null) ...[
+                    if (onOpenMenu != null) ...[
                       const SizedBox(width: 8),
                       ShadButton.outline(
                         size: ShadButtonSize.sm,
-                        onPressed: signingOut
-                            ? null
-                            : () {
-                                haptics.selection();
-                                onSignOut?.call();
-                              },
-                        child: signingOut
-                            ? const SizedBox(
-                                width: 14,
-                                height: 14,
-                                child: CircularProgressIndicator(strokeWidth: 2),
-                              )
-                            : Text(signOutLabel!),
+                        onPressed: () {
+                          haptics.selection();
+                          onOpenMenu?.call();
+                        },
+                        child: const Icon(Icons.menu, size: 18),
                       ),
                     ],
                   ],
@@ -97,15 +85,13 @@ class ChatHeaderCard extends StatelessWidget {
             const SizedBox(height: 10),
             Row(
               children: [
-                Icon(Icons.shopping_bag_outlined,
-                    size: 16, color: theme.colorScheme.mutedForeground),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: Text(
-                    cartLabel!,
-                    style: theme.textTheme.small,
-                  ),
+                Icon(
+                  Icons.shopping_bag_outlined,
+                  size: 16,
+                  color: theme.colorScheme.mutedForeground,
                 ),
+                const SizedBox(width: 8),
+                Expanded(child: Text(cartLabel!, style: theme.textTheme.small)),
                 if (onOpenCart != null)
                   ShadButton(
                     size: ShadButtonSize.sm,

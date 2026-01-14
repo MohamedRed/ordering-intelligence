@@ -7,10 +7,9 @@ mixin MiniAppStateBuildMenuGas
         MiniAppStateMenu,
         MiniAppStateStore,
         MiniAppStateCart,
-        MiniAppStateSignOut,
         MiniAppStateGas,
         MiniAppStateGasActions {
-  Widget _buildGasMenuLayout(SessionInfo session) {
+  Widget _buildGasMenuLayout(SessionInfo session, {VoidCallback? onOpenMenu}) {
     Widget menuBody;
     if (_loadingMenu) {
       menuBody = const Center(child: CircularProgressIndicator());
@@ -60,9 +59,7 @@ mixin MiniAppStateBuildMenuGas
           subtitle: 'Complete your fuel order.',
           cartLabel: null,
           onChangeStore: _changeStore,
-          signOutLabel: _signOutLabel,
-          onSignOut: _signOutLabel == null ? null : _requestSignOut,
-          signingOut: _signingOut,
+          onOpenMenu: onOpenMenu,
         ),
         const SizedBox(height: 12),
         Expanded(child: menuBody),

@@ -18,9 +18,7 @@ class StoreSearchChatView extends StatelessWidget {
     required this.onOptionsConfirmed,
     required this.onSelectSuggestion,
     this.onBack,
-    this.signOutLabel,
-    this.onSignOut,
-    this.signingOut = false,
+    this.onOpenMenu,
   });
 
   final List<ChatMessage> messages;
@@ -33,15 +31,12 @@ class StoreSearchChatView extends StatelessWidget {
   final void Function(ChatMessage, List<ChatOption>) onOptionsConfirmed;
   final ValueChanged<StoreChoice> onSelectSuggestion;
   final VoidCallback? onBack;
-  final String? signOutLabel;
-  final VoidCallback? onSignOut;
-  final bool signingOut;
+  final VoidCallback? onOpenMenu;
 
   @override
   Widget build(BuildContext context) {
     final theme = ShadTheme.of(context);
-    final showHeaderActions =
-        onBack != null || (onSignOut != null && signOutLabel != null);
+    final showHeaderActions = onBack != null || onOpenMenu != null;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -57,17 +52,11 @@ class StoreSearchChatView extends StatelessWidget {
                     child: const Text('Back'),
                   ),
                 const Spacer(),
-                if (onSignOut != null && signOutLabel != null)
+                if (onOpenMenu != null)
                   ShadButton.outline(
                     size: ShadButtonSize.sm,
-                    onPressed: signingOut ? null : onSignOut,
-                    child: signingOut
-                        ? const SizedBox(
-                            width: 14,
-                            height: 14,
-                            child: CircularProgressIndicator(strokeWidth: 2),
-                          )
-                        : Text(signOutLabel!),
+                    onPressed: onOpenMenu,
+                    child: const Icon(Icons.menu, size: 18),
                   ),
               ],
             ),

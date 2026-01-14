@@ -6,10 +6,10 @@ mixin MiniAppStateBuildMenu
         MiniAppStateGas,
         MiniAppStateBuildMenuGas,
         MiniAppStateBuildMenuChat {
-  Widget _buildMenuLayout(SessionInfo session) {
+  Widget _buildMenuLayout(SessionInfo session, {VoidCallback? onOpenMenu}) {
     if (session.businessType == 'gas_station') {
-      return _buildGasMenuLayout(session);
+      return _buildGasMenuLayout(session, onOpenMenu: onOpenMenu);
     }
-    return _buildChatMenuLayout(session);
+    return _buildChatMenuLayout(session, onOpenMenu: onOpenMenu);
   }
 }
