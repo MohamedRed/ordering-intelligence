@@ -444,6 +444,11 @@
             "type": "webhook",
             "config": "tool_configs/delivery_quote.json",
             "id": "tool_8501kcx1vyyaftzakzx5s65dv6p3"
+        },
+        {
+            "type": "client",
+            "config": "tool_configs/present_choices.json",
+            "id": "tool_6101kez2gwjme8aanvycpe16t861"
         }
     ]
 }
