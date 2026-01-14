@@ -26,12 +26,6 @@ class StorePickerResults extends StatelessWidget {
         recommendedOrders.where((order) => !order.isGroupOrder).toList();
     final groupOrders =
         recommendedOrders.where((order) => order.isGroupOrder).toList();
-    if (singleOrders.isEmpty && groupOrders.isEmpty && searchResults.isEmpty) {
-      return const CenteredMessage(
-        title: 'No results yet',
-        description: 'Search for a store to begin ordering.',
-      );
-    }
     final children = <Widget>[];
     children.add(
       RecommendedOrdersSection(
@@ -52,6 +46,13 @@ class StorePickerResults extends StatelessWidget {
         emptyLabel: 'No group orders yet.',
       ),
     );
+    if (singleOrders.isEmpty && groupOrders.isEmpty && searchResults.isEmpty) {
+      children.add(const SizedBox(height: 16));
+      children.add(const CenteredMessage(
+        title: 'No results yet',
+        description: 'Search for a store to begin ordering.',
+      ));
+    }
     if (searchResults.isNotEmpty) {
       children.add(const SizedBox(height: 16));
       children.add(
