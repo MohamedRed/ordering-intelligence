@@ -5,6 +5,7 @@ mixin MiniAppStateBuild
         State<MiniAppScreen>,
         MiniAppStateFields,
         MiniAppStateSearch,
+        MiniAppStateStoreSearchChat,
         MiniAppStateStore,
         MiniAppStateMenu,
         MiniAppStateCart,
