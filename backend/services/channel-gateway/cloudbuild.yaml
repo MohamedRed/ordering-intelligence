@@ -3,9 +3,9 @@ steps:
     args:
       - "build"
       - "-t"
-      - "us-central1-docker.pkg.dev/$PROJECT_ID/services/channel-gateway:latest"
+      - "${_REGION}-docker.pkg.dev/$PROJECT_ID/services/channel-gateway:latest"
       - "-f"
       - "backend/services/channel-gateway/Dockerfile"
       - "."
 images:
-  - "us-central1-docker.pkg.dev/$PROJECT_ID/services/channel-gateway:latest"
+  - "${_REGION}-docker.pkg.dev/$PROJECT_ID/services/channel-gateway:latest"
