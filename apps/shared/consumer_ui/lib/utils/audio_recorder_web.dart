@@ -74,8 +74,14 @@ class _WebRecorder implements AudioRecorder {
       final reader = html.FileReader();
       reader.readAsArrayBuffer(blob);
       await reader.onLoadEnd.first;
-      final buffer = reader.result as ByteBuffer;
-      final bytes = Uint8List.view(buffer);
+      final result = reader.result;
+      ByteBuffer? buffer;
+      if (result is ByteBuffer) {
+        buffer = result;
+      } else if (result is Uint8List) {
+        buffer = result.buffer;
+      }
+      final bytes = buffer != null ? Uint8List.view(buffer) : Uint8List(0);
       completer.complete(bytes);
       _chunks.clear();
       _recording = false;
