@@ -7,7 +7,7 @@ mixin MiniAppStateBuildMenu
         MiniAppStateBuildMenuGas,
         MiniAppStateBuildMenuChat {
   Widget _buildMenuLayout(SessionInfo session, {VoidCallback? onOpenMenu}) {
-    if (session.businessType == 'gas_station') {
+    if (session.storeId.isNotEmpty && session.businessType == 'gas_station') {
       return _buildGasMenuLayout(session, onOpenMenu: onOpenMenu);
     }
     return _buildChatMenuLayout(session, onOpenMenu: onOpenMenu);

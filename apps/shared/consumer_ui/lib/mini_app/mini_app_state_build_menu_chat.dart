@@ -18,79 +18,104 @@ mixin MiniAppStateBuildMenuChat
         MiniAppStateChatParticipants,
         MiniAppStateChatAudio {
   Widget _buildChatMenuLayout(SessionInfo session, {VoidCallback? onOpenMenu}) {
-    if (_menu != null) {
+    final hasStore = session.storeId.isNotEmpty;
+    if (_menu != null && hasStore) {
       _seedMenuChatIfNeeded();
     }
-    final subtitle = _groupOrder != null
-        ? 'Group order active • ${_groupOrder!.participants.length} joined'
-        : 'Chat-based ordering with quick picks.';
-    final cartLabel = _cartItemCount == 0
-        ? 'Cart is empty'
-        : 'Cart • $_cartItemCount item(s) • ${_formatPrice(_cartTotalCents)}';
+    final subtitle = hasStore
+        ? (_groupOrder != null
+              ? 'Group order active • ${_groupOrder!.participants.length} joined'
+              : 'Chat-based ordering with quick picks.')
+        : 'Search by name or pick a recent order.';
+    final cartLabel = hasStore
+        ? (_cartItemCount == 0
+              ? 'Cart is empty'
+              : 'Cart • $_cartItemCount item(s) • ${_formatPrice(_cartTotalCents)}')
+        : null;
+    final controller = hasStore ? _chatController : _searchController;
+    final footer = hasStore
+        ? null
+        : StoreSearchFooter(
+            controller: _searchController,
+            searching: _searching,
+            searchResults: _searchResults,
+            searchError: _searchError,
+            onSelectSuggestion: _selectStoreFromSearchSuggestion,
+          );
+    final isBusy = hasStore ? _chatBusy : _searching;
     final chatView = ChatView(
       key: const ValueKey('chat'),
       messages: _chatMessages,
-      controller: _chatController,
+      controller: controller,
       scrollController: _chatScrollController,
-      onSend: _sendChatText,
-      onOptionSelected: _handleOptionSelected,
-      onOptionsConfirmed: _handleMultiOptionsSelected,
-      onProductSelected: _handleProductSelected,
-      onToggleRecording: _toggleRecording,
-      isLoading: _chatBusy,
-      isRecording: _chatRecording,
-      isSending: _chatBusy,
-      canRecord: _audioRecorder != null,
+      onSend: hasStore ? _sendChatText : _sendStoreSearchMessage,
+      onOptionSelected: hasStore
+          ? _handleOptionSelected
+          : _handleStoreSearchOptionSelected,
+      onOptionsConfirmed: hasStore
+          ? _handleMultiOptionsSelected
+          : _handleStoreSearchOptionsConfirmed,
+      onProductSelected: hasStore ? _handleProductSelected : (_) {},
+      onToggleRecording: hasStore ? _toggleRecording : () {},
+      isLoading: isBusy,
+      isRecording: hasStore ? _chatRecording : false,
+      isSending: isBusy,
+      canRecord: hasStore && _audioRecorder != null,
+      footer: footer,
     );
-    final groupOrderPanel = buildGroupOrderPanel();
+    final groupOrderPanel = hasStore ? buildGroupOrderPanel() : null;
 
     return Column(
       children: [
         ChatHeaderCard(
-          storeName: session.storeName,
+          storeName: hasStore ? session.storeName : 'Find a store',
           subtitle: subtitle,
           cartLabel: cartLabel,
-          onOpenCart: _cartItemCount == 0 ? null : _openCartSheet,
-          onChangeStore: _changeStore,
+          onOpenCart: hasStore
+              ? (_cartItemCount == 0 ? null : _openCartSheet)
+              : null,
+          onChangeStore: hasStore ? _changeStore : null,
           onOpenMenu: onOpenMenu,
         ),
         const SizedBox(height: 12),
-        if (_menuError != null) ...[
-          ShadAlert.destructive(
-            title: const Text('Menu unavailable'),
-            description: Text(_menuError!),
-          ),
-          const SizedBox(height: 8),
-          Align(
-            alignment: Alignment.centerLeft,
-            child: ShadButton.outline(
-              onPressed: () => _loadMenu(session.storeId),
-              child: const Text('Retry menu'),
+        if (hasStore) ...[
+          if (_menuError != null) ...[
+            ShadAlert.destructive(
+              title: const Text('Menu unavailable'),
+              description: Text(_menuError!),
             ),
+            const SizedBox(height: 8),
+            Align(
+              alignment: Alignment.centerLeft,
+              child: ShadButton.outline(
+                onPressed: () => _loadMenu(session.storeId),
+                child: const Text('Retry menu'),
+              ),
+            ),
+          ] else if (_loadingMenu)
+            const LinearProgressIndicator(minHeight: 2),
+          if (_menuError != null || _loadingMenu) const SizedBox(height: 12),
+          ChatContextBar(
+            categories: _categories,
+            activeCategory: _activeCategory,
+            onCategorySelected: _handleCategorySelected,
+            selectedProduct: _selectedProduct,
+            onClearProduct: _selectedProduct == null
+                ? null
+                : () => setState(() => _selectedProduct = null),
+            participants: _groupOrder?.participants ?? const [],
+            selectedParticipantId: _groupOrderSelectedParticipantId,
+            onParticipantSelected: _handleParticipantSelected,
+            deliveryEnabled: _deliveryEnabled,
+            isDelivery: _isDeliverySelected,
+            onFulfillmentChanged: (isDelivery) => _toggleDelivery(isDelivery),
           ),
-        ] else if (_loadingMenu)
-          const LinearProgressIndicator(minHeight: 2),
-        if (_menuError != null || _loadingMenu) const SizedBox(height: 12),
-        ChatContextBar(
-          categories: _categories,
-          activeCategory: _activeCategory,
-          onCategorySelected: _handleCategorySelected,
-          selectedProduct: _selectedProduct,
-          onClearProduct: _selectedProduct == null
-              ? null
-              : () => setState(() => _selectedProduct = null),
-          participants: _groupOrder?.participants ?? const [],
-          selectedParticipantId: _groupOrderSelectedParticipantId,
-          onParticipantSelected: _handleParticipantSelected,
-          deliveryEnabled: _deliveryEnabled,
-          isDelivery: _isDeliverySelected,
-          onFulfillmentChanged: (isDelivery) => _toggleDelivery(isDelivery),
-        ),
-        if (groupOrderPanel != null) ...[
+          if (groupOrderPanel != null) ...[
+            const SizedBox(height: 12),
+            groupOrderPanel,
+          ],
           const SizedBox(height: 12),
-          groupOrderPanel,
         ],
-        const SizedBox(height: 12),
         Expanded(child: chatView),
       ],
     );

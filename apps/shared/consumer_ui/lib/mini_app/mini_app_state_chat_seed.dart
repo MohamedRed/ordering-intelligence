@@ -7,13 +7,14 @@ mixin MiniAppStateChatSeed
         MiniAppStateMenu,
         MiniAppStateChatState {
   void _seedMenuChatIfNeeded() {
-    if (_menu == null || _chatMessages.isNotEmpty) {
+    if (_menu == null || (_chatMessages.isNotEmpty && !_needsStoreIntro)) {
       return;
     }
     final storeName = _session?.storeName ?? 'this store';
     final seededCategories = _seededCategoryLabels();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!mounted || _chatMessages.isNotEmpty) return;
+      if (!mounted) return;
+      if (_chatMessages.isNotEmpty && !_needsStoreIntro) return;
       setState(() {
         _chatMessages.add(
           ChatMessage(
@@ -30,6 +31,7 @@ mixin MiniAppStateChatSeed
         _seededContextSent = false;
         _seededPrewarmSent = false;
         _seededPrewarmInFlight = false;
+        _needsStoreIntro = false;
       });
       _prewarmSeededChat();
     });

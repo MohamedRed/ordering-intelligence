@@ -62,7 +62,12 @@ mixin MiniAppStateBuild
       );
     }
     final session = _session;
-    if (session == null || session.storeId.isEmpty) {
+    if (session == null) {
+      return Scaffold(
+        body: wrapSafeArea(const Center(child: CircularProgressIndicator())),
+      );
+    }
+    if (session.storeId.isEmpty) {
       if (_shouldShowGroupOrderLoading) {
         return Scaffold(
           body: wrapSafeArea(const Center(child: CircularProgressIndicator())),
@@ -77,18 +82,7 @@ mixin MiniAppStateBuild
               final onOpenMenu = drawer == null
                   ? null
                   : () => Scaffold.of(context).openDrawer();
-              return StoreSearchChatView(
-                messages: _chatMessages,
-                controller: _searchController,
-                searching: _searching,
-                searchResults: _searchResults,
-                searchError: _searchError,
-                onSend: _sendStoreSearchMessage,
-                onOptionSelected: _handleStoreSearchOptionSelected,
-                onOptionsConfirmed: _handleStoreSearchOptionsConfirmed,
-                onSelectSuggestion: _selectStoreFromSearchSuggestion,
-                onOpenMenu: onOpenMenu,
-              );
+              return _buildMenuLayout(session, onOpenMenu: onOpenMenu);
             },
           ),
         ),

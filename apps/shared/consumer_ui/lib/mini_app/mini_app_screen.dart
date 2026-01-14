@@ -22,7 +22,7 @@ import 'widgets/modifier_dialog.dart';
 import 'widgets/order_confirmation.dart';
 import 'widgets/payment_methods_panel.dart';
 import 'widgets/mini_app_drawer.dart';
-import 'widgets/store_search_chat_view.dart';
+import 'widgets/store_search_footer.dart';
 
 part 'mini_app_state_fields.dart';
 part 'mini_app_state_search.dart';

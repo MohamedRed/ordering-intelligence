@@ -24,50 +24,56 @@ mixin MiniAppStateHomeChat
         return;
       }
       if (_chatMessages.isNotEmpty) return;
-      final singleOrders = _singleRecentOrders();
-      final groupOrders = _groupRecentOrders();
-      final hasRecent = singleOrders.isNotEmpty || groupOrders.isNotEmpty;
-      setState(() {
+      _appendHomeChatPrompt(setSeeded: true);
+    });
+  }
+
+  void _appendHomeChatPrompt({bool setSeeded = true}) {
+    final singleOrders = _singleRecentOrders();
+    final groupOrders = _groupRecentOrders();
+    final hasRecent = singleOrders.isNotEmpty || groupOrders.isNotEmpty;
+    setState(() {
+      if (setSeeded) {
         _storeSearchSeeded = true;
+      }
+      _chatMessages.add(
+        ChatMessage(
+          id: _chatId(),
+          role: ChatRole.assistant,
+          text: hasRecent
+              ? 'Pick a recent order or start a new one.'
+              : 'No recent orders yet. Start a new one below.',
+          options: _buildHomeStartOptions(),
+        ),
+      );
+      if (singleOrders.isNotEmpty) {
         _chatMessages.add(
           ChatMessage(
             id: _chatId(),
             role: ChatRole.assistant,
-            text: hasRecent
-                ? 'Pick a recent order or start a new one.'
-                : 'No recent orders yet. Start a new one below.',
-            options: _buildHomeStartOptions(),
+            text: 'Recent single orders',
+            options: _buildRecentOrderOptions(
+              singleOrders,
+              payloadPrefix: 'recent_single',
+            ),
           ),
         );
-        if (singleOrders.isNotEmpty) {
-          _chatMessages.add(
-            ChatMessage(
-              id: _chatId(),
-              role: ChatRole.assistant,
-              text: 'Recent single orders',
-              options: _buildRecentOrderOptions(
-                singleOrders,
-                payloadPrefix: 'recent_single',
-              ),
+      }
+      if (groupOrders.isNotEmpty) {
+        _chatMessages.add(
+          ChatMessage(
+            id: _chatId(),
+            role: ChatRole.assistant,
+            text: 'Recent group orders',
+            options: _buildRecentOrderOptions(
+              groupOrders,
+              payloadPrefix: 'recent_group',
             ),
-          );
-        }
-        if (groupOrders.isNotEmpty) {
-          _chatMessages.add(
-            ChatMessage(
-              id: _chatId(),
-              role: ChatRole.assistant,
-              text: 'Recent group orders',
-              options: _buildRecentOrderOptions(
-                groupOrders,
-                payloadPrefix: 'recent_group',
-              ),
-            ),
-          );
-        }
-      });
-      _scrollChatToBottom();
+          ),
+        );
+      }
     });
+    _scrollChatToBottom();
   }
 
   bool _selectRecommendedFromPayload(String? payload) {
