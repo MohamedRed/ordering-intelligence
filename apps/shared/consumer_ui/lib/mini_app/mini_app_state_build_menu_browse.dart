@@ -39,7 +39,7 @@ mixin MiniAppStateBuildMenuBrowse
         embedded: true,
         expanded: _contextExpanded,
         onToggleExpanded: () => _setContextExpanded(!_contextExpanded),
-        summaryText: _buildContextSummaryText(session),
+        summaryText: null,
         deliveryEnabled: _deliveryEnabled,
         isDelivery: _isDeliverySelected,
         onFulfillmentChanged: _toggleDelivery,
@@ -70,22 +70,31 @@ mixin MiniAppStateBuildMenuBrowse
       body = Column(
         children: [
           if (groupOrderPanel != null) ...[
-            groupOrderPanel,
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 12),
+              child: groupOrderPanel,
+            ),
             const SizedBox(height: 12),
           ],
-          MenuModeBar(toggle: modeToggle, onOpenMenu: null),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 12),
+            child: MenuModeBar(toggle: modeToggle, onOpenMenu: null),
+          ),
           const SizedBox(height: 12),
-          MenuBrowseFilters(
-            categories: _categories,
-            activeCategory: _activeCategory,
-            onCategorySelected: _selectBrowseCategory,
-            participants: _groupOrder?.participants ?? const [],
-            selectedParticipantId: _groupOrderSelectedParticipantId,
-            onParticipantSelected: _handleBrowseParticipantSelected,
-            deliveryEnabled: false,
-            isDelivery: _isDeliverySelected,
-            onFulfillmentChanged: (_) {},
-            showParticipants: groupOrderPanel == null,
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 12),
+            child: MenuBrowseFilters(
+              categories: _categories,
+              activeCategory: _activeCategory,
+              onCategorySelected: _selectBrowseCategory,
+              participants: _groupOrder?.participants ?? const [],
+              selectedParticipantId: _groupOrderSelectedParticipantId,
+              onParticipantSelected: _handleBrowseParticipantSelected,
+              deliveryEnabled: false,
+              isDelivery: _isDeliverySelected,
+              onFulfillmentChanged: (_) {},
+              showParticipants: groupOrderPanel == null,
+            ),
           ),
           const SizedBox(height: 12),
           Expanded(
@@ -122,12 +131,7 @@ mixin MiniAppStateBuildMenuBrowse
           child: header,
         ),
         const SizedBox(height: 8),
-        Expanded(
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 12),
-            child: body,
-          ),
-        ),
+        Expanded(child: body),
       ],
     );
   }

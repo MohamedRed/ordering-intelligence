@@ -61,7 +61,7 @@ mixin MiniAppStateBuildMenuChat
               embedded: true,
               expanded: _contextExpanded,
               onToggleExpanded: () => _setContextExpanded(!_contextExpanded),
-              summaryText: _buildContextSummaryText(session),
+              summaryText: null,
               deliveryEnabled: _deliveryEnabled,
               isDelivery: _isDeliverySelected,
               onFulfillmentChanged: _toggleDelivery,
