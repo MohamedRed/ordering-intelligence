@@ -87,10 +87,6 @@ mixin MiniAppStateBuildMenuChat
                     showParticipants: groupOrderPanel == null,
                     showCategories: false,
                   ),
-                  if (groupOrderPanel != null) ...[
-                    const SizedBox(height: 12),
-                    groupOrderPanel,
-                  ],
                 ],
               ),
             )
@@ -162,6 +158,13 @@ mixin MiniAppStateBuildMenuChat
           firstChild: const SizedBox.shrink(),
           secondChild: contextBlock,
         ),
+        if (groupOrderPanel != null) ...[
+          const SizedBox(height: 8),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 12),
+            child: groupOrderPanel,
+          ),
+        ],
         if (modeToggle != null) ...[
           const SizedBox(height: 8),
           Padding(
