@@ -1,7 +1,11 @@
 part of 'mini_app_screen.dart';
 
 mixin MiniAppStateGroupOrdersActions
-    on State<MiniAppScreen>, MiniAppStateFields, MiniAppStateMenu {
+    on
+        State<MiniAppScreen>,
+        MiniAppStateFields,
+        MiniAppStateMenu,
+        MiniAppStateSearch {
   Future<void> _createGroupOrder() async {
     final session = _session;
     if (session == null || session.storeId.isEmpty) return;
@@ -58,6 +62,7 @@ mixin MiniAppStateGroupOrdersActions
         _groupOrder = updated;
         _groupOrderBusy = false;
       });
+      await _loadRecommendedOrders();
     } catch (e) {
       if (!mounted) return;
       setState(() {

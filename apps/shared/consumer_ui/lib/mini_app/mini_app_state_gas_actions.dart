@@ -1,6 +1,7 @@
 part of 'mini_app_screen.dart';
 
-mixin MiniAppStateGasActions on MiniAppStateGas, MiniAppStatePayments {
+mixin MiniAppStateGasActions
+    on MiniAppStateGas, MiniAppStatePayments, MiniAppStateSearch {
   Future<void> _placeFuelOrder() async {
     final session = _session;
     if (session == null || !_isGasStation) return;
@@ -27,7 +28,9 @@ mixin MiniAppStateGasActions on MiniAppStateGas, MiniAppStatePayments {
         return;
       }
     } else if (preauthCents <= 0) {
-      setState(() => _fuelOrderError = 'Enter the maximum amount to authorize.');
+      setState(
+        () => _fuelOrderError = 'Enter the maximum amount to authorize.',
+      );
       return;
     }
 
@@ -42,10 +45,12 @@ mixin MiniAppStateGasActions on MiniAppStateGas, MiniAppStatePayments {
         unitPriceCents: unitPriceCents,
         unit: 'liter',
         requestedLiters: _fuelPrepayMode == FuelPrepayMode.liters ? liters : 0,
-        requestedAmountCents:
-            _fuelPrepayMode == FuelPrepayMode.amount ? amountCents : 0,
-        preauthAmountCents:
-            _fuelPaymentFlow == FuelPaymentFlow.preauth ? preauthCents : 0,
+        requestedAmountCents: _fuelPrepayMode == FuelPrepayMode.amount
+            ? amountCents
+            : 0,
+        preauthAmountCents: _fuelPaymentFlow == FuelPaymentFlow.preauth
+            ? preauthCents
+            : 0,
         paymentFlow: _fuelPaymentFlow.value,
         pumpNumber: '',
       );
@@ -79,6 +84,7 @@ mixin MiniAppStateGasActions on MiniAppStateGas, MiniAppStatePayments {
         amountCents: _resolveFuelIntentAmountCents(fuelDraft),
         currency: session.currency.isNotEmpty ? session.currency : fuelCurrency,
       );
+      await _loadRecommendedOrders();
     } catch (e) {
       if (!mounted) return;
       setState(() {
@@ -107,7 +113,9 @@ mixin MiniAppStateGasActions on MiniAppStateGas, MiniAppStatePayments {
     if (session == null || preauthCents <= 0) return;
     final storeDefault = session.fuelDefaultPrepayCents;
     final current = session.fuelPreauthCapCents;
-    final target = storeDefault > 0 && preauthCents == storeDefault ? 0 : preauthCents;
+    final target = storeDefault > 0 && preauthCents == storeDefault
+        ? 0
+        : preauthCents;
     if (target == current) return;
     try {
       final profile = await _api.updateFuelPreauthCap(

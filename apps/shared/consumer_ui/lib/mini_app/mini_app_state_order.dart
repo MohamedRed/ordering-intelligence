@@ -6,7 +6,8 @@ mixin MiniAppStateOrder
         MiniAppStateFields,
         MiniAppStateGas,
         MiniAppStatePayments,
-        MiniAppStateDelivery {
+        MiniAppStateDelivery,
+        MiniAppStateSearch {
   Future<void> _placeOrder() async {
     final session = _session;
     if (session == null || session.storeId.isEmpty || _cart.isEmpty) {
@@ -51,6 +52,7 @@ mixin MiniAppStateOrder
       if (paymentMethod == 'card') {
         await _handleOrderPayment(orderResponse: result, session: session);
       }
+      await _loadRecommendedOrders();
       Navigator.of(context).maybePop();
     } catch (e) {
       if (!mounted) {
