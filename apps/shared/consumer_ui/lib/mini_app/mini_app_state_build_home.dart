@@ -192,32 +192,26 @@ class _OrderRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final card = Expanded(
-      child: RecommendedOrderCard(
-        order: order,
-        onTap: actionsOnlyTap ? null : onTap,
-      ),
-    );
-    return Row(
+    final actions = Column(
+      mainAxisSize: MainAxisSize.min,
       children: [
-        card,
-        const SizedBox(width: 8),
-        Column(
-          children: [
-            ShadButton.outline(
-              size: ShadButtonSize.sm,
-              onPressed: onStartSingle,
-              child: const Icon(Icons.person_outline, size: 16),
-            ),
-            const SizedBox(height: 6),
-            ShadButton.outline(
-              size: ShadButtonSize.sm,
-              onPressed: onStartGroup,
-              child: const Icon(Icons.group_outlined, size: 16),
-            ),
-          ],
+        ActionIconButton(
+          icon: Icons.person_outline,
+          onPressed: onStartSingle,
+          size: 32,
+        ),
+        const SizedBox(height: 6),
+        ActionIconButton(
+          icon: Icons.group_outlined,
+          onPressed: onStartGroup,
+          size: 32,
         ),
       ],
+    );
+    return RecommendedOrderCard(
+      order: order,
+      onTap: actionsOnlyTap ? null : onTap,
+      trailing: actions,
     );
   }
 }

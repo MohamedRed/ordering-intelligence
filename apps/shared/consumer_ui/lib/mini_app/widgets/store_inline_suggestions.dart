@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
 
+import 'action_icon_button.dart';
 import 'store_logo.dart';
 import 'package:consumer_core/consumer_core.dart';
 
@@ -135,17 +136,17 @@ class _StoreSuggestionCard extends StatelessWidget {
             Column(
               children: [
                 if (onStartSingle != null)
-                  ShadButton.outline(
-                    size: ShadButtonSize.sm,
+                  ActionIconButton(
+                    icon: Icons.person_outline,
                     onPressed: () => onStartSingle!(store),
-                    child: const Icon(Icons.person_outline, size: 16),
+                    size: 32,
                   ),
                 if (onStartGroup != null) ...[
                   const SizedBox(height: 6),
-                  ShadButton.outline(
-                    size: ShadButtonSize.sm,
+                  ActionIconButton(
+                    icon: Icons.group_outlined,
                     onPressed: () => onStartGroup!(store),
-                    child: const Icon(Icons.group_outlined, size: 16),
+                    size: 32,
                   ),
                 ],
               ],

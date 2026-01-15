@@ -16,6 +16,7 @@ import 'menu_view_mode.dart';
 import 'mini_app_platform.dart';
 import 'mini_app_scope.dart';
 import 'widgets/account_link_panel.dart';
+import 'widgets/action_icon_button.dart';
 import 'widgets/cart_sheet.dart';
 import 'widgets/centered_message.dart';
 import 'widgets/delivery_options_section.dart';

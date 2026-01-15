@@ -11,11 +11,13 @@ class RecommendedOrderCard extends StatelessWidget {
     required this.order,
     this.onTap,
     this.showStoreName = true,
+    this.trailing,
   });
 
   final RecommendedOrder order;
   final VoidCallback? onTap;
   final bool showStoreName;
+  final Widget? trailing;
 
   @override
   Widget build(BuildContext context) {
@@ -49,7 +51,11 @@ class RecommendedOrderCard extends StatelessWidget {
                 ],
               ),
             ),
-            if (onTap != null) const Icon(Icons.chevron_right),
+            if (trailing != null) ...[
+              const SizedBox(width: 12),
+              trailing!,
+            ] else if (onTap != null)
+              const Icon(Icons.chevron_right),
           ],
         ),
       ),
@@ -74,7 +80,9 @@ class RecommendedOrderCard extends StatelessWidget {
       }
     }
     if (orderedAt != null) {
-      final dateLabel = MaterialLocalizations.of(context).formatShortDate(orderedAt);
+      final dateLabel = MaterialLocalizations.of(
+        context,
+      ).formatShortDate(orderedAt);
       pieces.add('Ordered $dateLabel');
     } else {
       pieces.add('Ordered recently');
