@@ -23,7 +23,10 @@ mixin MiniAppStateCartSheet
       builder: (context) {
         return StatefulBuilder(
           builder: (context, setModalState) {
-            _cartSheetSetState = setModalState;
+            _cartSheetSetState = (callback) {
+              if (!context.mounted) return;
+              setModalState(callback);
+            };
             return SafeArea(
               child: CartSheet(
                 cart: _cart,
