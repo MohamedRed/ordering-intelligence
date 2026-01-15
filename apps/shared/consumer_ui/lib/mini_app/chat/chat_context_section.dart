@@ -8,17 +8,20 @@ class ChatContextSection extends StatelessWidget {
     required this.child,
   });
 
-  final String label;
+  final String? label;
   final Widget child;
 
   @override
   Widget build(BuildContext context) {
     final theme = ShadTheme.of(context);
+    final showLabel = label != null && label!.trim().isNotEmpty;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(label, style: theme.textTheme.muted),
-        const SizedBox(height: 6),
+        if (showLabel) ...[
+          Text(label!, style: theme.textTheme.muted),
+          const SizedBox(height: 6),
+        ],
         child,
       ],
     );

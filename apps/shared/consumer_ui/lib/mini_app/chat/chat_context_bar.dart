@@ -65,7 +65,7 @@ class ChatContextBar extends StatelessWidget {
     if (categories.isNotEmpty) {
       sections.add(
         ChatContextSection(
-          label: 'Categories',
+          label: null,
           child: ChatCategoryRow(
             categories: categories,
             activeCategory: activeCategory,
