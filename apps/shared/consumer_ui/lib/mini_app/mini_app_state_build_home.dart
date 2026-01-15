@@ -42,6 +42,7 @@ mixin MiniAppStateBuildHome
                 onSelectSuggestion: _selectStoreFromSearchSuggestion,
                 onStartSingle: _startSingleOrderForStore,
                 onStartGroup: _startGroupOrderForStore,
+                actionsOnlyTap: true,
               ),
               if (recentStores.isNotEmpty) ...[
                 const SizedBox(height: 12),
@@ -53,6 +54,7 @@ mixin MiniAppStateBuildHome
                   axis: Axis.vertical,
                   onStartSingle: _startSingleOrderForStore,
                   onStartGroup: _startGroupOrderForStore,
+                  actionsOnlyTap: true,
                 ),
               ],
               if (!_recommendedOrdersLoaded)
@@ -70,6 +72,7 @@ mixin MiniAppStateBuildHome
                     onTap: () => _selectRecommendedOrder(order),
                     onStartSingle: () => _startSingleOrderForOrder(order),
                     onStartGroup: () => _startGroupOrderForOrder(order),
+                    actionsOnlyTap: true,
                   ),
                   const SizedBox(height: 10),
                 ],
@@ -84,6 +87,7 @@ mixin MiniAppStateBuildHome
                     onTap: () => _selectRecommendedOrder(order),
                     onStartSingle: () => _startSingleOrderForOrder(order),
                     onStartGroup: () => _startGroupOrderForOrder(order),
+                    actionsOnlyTap: true,
                   ),
                   const SizedBox(height: 10),
                 ],
@@ -177,20 +181,26 @@ class _OrderRow extends StatelessWidget {
     required this.onTap,
     required this.onStartSingle,
     required this.onStartGroup,
+    this.actionsOnlyTap = false,
   });
 
   final RecommendedOrder order;
   final VoidCallback onTap;
   final VoidCallback onStartSingle;
   final VoidCallback onStartGroup;
+  final bool actionsOnlyTap;
 
   @override
   Widget build(BuildContext context) {
+    final card = Expanded(
+      child: RecommendedOrderCard(
+        order: order,
+        onTap: actionsOnlyTap ? null : onTap,
+      ),
+    );
     return Row(
       children: [
-        Expanded(
-          child: RecommendedOrderCard(order: order, onTap: onTap),
-        ),
+        card,
         const SizedBox(width: 8),
         Column(
           children: [

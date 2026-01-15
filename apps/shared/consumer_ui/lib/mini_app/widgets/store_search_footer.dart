@@ -14,6 +14,7 @@ class StoreSearchFooter extends StatelessWidget {
     required this.onSelectSuggestion,
     this.onStartSingle,
     this.onStartGroup,
+    this.actionsOnlyTap = false,
   });
 
   final TextEditingController controller;
@@ -23,6 +24,7 @@ class StoreSearchFooter extends StatelessWidget {
   final ValueChanged<StoreChoice> onSelectSuggestion;
   final ValueChanged<StoreChoice>? onStartSingle;
   final ValueChanged<StoreChoice>? onStartGroup;
+  final bool actionsOnlyTap;
 
   @override
   Widget build(BuildContext context) {
@@ -56,6 +58,7 @@ class StoreSearchFooter extends StatelessWidget {
               axis: Axis.vertical,
               onStartSingle: onStartSingle,
               onStartGroup: onStartGroup,
+              actionsOnlyTap: actionsOnlyTap,
             ),
           ],
           if (hasQuery &&

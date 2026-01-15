@@ -14,6 +14,7 @@ class StoreInlineSuggestions extends StatelessWidget {
     this.axis = Axis.horizontal,
     this.onStartSingle,
     this.onStartGroup,
+    this.actionsOnlyTap = false,
   });
 
   final List<StoreChoice> results;
@@ -23,6 +24,7 @@ class StoreInlineSuggestions extends StatelessWidget {
   final Axis axis;
   final ValueChanged<StoreChoice>? onStartSingle;
   final ValueChanged<StoreChoice>? onStartGroup;
+  final bool actionsOnlyTap;
 
   @override
   Widget build(BuildContext context) {
@@ -45,6 +47,7 @@ class StoreInlineSuggestions extends StatelessWidget {
               showActions: showActions,
               onStartSingle: onStartSingle,
               onStartGroup: onStartGroup,
+              actionsOnlyTap: actionsOnlyTap,
             ),
             if (index < visible.length - 1) const SizedBox(height: 10),
           ],
@@ -68,6 +71,7 @@ class StoreInlineSuggestions extends StatelessWidget {
                 store: store,
                 onTap: () => onSelect(store),
                 showActions: false,
+                actionsOnlyTap: actionsOnlyTap,
               );
             },
           ),
@@ -85,6 +89,7 @@ class _StoreSuggestionCard extends StatelessWidget {
     this.showActions = false,
     this.onStartSingle,
     this.onStartGroup,
+    this.actionsOnlyTap = false,
   });
 
   final StoreChoice store;
@@ -93,64 +98,69 @@ class _StoreSuggestionCard extends StatelessWidget {
   final bool showActions;
   final ValueChanged<StoreChoice>? onStartSingle;
   final ValueChanged<StoreChoice>? onStartGroup;
+  final bool actionsOnlyTap;
 
   @override
   Widget build(BuildContext context) {
     final theme = ShadTheme.of(context);
     final name = store.name.isEmpty ? store.storeId : store.name;
+    final content = Container(
+      width: expand ? double.infinity : 200,
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+      decoration: BoxDecoration(
+        color: theme.colorScheme.muted,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: theme.colorScheme.border),
+      ),
+      child: Row(
+        children: [
+          Expanded(
+            child: Row(
+              children: [
+                StoreLogo(name: name, logoUrl: store.logoUrl, size: 28),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Text(
+                    name,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: theme.textTheme.small,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          if (showActions) ...[
+            const SizedBox(width: 8),
+            Column(
+              children: [
+                if (onStartSingle != null)
+                  ShadButton.outline(
+                    size: ShadButtonSize.sm,
+                    onPressed: () => onStartSingle!(store),
+                    child: const Icon(Icons.person_outline, size: 16),
+                  ),
+                if (onStartGroup != null) ...[
+                  const SizedBox(height: 6),
+                  ShadButton.outline(
+                    size: ShadButtonSize.sm,
+                    onPressed: () => onStartGroup!(store),
+                    child: const Icon(Icons.group_outlined, size: 16),
+                  ),
+                ],
+              ],
+            ),
+          ],
+        ],
+      ),
+    );
+    if (actionsOnlyTap) {
+      return content;
+    }
     return InkWell(
       onTap: onTap,
       borderRadius: BorderRadius.circular(16),
-      child: Container(
-        width: expand ? double.infinity : 200,
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-        decoration: BoxDecoration(
-          color: theme.colorScheme.muted,
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: theme.colorScheme.border),
-        ),
-        child: Row(
-          children: [
-            Expanded(
-              child: Row(
-                children: [
-                  StoreLogo(name: name, logoUrl: store.logoUrl, size: 28),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    child: Text(
-                      name,
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                      style: theme.textTheme.small,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            if (showActions) ...[
-              const SizedBox(width: 8),
-              Column(
-                children: [
-                  if (onStartSingle != null)
-                    ShadButton.outline(
-                      size: ShadButtonSize.sm,
-                      onPressed: () => onStartSingle!(store),
-                      child: const Icon(Icons.person_outline, size: 16),
-                    ),
-                  if (onStartGroup != null) ...[
-                    const SizedBox(height: 6),
-                    ShadButton.outline(
-                      size: ShadButtonSize.sm,
-                      onPressed: () => onStartGroup!(store),
-                      child: const Icon(Icons.group_outlined, size: 16),
-                    ),
-                  ],
-                ],
-              ),
-            ],
-          ],
-        ),
-      ),
+      child: content,
     );
   }
 }
