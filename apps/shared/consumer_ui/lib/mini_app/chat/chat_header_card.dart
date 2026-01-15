@@ -14,7 +14,6 @@ class ChatHeaderCard extends StatelessWidget {
     this.onChangeStore,
     this.onOpenMenu,
     this.contextSection,
-    this.modeToggle,
   });
 
   final String storeName;
@@ -24,7 +23,6 @@ class ChatHeaderCard extends StatelessWidget {
   final VoidCallback? onChangeStore;
   final VoidCallback? onOpenMenu;
   final Widget? contextSection;
-  final Widget? modeToggle;
 
   @override
   Widget build(BuildContext context) {
@@ -67,10 +65,6 @@ class ChatHeaderCard extends StatelessWidget {
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
                       ),
-                    ],
-                    if (modeToggle != null) ...[
-                      const SizedBox(height: 8),
-                      modeToggle!,
                     ],
                   ],
                 ),

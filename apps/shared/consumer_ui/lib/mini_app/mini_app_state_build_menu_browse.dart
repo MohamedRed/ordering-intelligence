@@ -35,7 +35,6 @@ mixin MiniAppStateBuildMenuBrowse
       onOpenCart: _cartItemCount == 0 ? null : _openCartSheet,
       onChangeStore: _changeStore,
       onOpenMenu: onOpenMenu,
-      modeToggle: modeToggle,
       contextSection: ChatContextPanel(
         embedded: true,
         expanded: _contextExpanded,
@@ -115,6 +114,10 @@ mixin MiniAppStateBuildMenuBrowse
 
     return Column(
       children: [
+        Padding(
+          padding: const EdgeInsets.fromLTRB(12, 4, 12, 8),
+          child: Align(alignment: Alignment.centerRight, child: modeToggle),
+        ),
         header,
         const SizedBox(height: 12),
         Expanded(child: body),

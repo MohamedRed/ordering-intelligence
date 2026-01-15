@@ -343,6 +343,87 @@ def main():
                 "updatedAt": now,
             },
         },
+        {
+            "id": "demo-group-order-2",
+            "fields": {
+                "id": "demo-group-order-2",
+                "joinCode": "BAKE45",
+                "storeId": "demo-bakery",
+                "tenantId": demo_tenants["demo-bakery"]["id"],
+                "customerId": demo_customer_id,
+                "status": "submitted",
+                "fulfillmentType": "delivery",
+                "host": {
+                    "channel": "telegram",
+                    "userId": "demo-user-4",
+                    "displayName": "Morgan",
+                },
+                "participants": [
+                    {
+                        "participantId": "p10",
+                        "displayName": "Morgan",
+                        "channelContact": {"channel": "telegram", "userId": "demo-user-4"},
+                    },
+                    {
+                        "participantId": "p11",
+                        "displayName": "Sam",
+                        "channelContact": {"channel": "telegram", "userId": "demo-user-5"},
+                    },
+                ],
+                "items": [
+                    {
+                        "itemId": "croissant",
+                        "name": "Butter Croissant",
+                        "quantity": 2,
+                        "priceCents": 350,
+                        "participantId": "p10",
+                        "participantLabel": "Morgan",
+                        "category": "Bakery",
+                        "modifiers": [],
+                    },
+                    {
+                        "itemId": "pain-au-chocolat",
+                        "name": "Pain au chocolat",
+                        "quantity": 1,
+                        "priceCents": 380,
+                        "participantId": "p11",
+                        "participantLabel": "Sam",
+                        "category": "Bakery",
+                        "modifiers": [],
+                    },
+                ],
+                "pricing": {
+                    "subtotalCents": 1080,
+                    "taxCents": 108,
+                    "feeCents": 0,
+                    "discountCents": 0,
+                    "totalCents": 1188,
+                    "allocations": [
+                        {
+                            "participantId": "p10",
+                            "subtotalCents": 700,
+                            "taxCents": 70,
+                            "feeCents": 0,
+                            "discountCents": 0,
+                            "totalCents": 770,
+                        },
+                        {
+                            "participantId": "p11",
+                            "subtotalCents": 380,
+                            "taxCents": 38,
+                            "feeCents": 0,
+                            "discountCents": 0,
+                            "totalCents": 418,
+                        },
+                    ],
+                },
+                "paymentMode": "single_payer",
+                "paymentMethod": "card",
+                "expiresAt": now + dt.timedelta(days=1),
+                "createdAt": now - dt.timedelta(days=1),
+                "updatedAt": now - dt.timedelta(days=1),
+            },
+        },
     ]
 
     reorders = [

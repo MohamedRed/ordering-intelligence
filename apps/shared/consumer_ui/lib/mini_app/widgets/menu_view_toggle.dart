@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
 
 import '../menu_view_mode.dart';
+import '../mini_app_scope.dart';
 
 class MenuViewToggle extends StatelessWidget {
   const MenuViewToggle({
@@ -15,48 +16,46 @@ class MenuViewToggle extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Row(
-      children: [
-        _ModeButton(
-          label: 'Browse',
-          active: mode == MenuViewMode.browse,
-          onPressed: () => onChanged(MenuViewMode.browse),
-        ),
-        const SizedBox(width: 8),
-        _ModeButton(
-          label: 'Chat',
-          active: mode == MenuViewMode.chat,
-          onPressed: () => onChanged(MenuViewMode.chat),
-        ),
-      ],
-    );
-  }
-}
-
-class _ModeButton extends StatelessWidget {
-  const _ModeButton({
-    required this.label,
-    required this.active,
-    required this.onPressed,
-  });
-
-  final String label;
-  final bool active;
-  final VoidCallback onPressed;
-
-  @override
-  Widget build(BuildContext context) {
-    if (active) {
-      return ShadButton(
-        size: ShadButtonSize.sm,
-        onPressed: onPressed,
-        child: Text(label),
-      );
-    }
-    return ShadButton.outline(
-      size: ShadButtonSize.sm,
-      onPressed: onPressed,
-      child: Text(label),
+    final theme = ShadTheme.of(context);
+    final isChat = mode == MenuViewMode.chat;
+    final haptics = MiniAppScope.hapticsOf(context);
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      decoration: BoxDecoration(
+        color: theme.colorScheme.muted,
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            'Browse',
+            style: theme.textTheme.small.copyWith(
+              color: isChat
+                  ? theme.colorScheme.mutedForeground
+                  : theme.colorScheme.foreground,
+            ),
+          ),
+          const SizedBox(width: 8),
+          Switch(
+            value: isChat,
+            activeThumbColor: theme.colorScheme.primary,
+            onChanged: (value) {
+              haptics.selection();
+              onChanged(value ? MenuViewMode.chat : MenuViewMode.browse);
+            },
+          ),
+          const SizedBox(width: 8),
+          Text(
+            'Chat',
+            style: theme.textTheme.small.copyWith(
+              color: isChat
+                  ? theme.colorScheme.foreground
+                  : theme.colorScheme.mutedForeground,
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

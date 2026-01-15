@@ -58,7 +58,6 @@ mixin MiniAppStateBuildMenuChat
           : null,
       onChangeStore: hasStore ? _changeStore : null,
       onOpenMenu: onOpenMenu,
-      modeToggle: modeToggle,
       contextSection: hasStore
           ? ChatContextPanel(
               embedded: true,
@@ -142,6 +141,12 @@ mixin MiniAppStateBuildMenuChat
     );
     return Column(
       children: [
+        if (modeToggle != null) ...[
+          Padding(
+            padding: const EdgeInsets.fromLTRB(12, 4, 12, 8),
+            child: Align(alignment: Alignment.centerRight, child: modeToggle),
+          ),
+        ],
         AnimatedSwitcher(
           duration: const Duration(milliseconds: 220),
           switchInCurve: Curves.easeOut,
