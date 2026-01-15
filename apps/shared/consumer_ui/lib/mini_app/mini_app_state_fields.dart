@@ -24,6 +24,7 @@ mixin MiniAppStateFields on State<MiniAppScreen> {
   List<RecommendedOrder> _recommendedOrders = [];
   bool _recommendedOrdersLoaded = false;
   bool _needsStoreIntro = false;
+  bool _needsHomePrompt = false;
   CustomerProfile? _customerProfile;
   bool _loadingIdentity = false;
   String? _identityError;

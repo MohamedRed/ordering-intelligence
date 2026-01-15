@@ -13,6 +13,7 @@ mixin MiniAppStateStoreSearchChat
       _storeSearchMode = true;
       _storeSearchSeeded = false;
       _pendingStartGroupOrder = startGroupOrder;
+      _needsHomePrompt = false;
       _searchResults = [];
       _searchError = null;
       _searching = false;

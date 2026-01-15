@@ -6,7 +6,6 @@ mixin MiniAppStateStore
         MiniAppStateFields,
         MiniAppStateChatState,
         MiniAppStateMenu,
-        MiniAppStateHomeChat,
         MiniAppStateIdentity,
         MiniAppStateDelivery,
         MiniAppStateGroupOrdersActions {
@@ -19,6 +18,7 @@ mixin MiniAppStateStore
       _storeSearchMode = false;
       _storeSearchSeeded = false;
       _needsStoreIntro = true;
+      _needsHomePrompt = false;
       _menu = null;
       _menuError = null;
       _loadingMenu = true;
@@ -101,6 +101,7 @@ mixin MiniAppStateStore
       _storeSearchSeeded = false;
       _pendingStartGroupOrder = false;
       _needsStoreIntro = false;
+      _needsHomePrompt = true;
       final nextSession = SessionInfo(
         sessionId: session.sessionId,
         accountId: session.accountId,
@@ -144,6 +145,5 @@ mixin MiniAppStateStore
       _notesController.clear();
       _resetDeliveryDraft();
     });
-    _appendHomeChatPrompt(setSeeded: true);
   }
 }

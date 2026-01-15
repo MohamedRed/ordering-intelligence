@@ -11,6 +11,7 @@ mixin MiniAppStateBuildMenuChat
         MiniAppStateGroupOrdersView,
         MiniAppStateDelivery,
         MiniAppStateChatState,
+        MiniAppStateStoreSearchChat,
         MiniAppStateChatSelection,
         MiniAppStateChatSeed,
         MiniAppStateChatComms,

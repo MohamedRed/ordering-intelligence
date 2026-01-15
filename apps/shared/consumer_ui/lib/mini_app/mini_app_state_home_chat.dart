@@ -7,23 +7,24 @@ mixin MiniAppStateHomeChat
         MiniAppStateSearch,
         MiniAppStateChatState {
   void _seedHomeChatIfNeeded() {
-    if (_storeSearchSeeded || !_recommendedOrdersLoaded) {
+    if ((_storeSearchSeeded && !_needsHomePrompt) ||
+        !_recommendedOrdersLoaded) {
       return;
     }
     final session = _session;
     if (session == null || session.storeId.isNotEmpty || _storeSearchMode) {
       return;
     }
-    if (_chatMessages.isNotEmpty) {
+    if (_chatMessages.isNotEmpty && !_needsHomePrompt) {
       return;
     }
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!mounted || _storeSearchSeeded) return;
+      if (!mounted || (_storeSearchSeeded && !_needsHomePrompt)) return;
       final current = _session;
       if (current == null || current.storeId.isNotEmpty || _storeSearchMode) {
         return;
       }
-      if (_chatMessages.isNotEmpty) return;
+      if (_chatMessages.isNotEmpty && !_needsHomePrompt) return;
       _appendHomeChatPrompt(setSeeded: true);
     });
   }
@@ -36,6 +37,7 @@ mixin MiniAppStateHomeChat
       if (setSeeded) {
         _storeSearchSeeded = true;
       }
+      _needsHomePrompt = false;
       _chatMessages.add(
         ChatMessage(
           id: _chatId(),

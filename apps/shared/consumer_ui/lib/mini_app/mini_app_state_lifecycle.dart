@@ -41,6 +41,7 @@ mixin MiniAppStateLifecycle
       _recommendedOrders = [];
       _recommendedOrdersLoaded = false;
       _storeSearchSeeded = false;
+      _needsHomePrompt = false;
     });
     try {
       _setSessionStage('session_start');
