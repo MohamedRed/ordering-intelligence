@@ -17,6 +17,7 @@ mixin MiniAppStateBuildMenuBrowse
     SessionInfo session, {
     VoidCallback? onOpenMenu,
   }) {
+    final theme = ShadTheme.of(context);
     final modeToggle = MenuViewToggle(
       mode: _menuViewMode,
       onChanged: _setMenuViewMode,
@@ -35,18 +36,29 @@ mixin MiniAppStateBuildMenuBrowse
       onChangeStore: null,
       onOpenMenu: null,
       centerTitle: true,
-      contextSection: ChatContextPanel(
-        embedded: true,
-        expanded: _contextExpanded,
-        onToggleExpanded: () => _setContextExpanded(!_contextExpanded),
-        summaryText: null,
-        deliveryEnabled: _deliveryEnabled,
-        isDelivery: _isDeliverySelected,
-        onFulfillmentChanged: _toggleDelivery,
-        showToggle: false,
-        expandedContent: const SizedBox.shrink(),
-      ),
+      contextSection: null,
     );
+    final showFulfillmentPanel = _deliveryEnabled;
+    final fulfillmentPanel = showFulfillmentPanel
+        ? Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 12),
+            child: MinimalCard(
+              padding: const EdgeInsets.all(12),
+              backgroundColor: theme.colorScheme.background,
+              child: ChatContextPanel(
+                embedded: true,
+                expanded: _contextExpanded,
+                onToggleExpanded: () => _setContextExpanded(!_contextExpanded),
+                summaryText: null,
+                deliveryEnabled: _deliveryEnabled,
+                isDelivery: _isDeliverySelected,
+                onFulfillmentChanged: _toggleDelivery,
+                showToggle: false,
+                expandedContent: const SizedBox.shrink(),
+              ),
+            ),
+          )
+        : null;
 
     Widget body;
     if (_loadingMenu) {
@@ -131,6 +143,10 @@ mixin MiniAppStateBuildMenuBrowse
           child: header,
         ),
         const SizedBox(height: 8),
+        if (fulfillmentPanel != null) ...[
+          fulfillmentPanel,
+          const SizedBox(height: 12),
+        ],
         Expanded(child: body),
       ],
     );

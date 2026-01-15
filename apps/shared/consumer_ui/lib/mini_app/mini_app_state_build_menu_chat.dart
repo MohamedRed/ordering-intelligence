@@ -19,6 +19,7 @@ mixin MiniAppStateBuildMenuChat
         MiniAppStateChatParticipants,
         MiniAppStateChatAudio {
   Widget _buildChatMenuLayout(SessionInfo session, {VoidCallback? onOpenMenu}) {
+    final theme = ShadTheme.of(context);
     final hasStore = session.storeId.isNotEmpty;
     if (_menu != null && hasStore) {
       _seedMenuChatIfNeeded();
@@ -48,6 +49,8 @@ mixin MiniAppStateBuildMenuChat
         _selectedProduct != null ||
         (groupOrderPanel == null &&
             (_groupOrder?.participants.isNotEmpty ?? false));
+    final showFulfillmentPanel =
+        hasStore && (_deliveryEnabled || showChatContextDetails);
     final header = ChatHeaderCard(
       key: ValueKey(hasStore ? session.storeId : 'no-store'),
       storeName: hasStore ? session.storeName : 'Find a store',
@@ -60,42 +63,50 @@ mixin MiniAppStateBuildMenuChat
       onChangeStore: hasStore ? null : null,
       onOpenMenu: null,
       centerTitle: hasStore,
-      contextSection: hasStore
-          ? ChatContextPanel(
-              embedded: true,
-              expanded: _contextExpanded,
-              onToggleExpanded: () => _setContextExpanded(!_contextExpanded),
-              summaryText: null,
-              deliveryEnabled: _deliveryEnabled,
-              isDelivery: _isDeliverySelected,
-              onFulfillmentChanged: _toggleDelivery,
-              showToggle: false,
-              showExpandedContentWhenEmbedded: showChatContextDetails,
-              expandedContent: Column(
-                children: [
-                  ChatContextBar(
-                    embedded: true,
-                    categories: _categories,
-                    activeCategory: _activeCategory,
-                    onCategorySelected: _handleCategorySelected,
-                    selectedProduct: _selectedProduct,
-                    onClearProduct: _selectedProduct == null
-                        ? null
-                        : () => setState(() => _selectedProduct = null),
-                    participants: _groupOrder?.participants ?? const [],
-                    selectedParticipantId: _groupOrderSelectedParticipantId,
-                    onParticipantSelected: _handleParticipantSelected,
-                    deliveryEnabled: false,
-                    isDelivery: _isDeliverySelected,
-                    onFulfillmentChanged: _toggleDelivery,
-                    showParticipants: groupOrderPanel == null,
-                    showCategories: false,
-                  ),
-                ],
-              ),
-            )
-          : null,
+      contextSection: null,
     );
+    final fulfillmentPanel = showFulfillmentPanel
+        ? Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 12),
+            child: MinimalCard(
+              padding: const EdgeInsets.all(12),
+              backgroundColor: theme.colorScheme.background,
+              child: ChatContextPanel(
+                embedded: true,
+                expanded: _contextExpanded,
+                onToggleExpanded: () => _setContextExpanded(!_contextExpanded),
+                summaryText: null,
+                deliveryEnabled: _deliveryEnabled,
+                isDelivery: _isDeliverySelected,
+                onFulfillmentChanged: _toggleDelivery,
+                showToggle: false,
+                showExpandedContentWhenEmbedded: showChatContextDetails,
+                expandedContent: Column(
+                  children: [
+                    ChatContextBar(
+                      embedded: true,
+                      categories: _categories,
+                      activeCategory: _activeCategory,
+                      onCategorySelected: _handleCategorySelected,
+                      selectedProduct: _selectedProduct,
+                      onClearProduct: _selectedProduct == null
+                          ? null
+                          : () => setState(() => _selectedProduct = null),
+                      participants: _groupOrder?.participants ?? const [],
+                      selectedParticipantId: _groupOrderSelectedParticipantId,
+                      onParticipantSelected: _handleParticipantSelected,
+                      deliveryEnabled: false,
+                      isDelivery: _isDeliverySelected,
+                      onFulfillmentChanged: _toggleDelivery,
+                      showParticipants: groupOrderPanel == null,
+                      showCategories: false,
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          )
+        : null;
     final showContextNotice = hasStore && (_menuError != null || _loadingMenu);
     final contextBlock = showContextNotice
         ? Column(
@@ -151,6 +162,10 @@ mixin MiniAppStateBuildMenuChat
           ),
         ),
         const SizedBox(height: 8),
+        if (fulfillmentPanel != null) ...[
+          fulfillmentPanel,
+          const SizedBox(height: 12),
+        ],
         if (showContextNotice) ...[
           AnimatedCrossFade(
             duration: const Duration(milliseconds: 220),

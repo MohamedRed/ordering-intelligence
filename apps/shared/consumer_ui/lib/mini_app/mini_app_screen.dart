@@ -29,6 +29,7 @@ import 'widgets/menu_browse_filters.dart';
 import 'widgets/menu_item_card.dart';
 import 'widgets/menu_mode_bar.dart';
 import 'widgets/menu_view_toggle.dart';
+import 'widgets/minimal_card.dart';
 import 'widgets/store_search_footer.dart';
 import 'widgets/store_inline_suggestions.dart';
 import 'widgets/store_logo.dart';

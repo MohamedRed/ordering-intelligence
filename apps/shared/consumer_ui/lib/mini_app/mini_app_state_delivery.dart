@@ -25,7 +25,7 @@ mixin MiniAppStateDelivery on State<MiniAppScreen>, MiniAppStateFields {
     return mode.replaceAll('_', ' ');
   }
 
-  void _toggleDelivery(bool enabled) {
+  void _toggleDelivery(bool enabled) async {
     setState(() {
       _fulfillmentType = enabled ? 'delivery' : 'pickup';
       _deliveryError = null;
@@ -35,8 +35,50 @@ mixin MiniAppStateDelivery on State<MiniAppScreen>, MiniAppStateFields {
     if (!enabled) {
       _deliveryPrewarmDebounce?.cancel();
     } else {
+      if (_deliveryAddressController.text.trim().isEmpty) {
+        await _promptForDeliveryAddress();
+      }
       _maybePrewarmDelivery();
     }
+  }
+
+  Future<void> _promptForDeliveryAddress() async {
+    if (!mounted) return;
+    final controller = TextEditingController(
+      text: _deliveryAddressController.text,
+    );
+    final result = await showDialog<String>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Delivery address'),
+        content: TextField(
+          controller: controller,
+          autofocus: true,
+          minLines: 1,
+          maxLines: 2,
+          decoration: const InputDecoration(
+            hintText: 'Enter delivery address',
+            border: OutlineInputBorder(),
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('Cancel'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(ctx, controller.text),
+            child: const Text('Continue'),
+          ),
+        ],
+      ),
+    );
+    final trimmed = result?.trim() ?? '';
+    if (trimmed.isEmpty) {
+      return;
+    }
+    _deliveryAddressController.text = trimmed;
+    _onDeliveryAddressChanged(trimmed);
   }
 
   void _maybePrewarmDelivery() {
