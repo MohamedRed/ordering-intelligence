@@ -22,6 +22,7 @@ class ChatContextBar extends StatelessWidget {
     required this.isDelivery,
     required this.onFulfillmentChanged,
     this.embedded = false,
+    this.showParticipants = true,
   });
 
   final List<String> categories;
@@ -35,11 +36,12 @@ class ChatContextBar extends StatelessWidget {
   final bool deliveryEnabled, isDelivery;
   final ValueChanged<bool> onFulfillmentChanged;
   final bool embedded;
+  final bool showParticipants;
 
   @override
   Widget build(BuildContext context) {
     final sections = <Widget>[];
-    if (participants.isNotEmpty) {
+    if (showParticipants && participants.isNotEmpty) {
       sections.add(
         ChatContextSection(
           label: 'Group',

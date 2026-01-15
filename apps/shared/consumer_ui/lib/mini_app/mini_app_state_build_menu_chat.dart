@@ -54,7 +54,7 @@ mixin MiniAppStateBuildMenuChat
           ? (_cartItemCount == 0 ? null : _openCartSheet)
           : null,
       onChangeStore: hasStore ? null : null,
-      onOpenMenu: hasStore ? null : onOpenMenu,
+      onOpenMenu: null,
       centerTitle: hasStore,
       contextSection: hasStore
           ? ChatContextPanel(
@@ -82,6 +82,7 @@ mixin MiniAppStateBuildMenuChat
                     deliveryEnabled: _deliveryEnabled,
                     isDelivery: _isDeliverySelected,
                     onFulfillmentChanged: _toggleDelivery,
+                    showParticipants: groupOrderPanel == null,
                   ),
                   if (groupOrderPanel != null) ...[
                     const SizedBox(height: 12),
@@ -199,7 +200,12 @@ mixin MiniAppStateBuildMenuChat
     if (_selectedProduct != null) {
       parts.add(_selectedProduct!.name);
     }
-    if (parts.isEmpty) return 'Details';
+    if (parts.isEmpty) return '';
+    if (parts.length == 1 &&
+        _deliveryEnabled &&
+        (parts.first == 'Delivery' || parts.first == 'Pickup')) {
+      return '';
+    }
     return parts.join(' • ');
   }
 }

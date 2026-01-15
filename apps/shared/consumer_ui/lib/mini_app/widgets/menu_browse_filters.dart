@@ -19,6 +19,7 @@ class MenuBrowseFilters extends StatelessWidget {
     required this.deliveryEnabled,
     required this.isDelivery,
     required this.onFulfillmentChanged,
+    this.showParticipants = true,
   });
 
   final List<String> categories;
@@ -30,11 +31,12 @@ class MenuBrowseFilters extends StatelessWidget {
   final bool deliveryEnabled;
   final bool isDelivery;
   final ValueChanged<bool> onFulfillmentChanged;
+  final bool showParticipants;
 
   @override
   Widget build(BuildContext context) {
     final sections = <Widget>[];
-    if (participants.isNotEmpty) {
+    if (showParticipants && participants.isNotEmpty) {
       sections.add(
         ChatContextSection(
           label: 'Group',

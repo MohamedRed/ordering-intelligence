@@ -19,7 +19,7 @@ class ChatContextPanel extends StatelessWidget {
 
   final bool expanded;
   final VoidCallback onToggleExpanded;
-  final String summaryText;
+  final String? summaryText;
   final bool deliveryEnabled;
   final bool isDelivery;
   final ValueChanged<bool> onFulfillmentChanged;
@@ -29,6 +29,7 @@ class ChatContextPanel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final hasSummary = summaryText != null && summaryText!.trim().isNotEmpty;
     final summaryRow = Row(
       children: [
         if (deliveryEnabled) ...[
@@ -38,14 +39,17 @@ class ChatContextPanel extends StatelessWidget {
           ),
           const SizedBox(width: 12),
         ],
-        Expanded(
-          child: Text(
-            summaryText,
-            style: ShadTheme.of(context).textTheme.small,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-          ),
-        ),
+        if (hasSummary)
+          Expanded(
+            child: Text(
+              summaryText!,
+              style: ShadTheme.of(context).textTheme.small,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+          )
+        else if (showToggle)
+          const Spacer(),
         if (showToggle) ...[
           const SizedBox(width: 8),
           ShadButton.outline(

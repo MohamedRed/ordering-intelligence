@@ -79,6 +79,7 @@ mixin MiniAppStateBuildMenuBrowse
             deliveryEnabled: false,
             isDelivery: _isDeliverySelected,
             onFulfillmentChanged: (_) {},
+            showParticipants: groupOrderPanel == null,
           ),
           if (groupOrderPanel != null) ...[
             const SizedBox(height: 12),
