@@ -119,6 +119,7 @@ mixin MiniAppStateBuildMenuChat
       isSending: isBusy,
       canRecord: hasStore && _audioRecorder != null,
       footer: footer,
+      summaryText: _buildChatSummaryText(session),
     );
     return Column(
       children: [
@@ -141,5 +142,24 @@ mixin MiniAppStateBuildMenuChat
         Expanded(child: chatView),
       ],
     );
+  }
+
+  String? _buildChatSummaryText(SessionInfo session) {
+    if (session.storeId.isEmpty) return null;
+    if (_cartItemCount == 0) {
+      if (_groupOrder != null) {
+        return 'Group order active • ${_groupOrder!.participants.length} joined. No items yet.';
+      }
+      return 'No items yet. Pick a category to start.';
+    }
+    final parts = <String>[
+      '$_cartItemCount item${_cartItemCount == 1 ? '' : 's'}',
+      _formatPrice(_cartTotalCents),
+      _isDeliverySelected ? 'Delivery' : 'Pickup',
+    ];
+    if (_groupOrder != null) {
+      parts.add('Group order • ${_groupOrder!.participants.length} joined');
+    }
+    return 'Current order: ${parts.join(' • ')}';
   }
 }

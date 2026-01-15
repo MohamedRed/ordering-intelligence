@@ -21,6 +21,7 @@ class ChatView extends StatelessWidget {
     this.canRecord = true,
     this.placeholder,
     this.footer,
+    this.summaryText,
   });
 
   final List<ChatMessage> messages;
@@ -37,6 +38,7 @@ class ChatView extends StatelessWidget {
   final bool canRecord;
   final String? placeholder;
   final Widget? footer;
+  final String? summaryText;
 
   @override
   Widget build(BuildContext context) {
@@ -50,6 +52,7 @@ class ChatView extends StatelessWidget {
             onProductSelected: onProductSelected,
             controller: scrollController,
             isLoading: isLoading,
+            summaryText: summaryText,
           ),
         ),
         if (footer != null) footer!,
