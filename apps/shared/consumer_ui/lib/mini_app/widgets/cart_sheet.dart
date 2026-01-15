@@ -39,23 +39,26 @@ class CartSheet extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final bottomInset = MediaQuery.of(context).viewInsets.bottom;
     return Padding(
-      padding: const EdgeInsets.all(16),
-      child: CartSheetContent(
-        cart: cart,
-        notesController: notesController,
-        totalCents: totalCents,
-        placingOrder: placingOrder,
-        orderError: orderError,
-        onQuantityChange: onQuantityChange,
-        onPlaceOrder: onPlaceOrder,
-        actionLabel: actionLabel,
-        formatPrice: formatPrice,
-        showPaymentMethod: showPaymentMethod,
-        paymentMethod: paymentMethod,
-        onPaymentMethodChanged: onPaymentMethodChanged,
-        paymentMethodsSection: paymentMethodsSection,
-        deliverySection: deliverySection,
+      padding: EdgeInsets.fromLTRB(16, 16, 16, 16 + bottomInset),
+      child: SingleChildScrollView(
+        child: CartSheetContent(
+          cart: cart,
+          notesController: notesController,
+          totalCents: totalCents,
+          placingOrder: placingOrder,
+          orderError: orderError,
+          onQuantityChange: onQuantityChange,
+          onPlaceOrder: onPlaceOrder,
+          actionLabel: actionLabel,
+          formatPrice: formatPrice,
+          showPaymentMethod: showPaymentMethod,
+          paymentMethod: paymentMethod,
+          onPaymentMethodChanged: onPaymentMethodChanged,
+          paymentMethodsSection: paymentMethodsSection,
+          deliverySection: deliverySection,
+        ),
       ),
     );
   }

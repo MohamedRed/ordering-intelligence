@@ -356,7 +356,10 @@ locals {
         FIRESTORE_PROJECT_ID    = var.project_id
         REQUIRE_AUTH            = "true"
         INTERNAL_AUTH_AUDIENCE  = local.service_urls.dispatch_service
-        INTERNAL_ALLOWED_EMAILS = module.agent_tools_sa.email
+        INTERNAL_ALLOWED_EMAILS = join(",", [
+          module.agent_tools_sa.email,
+          module.channel_gateway_sa.email,
+        ])
         ORDER_SERVICE_URL       = local.service_urls.order_service
         DISPATCH_EVENTS_TOPIC   = module.core.pubsub_topics["dispatch-events"]
         ASSIGNMENT_TTL_SECONDS  = "30"
