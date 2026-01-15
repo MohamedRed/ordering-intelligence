@@ -26,11 +26,11 @@ class ChatMessageBubble extends StatelessWidget {
     final theme = ShadTheme.of(context);
     final isUser = message.role == ChatRole.user;
     final bubbleColor = isUser
-        ? theme.colorScheme.primary
-        : theme.colorScheme.muted;
+        ? theme.colorScheme.muted
+        : theme.colorScheme.primary;
     final textColor = isUser
-        ? theme.colorScheme.primaryForeground
-        : theme.colorScheme.foreground;
+        ? theme.colorScheme.foreground
+        : theme.colorScheme.primaryForeground;
 
     final hasText = message.text != null && message.text!.trim().isNotEmpty;
     final hasAudio = message.audioBytes != null;

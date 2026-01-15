@@ -30,7 +30,11 @@ class MenuModeBar extends StatelessWidget {
             ),
           );
     return Row(
-      children: [menuButton, const Spacer(), if (toggle != null) toggle!],
+      children: [
+        menuButton,
+        Expanded(child: Center(child: toggle ?? const SizedBox.shrink())),
+        const SizedBox(width: buttonWidth),
+      ],
     );
   }
 }

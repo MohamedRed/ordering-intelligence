@@ -62,7 +62,7 @@ mixin MiniAppStateBuildMenuGas
             cartLabel: null,
             onBack: _changeStore,
             onChangeStore: null,
-            onOpenMenu: onOpenMenu,
+            onOpenMenu: null,
             centerTitle: true,
           ),
         ),

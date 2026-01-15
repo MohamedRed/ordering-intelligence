@@ -121,7 +121,7 @@ mixin MiniAppStateBuildMenuBrowse
         const SizedBox(height: 8),
         Padding(
           padding: const EdgeInsets.fromLTRB(12, 0, 12, 8),
-          child: MenuModeBar(toggle: modeToggle, onOpenMenu: onOpenMenu),
+          child: MenuModeBar(toggle: modeToggle, onOpenMenu: null),
         ),
         Expanded(child: body),
       ],

@@ -152,7 +152,7 @@ mixin MiniAppStateBuildMenuChat
         if (modeToggle != null)
           Padding(
             padding: const EdgeInsets.fromLTRB(12, 0, 12, 8),
-            child: MenuModeBar(toggle: modeToggle, onOpenMenu: onOpenMenu),
+            child: MenuModeBar(toggle: modeToggle, onOpenMenu: null),
           ),
         AnimatedCrossFade(
           duration: const Duration(milliseconds: 220),
