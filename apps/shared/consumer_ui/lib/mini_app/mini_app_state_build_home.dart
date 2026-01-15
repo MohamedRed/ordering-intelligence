@@ -65,12 +65,9 @@ mixin MiniAppStateBuildHome
                 _SectionTitle(title: 'Recent single orders'),
                 const SizedBox(height: 8),
                 for (final order in singleOrders) ...[
-                  RecommendedOrderCard(
+                  _OrderRow(
                     order: order,
                     onTap: () => _selectRecommendedOrder(order),
-                  ),
-                  const SizedBox(height: 6),
-                  _OrderActionRow(
                     onStartSingle: () => _startSingleOrderForOrder(order),
                     onStartGroup: () => _startGroupOrderForOrder(order),
                   ),
@@ -82,12 +79,9 @@ mixin MiniAppStateBuildHome
                 _SectionTitle(title: 'Recent group orders'),
                 const SizedBox(height: 8),
                 for (final order in groupOrders) ...[
-                  RecommendedOrderCard(
+                  _OrderRow(
                     order: order,
                     onTap: () => _selectRecommendedOrder(order),
-                  ),
-                  const SizedBox(height: 6),
-                  _OrderActionRow(
                     onStartSingle: () => _startSingleOrderForOrder(order),
                     onStartGroup: () => _startGroupOrderForOrder(order),
                   ),
@@ -177,12 +171,16 @@ class _SectionTitle extends StatelessWidget {
   }
 }
 
-class _OrderActionRow extends StatelessWidget {
-  const _OrderActionRow({
+class _OrderRow extends StatelessWidget {
+  const _OrderRow({
+    required this.order,
+    required this.onTap,
     required this.onStartSingle,
     required this.onStartGroup,
   });
 
+  final RecommendedOrder order;
+  final VoidCallback onTap;
   final VoidCallback onStartSingle;
   final VoidCallback onStartGroup;
 
@@ -190,16 +188,24 @@ class _OrderActionRow extends StatelessWidget {
   Widget build(BuildContext context) {
     return Row(
       children: [
-        ShadButton.outline(
-          size: ShadButtonSize.sm,
-          onPressed: onStartSingle,
-          child: const Text('New single'),
+        Expanded(
+          child: RecommendedOrderCard(order: order, onTap: onTap),
         ),
         const SizedBox(width: 8),
-        ShadButton.outline(
-          size: ShadButtonSize.sm,
-          onPressed: onStartGroup,
-          child: const Text('New group'),
+        Column(
+          children: [
+            ShadButton.outline(
+              size: ShadButtonSize.sm,
+              onPressed: onStartSingle,
+              child: const Icon(Icons.person_outline, size: 16),
+            ),
+            const SizedBox(height: 6),
+            ShadButton.outline(
+              size: ShadButtonSize.sm,
+              onPressed: onStartGroup,
+              child: const Icon(Icons.group_outlined, size: 16),
+            ),
+          ],
         ),
       ],
     );

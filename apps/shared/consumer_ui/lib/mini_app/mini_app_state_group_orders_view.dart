@@ -11,7 +11,8 @@ mixin MiniAppStateGroupOrdersView
     final session = _session;
     final groupOrder = _groupOrder;
     if (session == null || groupOrder == null) return false;
-    if (groupOrder.host.userId.isNotEmpty && groupOrder.host.userId == session.userId) {
+    if (groupOrder.host.userId.isNotEmpty &&
+        groupOrder.host.userId == session.userId) {
       return true;
     }
     return groupOrder.host.accountId.isNotEmpty &&
@@ -19,17 +20,21 @@ mixin MiniAppStateGroupOrdersView
   }
 
   bool get _isSplitPayment =>
-      (_groupOrder?.paymentMode ?? _groupOrderPaymentMode) == 'split_by_participant';
+      (_groupOrder?.paymentMode ?? _groupOrderPaymentMode) ==
+      'split_by_participant';
 
   bool get _isCashPayment =>
       (_groupOrder?.paymentMethod.isNotEmpty == true
-              ? _groupOrder!.paymentMethod
-              : _groupOrderPaymentMethod) ==
-          'cash';
+          ? _groupOrder!.paymentMethod
+          : _groupOrderPaymentMethod) ==
+      'cash';
 
   Widget? buildGroupOrderPanel() {
     if (_session == null) return null;
-    if (_groupOrder == null && _session?.storeId.isEmpty == true) {
+    if (_session?.storeId.isEmpty == true) {
+      return null;
+    }
+    if (_groupOrder == null && !_pendingStartGroupOrder) {
       return null;
     }
     String? primaryLabel;
@@ -75,7 +80,8 @@ mixin MiniAppStateGroupOrdersView
         } else if (_isSplitPayment) {
           primaryLabel = 'Pay my share';
           primaryAction = () => _checkoutGroupOrder(
-              participantId: _groupOrderParticipantId ?? _session!.userId);
+            participantId: _groupOrderParticipantId ?? _session!.userId,
+          );
         } else if (_isGroupOrderHost) {
           primaryLabel = 'Pay now';
           primaryAction = _checkoutGroupOrder;

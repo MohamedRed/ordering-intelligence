@@ -34,7 +34,7 @@ mixin MiniAppStateBuildMenuBrowse
       cartLabel: cartLabel,
       onOpenCart: _cartItemCount == 0 ? null : _openCartSheet,
       onChangeStore: _changeStore,
-      onOpenMenu: onOpenMenu,
+      onOpenMenu: null,
       contextSection: ChatContextPanel(
         embedded: true,
         expanded: _contextExpanded,
@@ -116,7 +116,7 @@ mixin MiniAppStateBuildMenuBrowse
       children: [
         Padding(
           padding: const EdgeInsets.fromLTRB(12, 4, 12, 8),
-          child: Center(child: modeToggle),
+          child: MenuModeBar(toggle: modeToggle, onOpenMenu: onOpenMenu),
         ),
         header,
         const SizedBox(height: 12),

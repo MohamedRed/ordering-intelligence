@@ -57,7 +57,7 @@ mixin MiniAppStateBuildMenuChat
           ? (_cartItemCount == 0 ? null : _openCartSheet)
           : null,
       onChangeStore: hasStore ? _changeStore : null,
-      onOpenMenu: onOpenMenu,
+      onOpenMenu: hasStore ? null : onOpenMenu,
       contextSection: hasStore
           ? ChatContextPanel(
               embedded: true,
@@ -144,7 +144,7 @@ mixin MiniAppStateBuildMenuChat
         if (modeToggle != null) ...[
           Padding(
             padding: const EdgeInsets.fromLTRB(12, 4, 12, 8),
-            child: Center(child: modeToggle),
+            child: MenuModeBar(toggle: modeToggle, onOpenMenu: onOpenMenu),
           ),
         ],
         AnimatedSwitcher(

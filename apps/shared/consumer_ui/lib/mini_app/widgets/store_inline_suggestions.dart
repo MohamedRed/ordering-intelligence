@@ -109,41 +109,42 @@ class _StoreSuggestionCard extends StatelessWidget {
           borderRadius: BorderRadius.circular(16),
           border: Border.all(color: theme.colorScheme.border),
         ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+        child: Row(
           children: [
-            Row(
-              children: [
-                StoreLogo(name: name, logoUrl: store.logoUrl, size: 28),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: Text(
-                    name,
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                    style: theme.textTheme.small,
+            Expanded(
+              child: Row(
+                children: [
+                  StoreLogo(name: name, logoUrl: store.logoUrl, size: 28),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Text(
+                      name,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: theme.textTheme.small,
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
             if (showActions) ...[
-              const SizedBox(height: 8),
-              Row(
+              const SizedBox(width: 8),
+              Column(
                 children: [
                   if (onStartSingle != null)
                     ShadButton.outline(
                       size: ShadButtonSize.sm,
                       onPressed: () => onStartSingle!(store),
-                      child: const Text('New single'),
+                      child: const Icon(Icons.person_outline, size: 16),
                     ),
-                  if (onStartSingle != null && onStartGroup != null)
-                    const SizedBox(width: 8),
-                  if (onStartGroup != null)
+                  if (onStartGroup != null) ...[
+                    const SizedBox(height: 6),
                     ShadButton.outline(
                       size: ShadButtonSize.sm,
                       onPressed: () => onStartGroup!(store),
-                      child: const Text('New group'),
+                      child: const Icon(Icons.group_outlined, size: 16),
                     ),
+                  ],
                 ],
               ),
             ],
