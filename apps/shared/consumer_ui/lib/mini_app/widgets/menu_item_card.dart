@@ -26,7 +26,6 @@ class MenuItemCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: theme.colorScheme.background,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: theme.colorScheme.border),
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.center,

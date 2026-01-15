@@ -40,11 +40,10 @@ class _ChatOptionMultiSelectState extends State<ChatOptionMultiSelect> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Wrap(
-          spacing: 8,
-          runSpacing: 8,
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            for (var index = 0; index < widget.options.length; index++)
+            for (var index = 0; index < widget.options.length; index++) ...[
               _MultiSelectChip(
                 option: widget.options[index],
                 isSelected: _selected.contains(index),
@@ -60,20 +59,22 @@ class _ChatOptionMultiSelectState extends State<ChatOptionMultiSelect> {
                   haptics.selection();
                 },
               ),
+              if (index < widget.options.length - 1) const SizedBox(height: 8),
+            ],
+            const SizedBox(height: 8),
+            ShadButton(
+              size: ShadButtonSize.sm,
+              onPressed: canConfirm
+                  ? () {
+                      final selections = _selected.toList()..sort();
+                      widget.onConfirm(
+                        selections.map((idx) => widget.options[idx]).toList(),
+                      );
+                    }
+                  : null,
+              child: Text(widget.confirmLabel ?? 'Confirm'),
+            ),
           ],
-        ),
-        const SizedBox(height: 8),
-        ShadButton(
-          size: ShadButtonSize.sm,
-          onPressed: canConfirm
-              ? () {
-                  final selections = _selected.toList()..sort();
-                  widget.onConfirm(
-                    selections.map((idx) => widget.options[idx]).toList(),
-                  );
-                }
-              : null,
-          child: Text(widget.confirmLabel ?? 'Confirm'),
         ),
         if (!canConfirm)
           Padding(
@@ -113,17 +114,17 @@ class _MultiSelectChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    if (isSelected) {
-      return ShadButton(
-        size: ShadButtonSize.sm,
-        onPressed: onTap,
-        child: Text(option.label),
-      );
-    }
-    return ShadButton.outline(
-      size: ShadButtonSize.sm,
-      onPressed: onTap,
-      child: Text(option.label),
-    );
+    final button = isSelected
+        ? ShadButton(
+            size: ShadButtonSize.sm,
+            onPressed: onTap,
+            child: Text(option.label),
+          )
+        : ShadButton.outline(
+            size: ShadButtonSize.sm,
+            onPressed: onTap,
+            child: Text(option.label),
+          );
+    return SizedBox(width: double.infinity, child: button);
   }
 }

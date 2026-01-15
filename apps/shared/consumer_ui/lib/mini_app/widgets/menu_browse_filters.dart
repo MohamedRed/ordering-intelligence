@@ -74,8 +74,13 @@ class MenuBrowseFilters extends StatelessWidget {
     if (sections.isEmpty) {
       return const SizedBox.shrink();
     }
-    return ShadCard(
+    final theme = ShadTheme.of(context);
+    return Container(
       padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: theme.colorScheme.background,
+        borderRadius: BorderRadius.circular(16),
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [

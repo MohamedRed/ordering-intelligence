@@ -21,8 +21,12 @@ class ChatContextSection extends StatelessWidget {
         if (showLabel) ...[
           Text(label!, style: theme.textTheme.muted),
           const SizedBox(height: 6),
-        ],
-        child,
+          child,
+        ] else
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 4),
+            child: child,
+          ),
       ],
     );
   }

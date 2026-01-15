@@ -18,24 +18,24 @@ class ChatOptionChips extends StatelessWidget {
   Widget build(BuildContext context) {
     if (options.isEmpty) return const SizedBox.shrink();
     final haptics = MiniAppScope.hapticsOf(context);
-    return SizedBox(
-      height: 44,
-      child: ListView.separated(
-        scrollDirection: Axis.horizontal,
-        itemCount: options.length,
-        separatorBuilder: (_, __) => const SizedBox(width: 8),
-        itemBuilder: (context, index) {
-          final option = options[index];
-          return ShadButton.outline(
-            size: ShadButtonSize.sm,
-            onPressed: () {
-              haptics.selection();
-              onSelected(option);
-            },
-            child: Text(option.label),
-          );
-        },
-      ),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        for (var index = 0; index < options.length; index++) ...[
+          SizedBox(
+            width: double.infinity,
+            child: ShadButton.outline(
+              size: ShadButtonSize.sm,
+              onPressed: () {
+                haptics.selection();
+                onSelected(options[index]);
+              },
+              child: Text(options[index].label),
+            ),
+          ),
+          if (index < options.length - 1) const SizedBox(height: 8),
+        ],
+      ],
     );
   }
 }

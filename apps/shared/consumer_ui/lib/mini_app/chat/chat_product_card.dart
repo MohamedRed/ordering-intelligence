@@ -5,11 +5,7 @@ import '../widgets/menu_item_image.dart';
 import 'package:consumer_core/consumer_core.dart';
 
 class ChatProductCard extends StatelessWidget {
-  const ChatProductCard({
-    super.key,
-    required this.product,
-    this.onTap,
-  });
+  const ChatProductCard({super.key, required this.product, this.onTap});
 
   final ChatProduct product;
   final VoidCallback? onTap;
@@ -25,15 +21,11 @@ class ChatProductCard extends StatelessWidget {
         decoration: BoxDecoration(
           color: theme.colorScheme.background,
           borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: theme.colorScheme.border),
         ),
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            MenuItemImage(
-              url: product.imageUrl,
-              size: 56,
-            ),
+            MenuItemImage(url: product.imageUrl, size: 56),
             const SizedBox(width: 12),
             Expanded(
               child: Column(
