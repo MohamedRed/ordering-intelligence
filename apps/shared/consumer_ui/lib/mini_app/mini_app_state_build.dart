@@ -74,7 +74,6 @@ mixin MiniAppStateBuild
         );
       }
       final drawer = _buildMiniAppDrawer();
-      _seedHomeChatIfNeeded();
       return Scaffold(
         body: wrapSafeArea(
           Builder(
@@ -82,7 +81,7 @@ mixin MiniAppStateBuild
               final onOpenMenu = drawer == null
                   ? null
                   : () => Scaffold.of(context).openDrawer();
-              return _buildMenuLayout(session, onOpenMenu: onOpenMenu);
+              return _buildHomeLayout(session, onOpenMenu: onOpenMenu);
             },
           ),
         ),

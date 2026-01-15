@@ -28,6 +28,7 @@ import 'widgets/menu_browse_filters.dart';
 import 'widgets/menu_item_card.dart';
 import 'widgets/menu_view_toggle.dart';
 import 'widgets/store_search_footer.dart';
+import 'widgets/store_inline_suggestions.dart';
 
 part 'mini_app_state_fields.dart';
 part 'mini_app_state_search.dart';
@@ -68,6 +69,7 @@ part 'mini_app_state_identity_ui.dart';
 part 'mini_app_state_sign_out.dart';
 part 'mini_app_state_lifecycle.dart';
 part 'mini_app_state_build_menu_gas.dart';
+part 'mini_app_state_build_home.dart';
 part 'mini_app_state_build_menu_browse.dart';
 part 'mini_app_state_build_menu_chat.dart';
 part 'mini_app_state_build_menu.dart';
@@ -124,6 +126,7 @@ class _MiniAppScreenState extends State<MiniAppScreen>
         MiniAppStateBuildMenuGas,
         MiniAppStateBuildMenuChat,
         MiniAppStateBuildMenuBrowse,
+        MiniAppStateBuildHome,
         MiniAppStateBuildMenu,
         MiniAppStateBuild {
   @override
