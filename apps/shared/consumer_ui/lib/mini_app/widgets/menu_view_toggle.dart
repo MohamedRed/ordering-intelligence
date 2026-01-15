@@ -46,7 +46,7 @@ class MenuViewToggle extends StatelessWidget {
                 boxShadow: [
                   BoxShadow(
                     blurRadius: 6,
-                    color: theme.colorScheme.shadow.withOpacity(0.08),
+                    color: Colors.black.withOpacity(0.08),
                     offset: const Offset(0, 2),
                   ),
                 ],
