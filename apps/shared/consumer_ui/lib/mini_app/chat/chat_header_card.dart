@@ -32,6 +32,7 @@ class ChatHeaderCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = ShadTheme.of(context);
     final haptics = MiniAppScope.hapticsOf(context);
+    final hasCart = cartLabel != null && cartLabel!.isNotEmpty;
     final leadingButtons = <Widget>[
       if (onOpenMenu != null)
         _HeaderIconButton(
@@ -148,7 +149,7 @@ class ChatHeaderCard extends StatelessWidget {
                 trailingWidget,
               ],
             ),
-          if (cartLabel != null && cartLabel!.isNotEmpty) ...[
+          if (hasCart) ...[
             const SizedBox(height: 10),
             Row(
               children: [
@@ -172,7 +173,7 @@ class ChatHeaderCard extends StatelessWidget {
             ),
           ],
           if (contextSection != null) ...[
-            const SizedBox(height: 10),
+            SizedBox(height: hasCart ? 14 : 10),
             contextSection!,
           ],
         ],
