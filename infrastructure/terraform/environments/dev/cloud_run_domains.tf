@@ -9,7 +9,7 @@ module "cloud_run_domain_mappings" {
 
   depends_on = [
     module.admin_service,
-    module.agent_customization,
+    module.agent_customization_service,
     module.agent_tools,
     module.agent_webhooks,
     module.channel_gateway,
@@ -33,6 +33,7 @@ module "cloud_dns_zone" {
   project_id = var.project_id
   zone_name  = var.cloud_dns_zone_name
   domain     = local.dns_domain
+  description = local.dns_domain != "" ? "Managed zone for ${local.dns_domain}" : "Managed zone"
   enabled    = var.enable_cloud_dns && local.dns_domain != ""
 
   resource_records = module.cloud_run_domain_mappings.resource_records
