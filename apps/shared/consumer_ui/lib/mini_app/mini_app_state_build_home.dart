@@ -18,6 +18,7 @@ mixin MiniAppStateBuildHome
     final recentStores = _recentStoreChoices();
     final singleOrders = _singleRecentOrders();
     final groupOrders = _groupRecentOrders();
+    const tileSize = 140.0;
     return Column(
       children: [
         Padding(
@@ -50,15 +51,24 @@ mixin MiniAppStateBuildHome
               ),
               if (recentStores.isNotEmpty) ...[
                 const SizedBox(height: 12),
-                StoreInlineSuggestions(
-                  results: recentStores,
-                  onSelect: _selectHomeStore,
-                  title: 'Recent stores',
-                  maxItems: 6,
-                  axis: Axis.vertical,
-                  onStartSingle: _startSingleOrderForStore,
-                  onStartGroup: _startGroupOrderForStore,
-                  actionsOnlyTap: true,
+                _SectionTitle(title: 'Recent stores'),
+                const SizedBox(height: 8),
+                SizedBox(
+                  height: tileSize,
+                  child: ListView.separated(
+                    scrollDirection: Axis.horizontal,
+                    itemCount: recentStores.length,
+                    separatorBuilder: (_, __) => const SizedBox(width: 10),
+                    itemBuilder: (context, index) {
+                      final store = recentStores[index];
+                      return _RecentStoreTile(
+                        store: store,
+                        size: tileSize,
+                        onStartSingle: () => _startSingleOrderForStore(store),
+                        onStartGroup: () => _startGroupOrderForStore(store),
+                      );
+                    },
+                  ),
                 ),
               ],
               if (!_recommendedOrdersLoaded)
@@ -70,31 +80,45 @@ mixin MiniAppStateBuildHome
                 const SizedBox(height: 16),
                 _SectionTitle(title: 'Recent single orders'),
                 const SizedBox(height: 8),
-                for (final order in singleOrders) ...[
-                  _OrderRow(
-                    order: order,
-                    onTap: () => _selectRecommendedOrder(order),
-                    onStartSingle: () => _startSingleOrderForOrder(order),
-                    onStartGroup: () => _startGroupOrderForOrder(order),
-                    actionsOnlyTap: true,
+                SizedBox(
+                  height: tileSize,
+                  child: ListView.separated(
+                    scrollDirection: Axis.horizontal,
+                    itemCount: singleOrders.length,
+                    separatorBuilder: (_, __) => const SizedBox(width: 10),
+                    itemBuilder: (context, index) {
+                      final order = singleOrders[index];
+                      return _RecentOrderTile(
+                        order: order,
+                        size: tileSize,
+                        onStartSingle: () => _startSingleOrderForOrder(order),
+                        onStartGroup: () => _startGroupOrderForOrder(order),
+                      );
+                    },
                   ),
-                  const SizedBox(height: 10),
-                ],
+                ),
               ],
               if (groupOrders.isNotEmpty) ...[
                 const SizedBox(height: 8),
                 _SectionTitle(title: 'Recent group orders'),
                 const SizedBox(height: 8),
-                for (final order in groupOrders) ...[
-                  _OrderRow(
-                    order: order,
-                    onTap: () => _selectRecommendedOrder(order),
-                    onStartSingle: () => _startSingleOrderForOrder(order),
-                    onStartGroup: () => _startGroupOrderForOrder(order),
-                    actionsOnlyTap: true,
+                SizedBox(
+                  height: tileSize,
+                  child: ListView.separated(
+                    scrollDirection: Axis.horizontal,
+                    itemCount: groupOrders.length,
+                    separatorBuilder: (_, __) => const SizedBox(width: 10),
+                    itemBuilder: (context, index) {
+                      final order = groupOrders[index];
+                      return _RecentOrderTile(
+                        order: order,
+                        size: tileSize,
+                        onStartSingle: () => _startSingleOrderForOrder(order),
+                        onStartGroup: () => _startGroupOrderForOrder(order),
+                      );
+                    },
                   ),
-                  const SizedBox(height: 10),
-                ],
+                ),
               ],
               if (_recommendedOrdersLoaded &&
                   singleOrders.isEmpty &&
@@ -179,43 +203,132 @@ class _SectionTitle extends StatelessWidget {
   }
 }
 
-class _OrderRow extends StatelessWidget {
-  const _OrderRow({
-    required this.order,
-    required this.onTap,
+class _RecentStoreTile extends StatelessWidget {
+  const _RecentStoreTile({
+    required this.store,
+    required this.size,
     required this.onStartSingle,
     required this.onStartGroup,
-    this.actionsOnlyTap = false,
   });
 
-  final RecommendedOrder order;
-  final VoidCallback onTap;
+  final StoreChoice store;
+  final double size;
   final VoidCallback onStartSingle;
   final VoidCallback onStartGroup;
-  final bool actionsOnlyTap;
 
   @override
   Widget build(BuildContext context) {
-    final actions = Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        ActionIconButton(
-          icon: Icons.person_outline,
-          onPressed: onStartSingle,
-          size: 32,
-        ),
-        const SizedBox(height: 6),
-        ActionIconButton(
-          icon: Icons.group_outlined,
-          onPressed: onStartGroup,
-          size: 32,
-        ),
-      ],
+    final theme = ShadTheme.of(context);
+    final name = store.name.isEmpty ? store.storeId : store.name;
+    return Container(
+      width: size,
+      height: size,
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: theme.colorScheme.muted,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: theme.colorScheme.border),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          StoreLogo(name: name, logoUrl: store.logoUrl, size: 34),
+          const SizedBox(height: 8),
+          Text(
+            name,
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+            style: theme.textTheme.small,
+          ),
+          const Spacer(),
+          Row(
+            children: [
+              ActionIconButton(
+                icon: Icons.person_outline,
+                onPressed: onStartSingle,
+                size: 30,
+              ),
+              const SizedBox(width: 6),
+              ActionIconButton(
+                icon: Icons.group_outlined,
+                onPressed: onStartGroup,
+                size: 30,
+              ),
+            ],
+          ),
+        ],
+      ),
     );
-    return RecommendedOrderCard(
-      order: order,
-      onTap: actionsOnlyTap ? null : onTap,
-      trailing: actions,
+  }
+}
+
+class _RecentOrderTile extends StatelessWidget {
+  const _RecentOrderTile({
+    required this.order,
+    required this.size,
+    required this.onStartSingle,
+    required this.onStartGroup,
+  });
+
+  final RecommendedOrder order;
+  final double size;
+  final VoidCallback onStartSingle;
+  final VoidCallback onStartGroup;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = ShadTheme.of(context);
+    final title = order.storeName;
+    final subtitle = order.isGroupOrder
+        ? 'Group order'
+        : order.itemCount > 0
+        ? '${order.itemCount} items'
+        : 'Recent order';
+    return Container(
+      width: size,
+      height: size,
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: theme.colorScheme.muted,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: theme.colorScheme.border),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          StoreLogo(name: title, logoUrl: order.logoUrl, size: 34),
+          const SizedBox(height: 8),
+          Text(
+            title,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: theme.textTheme.small,
+          ),
+          const SizedBox(height: 4),
+          Text(
+            subtitle,
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+            style: theme.textTheme.muted,
+          ),
+          const Spacer(),
+          Row(
+            children: [
+              ActionIconButton(
+                icon: Icons.person_outline,
+                onPressed: onStartSingle,
+                size: 30,
+              ),
+              const SizedBox(width: 6),
+              ActionIconButton(
+                icon: Icons.group_outlined,
+                onPressed: onStartGroup,
+                size: 30,
+              ),
+            ],
+          ),
+        ],
+      ),
     );
   }
 }

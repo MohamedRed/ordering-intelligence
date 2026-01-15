@@ -31,6 +31,7 @@ import 'widgets/menu_mode_bar.dart';
 import 'widgets/menu_view_toggle.dart';
 import 'widgets/store_search_footer.dart';
 import 'widgets/store_inline_suggestions.dart';
+import 'widgets/store_logo.dart';
 import 'widgets/recommended_order_card.dart';
 
 part 'mini_app_state_fields.dart';
