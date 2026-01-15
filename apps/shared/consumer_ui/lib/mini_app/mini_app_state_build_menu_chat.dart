@@ -53,10 +53,11 @@ mixin MiniAppStateBuildMenuChat
       storeName: hasStore ? session.storeName : 'Find a store',
       subtitle: subtitle,
       cartLabel: cartLabel,
+      onBack: hasStore ? _changeStore : null,
       onOpenCart: hasStore
           ? (_cartItemCount == 0 ? null : _openCartSheet)
           : null,
-      onChangeStore: hasStore ? _changeStore : null,
+      onChangeStore: hasStore ? null : null,
       onOpenMenu: hasStore ? null : onOpenMenu,
       contextSection: hasStore
           ? ChatContextPanel(

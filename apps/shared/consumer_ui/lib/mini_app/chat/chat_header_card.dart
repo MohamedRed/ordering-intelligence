@@ -10,6 +10,7 @@ class ChatHeaderCard extends StatelessWidget {
     required this.storeName,
     required this.subtitle,
     this.cartLabel,
+    this.onBack,
     this.onOpenCart,
     this.onChangeStore,
     this.onOpenMenu,
@@ -19,6 +20,7 @@ class ChatHeaderCard extends StatelessWidget {
   final String storeName;
   final String subtitle;
   final String? cartLabel;
+  final VoidCallback? onBack;
   final VoidCallback? onOpenCart;
   final VoidCallback? onChangeStore;
   final VoidCallback? onOpenMenu;
@@ -45,6 +47,17 @@ class ChatHeaderCard extends StatelessWidget {
                     onOpenMenu?.call();
                   },
                   child: const Icon(Icons.menu, size: 18),
+                ),
+                const SizedBox(width: 8),
+              ],
+              if (onBack != null) ...[
+                ShadButton.outline(
+                  size: ShadButtonSize.sm,
+                  onPressed: () {
+                    haptics.selection();
+                    onBack?.call();
+                  },
+                  child: const Icon(Icons.arrow_back, size: 18),
                 ),
                 const SizedBox(width: 8),
               ],

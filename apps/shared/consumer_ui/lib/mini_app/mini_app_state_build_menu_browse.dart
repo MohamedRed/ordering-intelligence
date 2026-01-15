@@ -32,8 +32,9 @@ mixin MiniAppStateBuildMenuBrowse
           ? 'Group order active • ${_groupOrder!.participants.length} joined'
           : '',
       cartLabel: cartLabel,
+      onBack: _changeStore,
       onOpenCart: _cartItemCount == 0 ? null : _openCartSheet,
-      onChangeStore: _changeStore,
+      onChangeStore: null,
       onOpenMenu: null,
       contextSection: ChatContextPanel(
         embedded: true,
