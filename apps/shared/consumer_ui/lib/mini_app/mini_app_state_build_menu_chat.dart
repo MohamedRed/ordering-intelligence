@@ -44,6 +44,62 @@ mixin MiniAppStateBuildMenuChat
             onSelectSuggestion: _selectStoreFromSearchSuggestion,
           );
     final isBusy = hasStore ? _chatBusy : _searching;
+    final groupOrderPanel = hasStore ? buildGroupOrderPanel() : null;
+    final header = ChatHeaderCard(
+      key: ValueKey(hasStore ? session.storeId : 'no-store'),
+      storeName: hasStore ? session.storeName : 'Find a store',
+      subtitle: subtitle,
+      cartLabel: cartLabel,
+      onOpenCart: hasStore
+          ? (_cartItemCount == 0 ? null : _openCartSheet)
+          : null,
+      onChangeStore: hasStore ? _changeStore : null,
+      onOpenMenu: onOpenMenu,
+    );
+    final contextBlock = hasStore
+        ? Column(
+            children: [
+              if (_menuError != null) ...[
+                ShadAlert.destructive(
+                  title: const Text('Menu unavailable'),
+                  description: Text(_menuError!),
+                ),
+                const SizedBox(height: 8),
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: ShadButton.outline(
+                    onPressed: () => _loadMenu(session.storeId),
+                    child: const Text('Retry menu'),
+                  ),
+                ),
+              ] else if (_loadingMenu)
+                const LinearProgressIndicator(minHeight: 2),
+              if (_menuError != null || _loadingMenu)
+                const SizedBox(height: 12),
+              ChatContextBar(
+                categories: _categories,
+                activeCategory: _activeCategory,
+                onCategorySelected: _handleCategorySelected,
+                selectedProduct: _selectedProduct,
+                onClearProduct: _selectedProduct == null
+                    ? null
+                    : () => setState(() => _selectedProduct = null),
+                participants: _groupOrder?.participants ?? const [],
+                selectedParticipantId: _groupOrderSelectedParticipantId,
+                onParticipantSelected: _handleParticipantSelected,
+                deliveryEnabled: _deliveryEnabled,
+                isDelivery: _isDeliverySelected,
+                onFulfillmentChanged: (isDelivery) =>
+                    _toggleDelivery(isDelivery),
+              ),
+              if (groupOrderPanel != null) ...[
+                const SizedBox(height: 12),
+                groupOrderPanel,
+              ],
+              const SizedBox(height: 12),
+            ],
+          )
+        : const SizedBox.shrink();
     final chatView = ChatView(
       key: const ValueKey('chat'),
       messages: _chatMessages,
@@ -64,59 +120,24 @@ mixin MiniAppStateBuildMenuChat
       canRecord: hasStore && _audioRecorder != null,
       footer: footer,
     );
-    final groupOrderPanel = hasStore ? buildGroupOrderPanel() : null;
-
     return Column(
       children: [
-        ChatHeaderCard(
-          storeName: hasStore ? session.storeName : 'Find a store',
-          subtitle: subtitle,
-          cartLabel: cartLabel,
-          onOpenCart: hasStore
-              ? (_cartItemCount == 0 ? null : _openCartSheet)
-              : null,
-          onChangeStore: hasStore ? _changeStore : null,
-          onOpenMenu: onOpenMenu,
+        AnimatedSwitcher(
+          duration: const Duration(milliseconds: 220),
+          switchInCurve: Curves.easeOut,
+          switchOutCurve: Curves.easeIn,
+          child: header,
         ),
         const SizedBox(height: 12),
-        if (hasStore) ...[
-          if (_menuError != null) ...[
-            ShadAlert.destructive(
-              title: const Text('Menu unavailable'),
-              description: Text(_menuError!),
-            ),
-            const SizedBox(height: 8),
-            Align(
-              alignment: Alignment.centerLeft,
-              child: ShadButton.outline(
-                onPressed: () => _loadMenu(session.storeId),
-                child: const Text('Retry menu'),
-              ),
-            ),
-          ] else if (_loadingMenu)
-            const LinearProgressIndicator(minHeight: 2),
-          if (_menuError != null || _loadingMenu) const SizedBox(height: 12),
-          ChatContextBar(
-            categories: _categories,
-            activeCategory: _activeCategory,
-            onCategorySelected: _handleCategorySelected,
-            selectedProduct: _selectedProduct,
-            onClearProduct: _selectedProduct == null
-                ? null
-                : () => setState(() => _selectedProduct = null),
-            participants: _groupOrder?.participants ?? const [],
-            selectedParticipantId: _groupOrderSelectedParticipantId,
-            onParticipantSelected: _handleParticipantSelected,
-            deliveryEnabled: _deliveryEnabled,
-            isDelivery: _isDeliverySelected,
-            onFulfillmentChanged: (isDelivery) => _toggleDelivery(isDelivery),
-          ),
-          if (groupOrderPanel != null) ...[
-            const SizedBox(height: 12),
-            groupOrderPanel,
-          ],
-          const SizedBox(height: 12),
-        ],
+        AnimatedCrossFade(
+          duration: const Duration(milliseconds: 220),
+          sizeCurve: Curves.easeOut,
+          crossFadeState: hasStore
+              ? CrossFadeState.showSecond
+              : CrossFadeState.showFirst,
+          firstChild: const SizedBox.shrink(),
+          secondChild: contextBlock,
+        ),
         Expanded(child: chatView),
       ],
     );
