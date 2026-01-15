@@ -96,7 +96,8 @@ mixin MiniAppStateBuildMenuChat
             )
           : null,
     );
-    final contextBlock = hasStore
+    final showContextNotice = hasStore && (_menuError != null || _loadingMenu);
+    final contextBlock = showContextNotice
         ? Column(
             children: [
               if (_menuError != null) ...[
@@ -114,9 +115,6 @@ mixin MiniAppStateBuildMenuChat
                 ),
               ] else if (_loadingMenu)
                 const LinearProgressIndicator(minHeight: 2),
-              if (_menuError != null || _loadingMenu)
-                const SizedBox(height: 12),
-              const SizedBox(height: 4),
             ],
           )
         : const SizedBox.shrink();
@@ -153,28 +151,31 @@ mixin MiniAppStateBuildMenuChat
           ),
         ),
         const SizedBox(height: 8),
-        AnimatedCrossFade(
-          duration: const Duration(milliseconds: 220),
-          sizeCurve: Curves.easeOut,
-          crossFadeState: hasStore
-              ? CrossFadeState.showSecond
-              : CrossFadeState.showFirst,
-          firstChild: const SizedBox.shrink(),
-          secondChild: contextBlock,
-        ),
-        if (groupOrderPanel != null) ...[
+        if (showContextNotice) ...[
+          AnimatedCrossFade(
+            duration: const Duration(milliseconds: 220),
+            sizeCurve: Curves.easeOut,
+            crossFadeState: hasStore
+                ? CrossFadeState.showSecond
+                : CrossFadeState.showFirst,
+            firstChild: const SizedBox.shrink(),
+            secondChild: contextBlock,
+          ),
           const SizedBox(height: 8),
+        ],
+        if (groupOrderPanel != null) ...[
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 12),
             child: SizedBox(width: double.infinity, child: groupOrderPanel),
           ),
+          const SizedBox(height: 12),
         ],
         if (modeToggle != null) ...[
-          const SizedBox(height: 8),
           Padding(
-            padding: const EdgeInsets.fromLTRB(12, 0, 12, 8),
+            padding: const EdgeInsets.symmetric(horizontal: 12),
             child: MenuModeBar(toggle: modeToggle, onOpenMenu: null),
           ),
+          const SizedBox(height: 12),
         ],
         Expanded(child: chatView),
       ],
