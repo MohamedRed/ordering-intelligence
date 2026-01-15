@@ -65,6 +65,8 @@ mixin MiniAppStateBuildMenuChat
               deliveryEnabled: _deliveryEnabled,
               isDelivery: _isDeliverySelected,
               onFulfillmentChanged: _toggleDelivery,
+              showToggle: false,
+              showExpandedContentWhenEmbedded: true,
               expandedContent: Column(
                 children: [
                   ChatContextBar(
@@ -79,7 +81,7 @@ mixin MiniAppStateBuildMenuChat
                     participants: _groupOrder?.participants ?? const [],
                     selectedParticipantId: _groupOrderSelectedParticipantId,
                     onParticipantSelected: _handleParticipantSelected,
-                    deliveryEnabled: _deliveryEnabled,
+                    deliveryEnabled: false,
                     isDelivery: _isDeliverySelected,
                     onFulfillmentChanged: _toggleDelivery,
                     showParticipants: groupOrderPanel == null,
