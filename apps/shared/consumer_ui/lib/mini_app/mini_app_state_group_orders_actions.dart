@@ -5,7 +5,7 @@ mixin MiniAppStateGroupOrdersActions
         State<MiniAppScreen>,
         MiniAppStateFields,
         MiniAppStateMenu,
-        MiniAppStateSearch {
+        MiniAppStateRecommendations {
   Future<void> _createGroupOrder() async {
     final session = _session;
     if (session == null || session.storeId.isEmpty) return;

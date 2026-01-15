@@ -7,7 +7,7 @@ mixin MiniAppStateOrder
         MiniAppStateGas,
         MiniAppStatePayments,
         MiniAppStateDelivery,
-        MiniAppStateSearch {
+        MiniAppStateRecommendations {
   Future<void> _placeOrder() async {
     final session = _session;
     if (session == null || session.storeId.isEmpty || _cart.isEmpty) {

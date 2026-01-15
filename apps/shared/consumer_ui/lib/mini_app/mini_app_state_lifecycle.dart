@@ -5,6 +5,7 @@ mixin MiniAppStateLifecycle
         State<MiniAppScreen>,
         MiniAppStateFields,
         MiniAppStateSearch,
+        MiniAppStateRecommendations,
         MiniAppStateGroupOrdersEntry,
         MiniAppStateMenu,
         MiniAppStateChatState,

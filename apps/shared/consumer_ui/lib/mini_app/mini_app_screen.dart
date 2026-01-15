@@ -37,6 +37,7 @@ import 'widgets/recommended_order_card.dart';
 
 part 'mini_app_state_fields.dart';
 part 'mini_app_state_search.dart';
+part 'mini_app_state_recommendations.dart';
 part 'mini_app_state_store_search_chat.dart';
 part 'mini_app_state_home_chat.dart';
 part 'mini_app_state_store.dart';
@@ -92,6 +93,7 @@ class MiniAppScreen extends StatefulWidget {
 class _MiniAppScreenState extends State<MiniAppScreen>
     with
         MiniAppStateFields,
+        MiniAppStateRecommendations,
         MiniAppStateIdentity,
         MiniAppStateIdentityActions,
         MiniAppStateIdentityLinks,

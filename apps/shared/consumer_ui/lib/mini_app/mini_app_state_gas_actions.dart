@@ -1,7 +1,7 @@
 part of 'mini_app_screen.dart';
 
 mixin MiniAppStateGasActions
-    on MiniAppStateGas, MiniAppStatePayments, MiniAppStateSearch {
+    on MiniAppStateGas, MiniAppStatePayments, MiniAppStateRecommendations {
   Future<void> _placeFuelOrder() async {
     final session = _session;
     if (session == null || !_isGasStation) return;

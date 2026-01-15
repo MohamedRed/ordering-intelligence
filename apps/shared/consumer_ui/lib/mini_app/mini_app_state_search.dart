@@ -53,33 +53,6 @@ mixin MiniAppStateSearch
     }
   }
 
-  Future<void> _loadRecommendedOrders() async {
-    final session = _session;
-    if (session == null) {
-      return;
-    }
-    try {
-      final orders = await _api.fetchRecommendedOrders(
-        sessionId: session.sessionId,
-      );
-      if (!mounted) {
-        return;
-      }
-      setState(() {
-        _recommendedOrders = orders;
-        _recommendedOrdersLoaded = true;
-      });
-    } catch (_) {
-      if (!mounted) {
-        return;
-      }
-      setState(() {
-        _recommendedOrders = [];
-        _recommendedOrdersLoaded = true;
-      });
-    }
-  }
-
   void _selectRecommendedOrder(RecommendedOrder order) {
     final choice = StoreChoice(
       name: order.storeName,
