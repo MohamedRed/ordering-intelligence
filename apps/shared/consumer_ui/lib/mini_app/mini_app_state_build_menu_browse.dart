@@ -69,6 +69,12 @@ mixin MiniAppStateBuildMenuBrowse
       final filtered = _filteredMenuItems(_menu!);
       body = Column(
         children: [
+          if (groupOrderPanel != null) ...[
+            groupOrderPanel,
+            const SizedBox(height: 12),
+          ],
+          MenuModeBar(toggle: modeToggle, onOpenMenu: null),
+          const SizedBox(height: 12),
           MenuBrowseFilters(
             categories: _categories,
             activeCategory: _activeCategory,
@@ -81,12 +87,6 @@ mixin MiniAppStateBuildMenuBrowse
             onFulfillmentChanged: (_) {},
             showParticipants: groupOrderPanel == null,
           ),
-          if (groupOrderPanel != null) ...[
-            const SizedBox(height: 12),
-            groupOrderPanel,
-          ],
-          const SizedBox(height: 12),
-          MenuModeBar(toggle: modeToggle, onOpenMenu: null),
           const SizedBox(height: 12),
           Expanded(
             child: filtered.isEmpty
