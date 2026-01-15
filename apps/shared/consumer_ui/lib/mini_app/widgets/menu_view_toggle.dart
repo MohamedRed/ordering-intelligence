@@ -19,43 +19,36 @@ class MenuViewToggle extends StatelessWidget {
     final theme = ShadTheme.of(context);
     final isChat = mode == MenuViewMode.chat;
     final haptics = MiniAppScope.hapticsOf(context);
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-      decoration: BoxDecoration(
-        color: theme.colorScheme.muted,
-        borderRadius: BorderRadius.circular(16),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Text(
-            'Browse',
-            style: theme.textTheme.small.copyWith(
-              color: isChat
-                  ? theme.colorScheme.mutedForeground
-                  : theme.colorScheme.foreground,
-            ),
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Text(
+          'Browse',
+          style: theme.textTheme.small.copyWith(
+            color: isChat
+                ? theme.colorScheme.mutedForeground
+                : theme.colorScheme.foreground,
           ),
-          const SizedBox(width: 8),
-          Switch(
-            value: isChat,
-            activeThumbColor: theme.colorScheme.primary,
-            onChanged: (value) {
-              haptics.selection();
-              onChanged(value ? MenuViewMode.chat : MenuViewMode.browse);
-            },
+        ),
+        const SizedBox(width: 10),
+        Switch.adaptive(
+          value: isChat,
+          activeColor: theme.colorScheme.primary,
+          onChanged: (value) {
+            haptics.selection();
+            onChanged(value ? MenuViewMode.chat : MenuViewMode.browse);
+          },
+        ),
+        const SizedBox(width: 10),
+        Text(
+          'Chat',
+          style: theme.textTheme.small.copyWith(
+            color: isChat
+                ? theme.colorScheme.foreground
+                : theme.colorScheme.mutedForeground,
           ),
-          const SizedBox(width: 8),
-          Text(
-            'Chat',
-            style: theme.textTheme.small.copyWith(
-              color: isChat
-                  ? theme.colorScheme.foreground
-                  : theme.colorScheme.mutedForeground,
-            ),
-          ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 }

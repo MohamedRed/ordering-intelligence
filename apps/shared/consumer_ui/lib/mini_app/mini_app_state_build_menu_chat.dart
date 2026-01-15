@@ -144,7 +144,7 @@ mixin MiniAppStateBuildMenuChat
         if (modeToggle != null) ...[
           Padding(
             padding: const EdgeInsets.fromLTRB(12, 4, 12, 8),
-            child: Align(alignment: Alignment.centerRight, child: modeToggle),
+            child: Center(child: modeToggle),
           ),
         ],
         AnimatedSwitcher(

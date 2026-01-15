@@ -40,6 +40,8 @@ mixin MiniAppStateBuildHome
                 searchResults: _searchResults,
                 searchError: _searchError,
                 onSelectSuggestion: _selectStoreFromSearchSuggestion,
+                onStartSingle: _startSingleOrderForStore,
+                onStartGroup: _startGroupOrderForStore,
               ),
               if (recentStores.isNotEmpty) ...[
                 const SizedBox(height: 12),
@@ -48,7 +50,9 @@ mixin MiniAppStateBuildHome
                   onSelect: _selectHomeStore,
                   title: 'Recent stores',
                   maxItems: 6,
-                  axis: Axis.horizontal,
+                  axis: Axis.vertical,
+                  onStartSingle: _startSingleOrderForStore,
+                  onStartGroup: _startGroupOrderForStore,
                 ),
               ],
               if (!_recommendedOrdersLoaded)
@@ -65,6 +69,11 @@ mixin MiniAppStateBuildHome
                     order: order,
                     onTap: () => _selectRecommendedOrder(order),
                   ),
+                  const SizedBox(height: 6),
+                  _OrderActionRow(
+                    onStartSingle: () => _startSingleOrderForOrder(order),
+                    onStartGroup: () => _startGroupOrderForOrder(order),
+                  ),
                   const SizedBox(height: 10),
                 ],
               ],
@@ -76,6 +85,11 @@ mixin MiniAppStateBuildHome
                   RecommendedOrderCard(
                     order: order,
                     onTap: () => _selectRecommendedOrder(order),
+                  ),
+                  const SizedBox(height: 6),
+                  _OrderActionRow(
+                    onStartSingle: () => _startSingleOrderForOrder(order),
+                    onStartGroup: () => _startGroupOrderForOrder(order),
                   ),
                   const SizedBox(height: 10),
                 ],
@@ -120,6 +134,36 @@ mixin MiniAppStateBuildHome
     _setPendingMenuViewMode(MenuViewMode.browse);
     _selectStore(store);
   }
+
+  void _startSingleOrderForStore(StoreChoice store) {
+    _pendingStartGroupOrder = false;
+    _setPendingMenuViewMode(MenuViewMode.browse);
+    _selectStore(store);
+  }
+
+  void _startGroupOrderForStore(StoreChoice store) {
+    _pendingStartGroupOrder = true;
+    _setPendingMenuViewMode(MenuViewMode.browse);
+    _selectStore(store);
+  }
+
+  StoreChoice _storeChoiceFromOrder(RecommendedOrder order) {
+    return StoreChoice(
+      name: order.storeName,
+      storeId: order.storeId,
+      tenantId: order.tenantId,
+      businessType: order.businessType,
+      logoUrl: order.logoUrl,
+    );
+  }
+
+  void _startSingleOrderForOrder(RecommendedOrder order) {
+    _startSingleOrderForStore(_storeChoiceFromOrder(order));
+  }
+
+  void _startGroupOrderForOrder(RecommendedOrder order) {
+    _startGroupOrderForStore(_storeChoiceFromOrder(order));
+  }
 }
 
 class _SectionTitle extends StatelessWidget {
@@ -130,5 +174,34 @@ class _SectionTitle extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Text(title, style: ShadTheme.of(context).textTheme.muted);
+  }
+}
+
+class _OrderActionRow extends StatelessWidget {
+  const _OrderActionRow({
+    required this.onStartSingle,
+    required this.onStartGroup,
+  });
+
+  final VoidCallback onStartSingle;
+  final VoidCallback onStartGroup;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        ShadButton.outline(
+          size: ShadButtonSize.sm,
+          onPressed: onStartSingle,
+          child: const Text('New single'),
+        ),
+        const SizedBox(width: 8),
+        ShadButton.outline(
+          size: ShadButtonSize.sm,
+          onPressed: onStartGroup,
+          child: const Text('New group'),
+        ),
+      ],
+    );
   }
 }

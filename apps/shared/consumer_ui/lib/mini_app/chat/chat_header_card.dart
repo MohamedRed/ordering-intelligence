@@ -30,6 +30,7 @@ class ChatHeaderCard extends StatelessWidget {
     final haptics = MiniAppScope.hapticsOf(context);
     return MinimalCard(
       padding: const EdgeInsets.all(14),
+      backgroundColor: theme.colorScheme.background,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [

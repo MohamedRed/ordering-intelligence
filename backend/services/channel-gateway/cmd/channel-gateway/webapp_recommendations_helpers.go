@@ -21,11 +21,13 @@ type reorderModifier struct {
 }
 
 type reorderTemplate struct {
-	OrderTemplateID string        `json:"orderTemplateId" firestore:"orderTemplateId"`
-	Title           string        `json:"title" firestore:"title"`
-	Items           []reorderItem `json:"items" firestore:"items"`
-	Fuel            *reorderFuel  `json:"fuel,omitempty" firestore:"fuel,omitempty"`
-	LastOrderedAt   time.Time     `json:"lastOrderedAt" firestore:"lastOrderedAt"`
+	OrderTemplateID  string        `json:"orderTemplateId" firestore:"orderTemplateId"`
+	Title            string        `json:"title" firestore:"title"`
+	Items            []reorderItem `json:"items" firestore:"items"`
+	Fuel             *reorderFuel  `json:"fuel,omitempty" firestore:"fuel,omitempty"`
+	LastOrderedAt    time.Time     `json:"lastOrderedAt" firestore:"lastOrderedAt"`
+	OrderType        string        `json:"orderType,omitempty" firestore:"orderType,omitempty"`
+	ParticipantCount int           `json:"participantCount,omitempty" firestore:"participantCount,omitempty"`
 }
 
 type reorderDoc struct {
@@ -47,17 +49,19 @@ type reorderFuel struct {
 }
 
 type webAppReorder struct {
-	StoreID      string        `json:"storeId"`
-	StoreName    string        `json:"storeName"`
-	TenantID     string        `json:"tenantId"`
-	BusinessType string        `json:"businessType"`
-	LogoURL      string        `json:"logoUrl"`
-	Currency     string        `json:"currency,omitempty"`
-	Title        string        `json:"title"`
-	ItemCount    int           `json:"itemCount"`
-	OrderedAt    string        `json:"orderedAt"`
-	Items        []reorderItem `json:"items,omitempty"`
-	Fuel         *reorderFuel  `json:"fuel,omitempty"`
+	StoreID          string        `json:"storeId"`
+	StoreName        string        `json:"storeName"`
+	TenantID         string        `json:"tenantId"`
+	BusinessType     string        `json:"businessType"`
+	LogoURL          string        `json:"logoUrl"`
+	Currency         string        `json:"currency,omitempty"`
+	Title            string        `json:"title"`
+	ItemCount        int           `json:"itemCount"`
+	OrderedAt        string        `json:"orderedAt"`
+	Items            []reorderItem `json:"items,omitempty"`
+	Fuel             *reorderFuel  `json:"fuel,omitempty"`
+	OrderType        string        `json:"orderType,omitempty"`
+	ParticipantCount int           `json:"participantCount,omitempty"`
 }
 
 func toWebAppReorder(t reorderTemplate, meta storeMetadata) webAppReorder {
@@ -66,17 +70,19 @@ func toWebAppReorder(t reorderTemplate, meta storeMetadata) webAppReorder {
 		orderedAt = t.LastOrderedAt.UTC().Format(time.RFC3339)
 	}
 	return webAppReorder{
-		StoreID:      meta.StoreID,
-		StoreName:    meta.StoreName,
-		TenantID:     meta.TenantID,
-		BusinessType: meta.BusinessType,
-		LogoURL:      meta.LogoURL,
-		Currency:     meta.Currency,
-		Title:        strings.TrimSpace(t.Title),
-		ItemCount:    countReorderItems(t.Items, t.Fuel),
-		OrderedAt:    orderedAt,
-		Items:        t.Items,
-		Fuel:         t.Fuel,
+		StoreID:          meta.StoreID,
+		StoreName:        meta.StoreName,
+		TenantID:         meta.TenantID,
+		BusinessType:     meta.BusinessType,
+		LogoURL:          meta.LogoURL,
+		Currency:         meta.Currency,
+		Title:            strings.TrimSpace(t.Title),
+		ItemCount:        countReorderItems(t.Items, t.Fuel),
+		OrderedAt:        orderedAt,
+		Items:            t.Items,
+		Fuel:             t.Fuel,
+		OrderType:        strings.TrimSpace(t.OrderType),
+		ParticipantCount: t.ParticipantCount,
 	}
 }
 

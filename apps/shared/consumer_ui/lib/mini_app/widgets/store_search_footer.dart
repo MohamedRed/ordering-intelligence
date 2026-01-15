@@ -12,6 +12,8 @@ class StoreSearchFooter extends StatelessWidget {
     required this.searchResults,
     required this.searchError,
     required this.onSelectSuggestion,
+    this.onStartSingle,
+    this.onStartGroup,
   });
 
   final TextEditingController controller;
@@ -19,6 +21,8 @@ class StoreSearchFooter extends StatelessWidget {
   final List<StoreChoice> searchResults;
   final String? searchError;
   final ValueChanged<StoreChoice> onSelectSuggestion;
+  final ValueChanged<StoreChoice>? onStartSingle;
+  final ValueChanged<StoreChoice>? onStartGroup;
 
   @override
   Widget build(BuildContext context) {
@@ -50,6 +54,8 @@ class StoreSearchFooter extends StatelessWidget {
               title: 'Suggestions',
               maxItems: 6,
               axis: Axis.vertical,
+              onStartSingle: onStartSingle,
+              onStartGroup: onStartGroup,
             ),
           ],
           if (hasQuery &&

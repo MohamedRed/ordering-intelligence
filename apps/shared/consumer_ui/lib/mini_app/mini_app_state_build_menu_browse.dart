@@ -116,7 +116,7 @@ mixin MiniAppStateBuildMenuBrowse
       children: [
         Padding(
           padding: const EdgeInsets.fromLTRB(12, 4, 12, 8),
-          child: Align(alignment: Alignment.centerRight, child: modeToggle),
+          child: Center(child: modeToggle),
         ),
         header,
         const SizedBox(height: 12),
