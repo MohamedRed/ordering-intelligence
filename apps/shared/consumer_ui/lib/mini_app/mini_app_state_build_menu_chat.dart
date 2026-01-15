@@ -55,6 +55,41 @@ mixin MiniAppStateBuildMenuChat
           : null,
       onChangeStore: hasStore ? _changeStore : null,
       onOpenMenu: onOpenMenu,
+      contextSection: hasStore
+          ? ChatContextPanel(
+              embedded: true,
+              expanded: _contextExpanded,
+              onToggleExpanded: () => _setContextExpanded(!_contextExpanded),
+              summaryText: _buildContextSummaryText(session),
+              deliveryEnabled: _deliveryEnabled,
+              isDelivery: _isDeliverySelected,
+              onFulfillmentChanged: _toggleDelivery,
+              expandedContent: Column(
+                children: [
+                  ChatContextBar(
+                    embedded: true,
+                    categories: _categories,
+                    activeCategory: _activeCategory,
+                    onCategorySelected: _handleCategorySelected,
+                    selectedProduct: _selectedProduct,
+                    onClearProduct: _selectedProduct == null
+                        ? null
+                        : () => setState(() => _selectedProduct = null),
+                    participants: _groupOrder?.participants ?? const [],
+                    selectedParticipantId: _groupOrderSelectedParticipantId,
+                    onParticipantSelected: _handleParticipantSelected,
+                    deliveryEnabled: _deliveryEnabled,
+                    isDelivery: _isDeliverySelected,
+                    onFulfillmentChanged: _toggleDelivery,
+                  ),
+                  if (groupOrderPanel != null) ...[
+                    const SizedBox(height: 12),
+                    groupOrderPanel,
+                  ],
+                ],
+              ),
+            )
+          : null,
     );
     final contextBlock = hasStore
         ? Column(
@@ -76,38 +111,7 @@ mixin MiniAppStateBuildMenuChat
                 const LinearProgressIndicator(minHeight: 2),
               if (_menuError != null || _loadingMenu)
                 const SizedBox(height: 12),
-              ChatContextPanel(
-                expanded: _contextExpanded,
-                onToggleExpanded: () => _setContextExpanded(!_contextExpanded),
-                summaryText: _buildContextSummaryText(session),
-                deliveryEnabled: _deliveryEnabled,
-                isDelivery: _isDeliverySelected,
-                onFulfillmentChanged: _toggleDelivery,
-                expandedContent: Column(
-                  children: [
-                    ChatContextBar(
-                      categories: _categories,
-                      activeCategory: _activeCategory,
-                      onCategorySelected: _handleCategorySelected,
-                      selectedProduct: _selectedProduct,
-                      onClearProduct: _selectedProduct == null
-                          ? null
-                          : () => setState(() => _selectedProduct = null),
-                      participants: _groupOrder?.participants ?? const [],
-                      selectedParticipantId: _groupOrderSelectedParticipantId,
-                      onParticipantSelected: _handleParticipantSelected,
-                      deliveryEnabled: _deliveryEnabled,
-                      isDelivery: _isDeliverySelected,
-                      onFulfillmentChanged: _toggleDelivery,
-                    ),
-                    if (groupOrderPanel != null) ...[
-                      const SizedBox(height: 12),
-                      groupOrderPanel,
-                    ],
-                  ],
-                ),
-              ),
-              const SizedBox(height: 12),
+              const SizedBox(height: 4),
             ],
           )
         : const SizedBox.shrink();

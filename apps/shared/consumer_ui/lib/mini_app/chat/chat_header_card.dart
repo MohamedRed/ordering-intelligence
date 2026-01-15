@@ -13,6 +13,7 @@ class ChatHeaderCard extends StatelessWidget {
     this.onOpenCart,
     this.onChangeStore,
     this.onOpenMenu,
+    this.contextSection,
   });
 
   final String storeName;
@@ -21,6 +22,7 @@ class ChatHeaderCard extends StatelessWidget {
   final VoidCallback? onOpenCart;
   final VoidCallback? onChangeStore;
   final VoidCallback? onOpenMenu;
+  final Widget? contextSection;
 
   @override
   Widget build(BuildContext context) {
@@ -98,6 +100,12 @@ class ChatHeaderCard extends StatelessWidget {
                   ),
               ],
             ),
+          ],
+          if (contextSection != null) ...[
+            const SizedBox(height: 10),
+            Divider(height: 1, color: theme.colorScheme.border),
+            const SizedBox(height: 10),
+            contextSection!,
           ],
         ],
       ),

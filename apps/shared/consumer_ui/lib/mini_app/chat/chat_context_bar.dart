@@ -21,15 +21,20 @@ class ChatContextBar extends StatelessWidget {
     required this.deliveryEnabled,
     required this.isDelivery,
     required this.onFulfillmentChanged,
+    this.embedded = false,
   });
 
-  final List<String> categories; final String activeCategory;
+  final List<String> categories;
+  final String activeCategory;
   final ValueChanged<String> onCategorySelected;
-  final ChatProduct? selectedProduct; final VoidCallback? onClearProduct;
-  final List<GroupOrderParticipant> participants; final String? selectedParticipantId;
+  final ChatProduct? selectedProduct;
+  final VoidCallback? onClearProduct;
+  final List<GroupOrderParticipant> participants;
+  final String? selectedParticipantId;
   final ValueChanged<GroupOrderParticipant> onParticipantSelected;
   final bool deliveryEnabled, isDelivery;
   final ValueChanged<bool> onFulfillmentChanged;
+  final bool embedded;
 
   @override
   Widget build(BuildContext context) {
@@ -83,17 +88,18 @@ class ChatContextBar extends StatelessWidget {
     if (sections.isEmpty) {
       return const SizedBox.shrink();
     }
-    return ShadCard(
-      padding: const EdgeInsets.all(12),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          for (var i = 0; i < sections.length; i++) ...[
-            if (i > 0) const SizedBox(height: 10),
-            sections[i],
-          ],
+    final content = Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        for (var i = 0; i < sections.length; i++) ...[
+          if (i > 0) const SizedBox(height: 10),
+          sections[i],
         ],
-      ),
+      ],
     );
+    if (embedded) {
+      return content;
+    }
+    return ShadCard(padding: const EdgeInsets.all(12), child: content);
   }
 }

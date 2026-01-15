@@ -13,6 +13,7 @@ class ChatContextPanel extends StatelessWidget {
     required this.isDelivery,
     required this.onFulfillmentChanged,
     required this.expandedContent,
+    this.embedded = false,
   });
 
   final bool expanded;
@@ -22,9 +23,46 @@ class ChatContextPanel extends StatelessWidget {
   final bool isDelivery;
   final ValueChanged<bool> onFulfillmentChanged;
   final Widget expandedContent;
+  final bool embedded;
 
   @override
   Widget build(BuildContext context) {
+    final summaryRow = Row(
+      children: [
+        if (deliveryEnabled) ...[
+          ChatFulfillmentRow(
+            isDelivery: isDelivery,
+            onChanged: onFulfillmentChanged,
+          ),
+          const SizedBox(width: 12),
+        ],
+        Expanded(
+          child: Text(
+            summaryText,
+            style: ShadTheme.of(context).textTheme.small,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+          ),
+        ),
+        const SizedBox(width: 8),
+        ShadButton.outline(
+          size: ShadButtonSize.sm,
+          onPressed: onToggleExpanded,
+          child: Text(expanded ? 'Hide' : 'Details'),
+        ),
+      ],
+    );
+
+    if (embedded) {
+      if (!expanded) {
+        return summaryRow;
+      }
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [summaryRow, const SizedBox(height: 10), expandedContent],
+      );
+    }
+
     if (expanded) {
       return Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -41,34 +79,7 @@ class ChatContextPanel extends StatelessWidget {
       );
     }
 
-    return ShadCard(
-      padding: const EdgeInsets.all(12),
-      child: Row(
-        children: [
-          if (deliveryEnabled) ...[
-            ChatFulfillmentRow(
-              isDelivery: isDelivery,
-              onChanged: onFulfillmentChanged,
-            ),
-            const SizedBox(width: 12),
-          ],
-          Expanded(
-            child: Text(
-              summaryText,
-              style: ShadTheme.of(context).textTheme.small,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-            ),
-          ),
-          const SizedBox(width: 8),
-          ShadButton.outline(
-            size: ShadButtonSize.sm,
-            onPressed: onToggleExpanded,
-            child: const Text('Details'),
-          ),
-        ],
-      ),
-    );
+    return ShadCard(padding: const EdgeInsets.all(12), child: summaryRow);
   }
 }
 
