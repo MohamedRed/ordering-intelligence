@@ -83,6 +83,7 @@ mixin MiniAppStateBuildMenuChat
                     isDelivery: _isDeliverySelected,
                     onFulfillmentChanged: _toggleDelivery,
                     showParticipants: groupOrderPanel == null,
+                    showCategories: false,
                   ),
                   if (groupOrderPanel != null) ...[
                     const SizedBox(height: 12),

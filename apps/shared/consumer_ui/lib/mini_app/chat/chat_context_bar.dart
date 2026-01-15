@@ -23,6 +23,7 @@ class ChatContextBar extends StatelessWidget {
     required this.onFulfillmentChanged,
     this.embedded = false,
     this.showParticipants = true,
+    this.showCategories = true,
   });
 
   final List<String> categories;
@@ -37,6 +38,7 @@ class ChatContextBar extends StatelessWidget {
   final ValueChanged<bool> onFulfillmentChanged;
   final bool embedded;
   final bool showParticipants;
+  final bool showCategories;
 
   @override
   Widget build(BuildContext context) {
@@ -64,7 +66,7 @@ class ChatContextBar extends StatelessWidget {
         ),
       );
     }
-    if (categories.isNotEmpty) {
+    if (showCategories && categories.isNotEmpty) {
       sections.add(
         ChatContextSection(
           label: null,
