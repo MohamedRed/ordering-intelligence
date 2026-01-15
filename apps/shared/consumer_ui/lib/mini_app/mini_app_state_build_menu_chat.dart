@@ -139,19 +139,21 @@ mixin MiniAppStateBuildMenuChat
     );
     return Column(
       children: [
-        if (modeToggle != null) ...[
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 12),
+          child: AnimatedSwitcher(
+            duration: const Duration(milliseconds: 220),
+            switchInCurve: Curves.easeOut,
+            switchOutCurve: Curves.easeIn,
+            child: header,
+          ),
+        ),
+        const SizedBox(height: 8),
+        if (modeToggle != null)
           Padding(
-            padding: const EdgeInsets.fromLTRB(12, 4, 12, 8),
+            padding: const EdgeInsets.fromLTRB(12, 0, 12, 8),
             child: MenuModeBar(toggle: modeToggle, onOpenMenu: onOpenMenu),
           ),
-        ],
-        AnimatedSwitcher(
-          duration: const Duration(milliseconds: 220),
-          switchInCurve: Curves.easeOut,
-          switchOutCurve: Curves.easeIn,
-          child: header,
-        ),
-        const SizedBox(height: 12),
         AnimatedCrossFade(
           duration: const Duration(milliseconds: 220),
           sizeCurve: Curves.easeOut,

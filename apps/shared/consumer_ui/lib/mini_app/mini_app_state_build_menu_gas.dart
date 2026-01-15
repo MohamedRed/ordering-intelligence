@@ -54,14 +54,17 @@ mixin MiniAppStateBuildMenuGas
     }
     return Column(
       children: [
-        ChatHeaderCard(
-          storeName: session.storeName,
-          subtitle: 'Complete your fuel order.',
-          cartLabel: null,
-          onBack: _changeStore,
-          onChangeStore: null,
-          onOpenMenu: onOpenMenu,
-          centerTitle: true,
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 12),
+          child: ChatHeaderCard(
+            storeName: session.storeName,
+            subtitle: 'Complete your fuel order.',
+            cartLabel: null,
+            onBack: _changeStore,
+            onChangeStore: null,
+            onOpenMenu: onOpenMenu,
+            centerTitle: true,
+          ),
         ),
         const SizedBox(height: 12),
         Expanded(child: menuBody),

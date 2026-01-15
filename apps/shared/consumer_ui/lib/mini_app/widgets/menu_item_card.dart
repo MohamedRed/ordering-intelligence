@@ -20,7 +20,7 @@ class MenuItemCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = ShadTheme.of(context);
     final isAvailable = item.available;
-    final buttonLabel = item.modifierGroups.isNotEmpty ? 'Customize' : 'Add';
+    final buttonIcon = item.modifierGroups.isNotEmpty ? Icons.tune : Icons.add;
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
@@ -29,7 +29,7 @@ class MenuItemCard extends StatelessWidget {
         border: Border.all(color: theme.colorScheme.border),
       ),
       child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           MenuItemImage(url: item.imageUrl, size: 64),
           const SizedBox(width: 12),
@@ -64,16 +64,16 @@ class MenuItemCard extends StatelessWidget {
                       const SizedBox(width: 8),
                       Text('Unavailable', style: theme.textTheme.muted),
                     ],
-                    const Spacer(),
-                    ShadButton(
-                      size: ShadButtonSize.sm,
-                      onPressed: isAvailable ? onAdd : null,
-                      child: Text(buttonLabel),
-                    ),
                   ],
                 ),
               ],
             ),
+          ),
+          const SizedBox(width: 12),
+          ShadButton(
+            size: ShadButtonSize.sm,
+            onPressed: isAvailable ? onAdd : null,
+            child: Icon(buttonIcon, size: 18),
           ),
         ],
       ),

@@ -49,7 +49,7 @@ class MenuBrowseFilters extends StatelessWidget {
     if (deliveryEnabled) {
       sections.add(
         ChatContextSection(
-          label: 'Fulfillment',
+          label: null,
           child: ChatFulfillmentRow(
             isDelivery: isDelivery,
             onChanged: onFulfillmentChanged,

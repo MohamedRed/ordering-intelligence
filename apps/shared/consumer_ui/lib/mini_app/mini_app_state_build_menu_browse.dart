@@ -115,11 +115,14 @@ mixin MiniAppStateBuildMenuBrowse
     return Column(
       children: [
         Padding(
-          padding: const EdgeInsets.fromLTRB(12, 4, 12, 8),
+          padding: const EdgeInsets.symmetric(horizontal: 12),
+          child: header,
+        ),
+        const SizedBox(height: 8),
+        Padding(
+          padding: const EdgeInsets.fromLTRB(12, 0, 12, 8),
           child: MenuModeBar(toggle: modeToggle, onOpenMenu: onOpenMenu),
         ),
-        header,
-        const SizedBox(height: 12),
         Expanded(child: body),
       ],
     );
