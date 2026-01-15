@@ -17,13 +17,16 @@ class MenuModeBar extends StatelessWidget {
         ? const SizedBox(width: buttonWidth)
         : SizedBox(
             width: buttonWidth,
-            child: ShadButton.outline(
-              size: ShadButtonSize.sm,
+            child: IconButton(
+              constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
+              padding: EdgeInsets.zero,
+              splashRadius: 18,
+              iconSize: 18,
               onPressed: () {
                 haptics.selection();
                 onOpenMenu?.call();
               },
-              child: const Icon(Icons.menu, size: 18),
+              icon: const Icon(Icons.menu),
             ),
           );
     return Row(
