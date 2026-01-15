@@ -26,11 +26,7 @@ mixin MiniAppStateBuildMenuChat
     final modeToggle = hasStore
         ? MenuViewToggle(mode: _menuViewMode, onChanged: _setMenuViewMode)
         : null;
-    final subtitle = hasStore
-        ? (_groupOrder != null
-              ? 'Group order active • ${_groupOrder!.participants.length} joined'
-              : '')
-        : 'Search by name or pick a recent order.';
+    final subtitle = hasStore ? '' : 'Search by name or pick a recent order.';
     final cartLabel = hasStore
         ? (_cartItemCount == 0
               ? 'Cart is empty'
@@ -59,6 +55,7 @@ mixin MiniAppStateBuildMenuChat
           : null,
       onChangeStore: hasStore ? null : null,
       onOpenMenu: hasStore ? null : onOpenMenu,
+      centerTitle: hasStore,
       contextSection: hasStore
           ? ChatContextPanel(
               embedded: true,
@@ -199,9 +196,6 @@ mixin MiniAppStateBuildMenuChat
     }
     if (_selectedProduct != null) {
       parts.add(_selectedProduct!.name);
-    }
-    if (_groupOrder != null) {
-      parts.add('Group order');
     }
     if (parts.isEmpty) return 'Details';
     return parts.join(' • ');

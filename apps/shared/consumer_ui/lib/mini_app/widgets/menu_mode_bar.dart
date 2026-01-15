@@ -4,9 +4,9 @@ import 'package:shadcn_ui/shadcn_ui.dart';
 import '../mini_app_scope.dart';
 
 class MenuModeBar extends StatelessWidget {
-  const MenuModeBar({super.key, required this.toggle, this.onOpenMenu});
+  const MenuModeBar({super.key, this.toggle, this.onOpenMenu});
 
-  final Widget toggle;
+  final Widget? toggle;
   final VoidCallback? onOpenMenu;
 
   @override
@@ -27,11 +27,7 @@ class MenuModeBar extends StatelessWidget {
             ),
           );
     return Row(
-      children: [
-        menuButton,
-        Expanded(child: Center(child: toggle)),
-        const SizedBox(width: buttonWidth),
-      ],
+      children: [menuButton, const Spacer(), if (toggle != null) toggle!],
     );
   }
 }

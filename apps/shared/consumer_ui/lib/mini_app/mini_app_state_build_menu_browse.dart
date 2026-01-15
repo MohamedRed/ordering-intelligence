@@ -28,14 +28,13 @@ mixin MiniAppStateBuildMenuBrowse
     final header = ChatHeaderCard(
       key: ValueKey('browse-${session.storeId}'),
       storeName: session.storeName,
-      subtitle: _groupOrder != null
-          ? 'Group order active • ${_groupOrder!.participants.length} joined'
-          : '',
+      subtitle: '',
       cartLabel: cartLabel,
       onBack: _changeStore,
       onOpenCart: _cartItemCount == 0 ? null : _openCartSheet,
       onChangeStore: null,
       onOpenMenu: null,
+      centerTitle: true,
       contextSection: ChatContextPanel(
         embedded: true,
         expanded: _contextExpanded,

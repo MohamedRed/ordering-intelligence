@@ -13,13 +13,17 @@ mixin MiniAppStateBuildHome
       storeName: 'Find a store',
       subtitle: '',
       cartLabel: null,
-      onOpenMenu: onOpenMenu,
+      onOpenMenu: null,
     );
     final recentStores = _recentStoreChoices();
     final singleOrders = _singleRecentOrders();
     final groupOrders = _groupRecentOrders();
     return Column(
       children: [
+        Padding(
+          padding: const EdgeInsets.fromLTRB(12, 4, 12, 8),
+          child: MenuModeBar(toggle: null, onOpenMenu: onOpenMenu),
+        ),
         header,
         const SizedBox(height: 12),
         Expanded(

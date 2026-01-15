@@ -19,36 +19,89 @@ class MenuViewToggle extends StatelessWidget {
     final theme = ShadTheme.of(context);
     final isChat = mode == MenuViewMode.chat;
     final haptics = MiniAppScope.hapticsOf(context);
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Text(
-          'Browse',
-          style: theme.textTheme.small.copyWith(
-            color: isChat
-                ? theme.colorScheme.mutedForeground
-                : theme.colorScheme.foreground,
+    const double height = 34;
+    const double width = 96;
+    const double knobWidth = 44;
+    return Container(
+      height: height,
+      width: width,
+      padding: const EdgeInsets.all(2),
+      decoration: BoxDecoration(
+        color: theme.colorScheme.muted,
+        borderRadius: BorderRadius.circular(height / 2),
+        border: Border.all(color: theme.colorScheme.border),
+      ),
+      child: Stack(
+        children: [
+          AnimatedAlign(
+            alignment: isChat ? Alignment.centerRight : Alignment.centerLeft,
+            duration: const Duration(milliseconds: 160),
+            curve: Curves.easeOut,
+            child: Container(
+              width: knobWidth,
+              height: height - 4,
+              decoration: BoxDecoration(
+                color: theme.colorScheme.background,
+                borderRadius: BorderRadius.circular((height - 4) / 2),
+                boxShadow: [
+                  BoxShadow(
+                    blurRadius: 6,
+                    color: theme.colorScheme.shadow.withOpacity(0.08),
+                    offset: const Offset(0, 2),
+                  ),
+                ],
+              ),
+            ),
           ),
-        ),
-        const SizedBox(width: 10),
-        Switch.adaptive(
-          value: isChat,
-          activeColor: theme.colorScheme.primary,
-          onChanged: (value) {
-            haptics.selection();
-            onChanged(value ? MenuViewMode.chat : MenuViewMode.browse);
-          },
-        ),
-        const SizedBox(width: 10),
-        Text(
-          'Chat',
-          style: theme.textTheme.small.copyWith(
-            color: isChat
-                ? theme.colorScheme.foreground
-                : theme.colorScheme.mutedForeground,
+          Row(
+            children: [
+              _ToggleIconButton(
+                icon: Icons.storefront_outlined,
+                selected: !isChat,
+                onTap: () {
+                  haptics.selection();
+                  onChanged(MenuViewMode.browse);
+                },
+              ),
+              _ToggleIconButton(
+                icon: Icons.chat_bubble_outline,
+                selected: isChat,
+                onTap: () {
+                  haptics.selection();
+                  onChanged(MenuViewMode.chat);
+                },
+              ),
+            ],
           ),
-        ),
-      ],
+        ],
+      ),
+    );
+  }
+}
+
+class _ToggleIconButton extends StatelessWidget {
+  const _ToggleIconButton({
+    required this.icon,
+    required this.selected,
+    required this.onTap,
+  });
+
+  final IconData icon;
+  final bool selected;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = ShadTheme.of(context);
+    final color = selected
+        ? theme.colorScheme.foreground
+        : theme.colorScheme.mutedForeground;
+    return Expanded(
+      child: InkWell(
+        borderRadius: BorderRadius.circular(16),
+        onTap: onTap,
+        child: Center(child: Icon(icon, size: 16, color: color)),
+      ),
     );
   }
 }

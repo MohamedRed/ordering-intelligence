@@ -61,6 +61,7 @@ mixin MiniAppStateBuildMenuGas
           onBack: _changeStore,
           onChangeStore: null,
           onOpenMenu: onOpenMenu,
+          centerTitle: true,
         ),
         const SizedBox(height: 12),
         Expanded(child: menuBody),
