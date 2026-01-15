@@ -88,6 +88,7 @@ mixin MiniAppStateSearch
       businessType: order.businessType,
       logoUrl: order.logoUrl,
     );
+    _setPendingMenuViewMode(MenuViewMode.chat);
     _selectStore(choice);
   }
 }

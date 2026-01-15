@@ -52,6 +52,8 @@ mixin MiniAppStateFields on State<MiniAppScreen> {
   List<String> _categories = [];
   String _activeCategory = '';
   ChatProduct? _selectedProduct;
+  MenuViewMode _menuViewMode = MenuViewMode.browse;
+  MenuViewMode _pendingMenuViewMode = MenuViewMode.browse;
 
   List<CartItem> _cart = [];
   StateSetter? _cartSheetSetState;
@@ -68,5 +70,14 @@ mixin MiniAppStateFields on State<MiniAppScreen> {
   void _collapseContextAfterSelection() {
     if (!_contextExpanded) return;
     setState(() => _contextExpanded = false);
+  }
+
+  void _setMenuViewMode(MenuViewMode mode) {
+    if (_menuViewMode == mode) return;
+    setState(() => _menuViewMode = mode);
+  }
+
+  void _setPendingMenuViewMode(MenuViewMode mode) {
+    _pendingMenuViewMode = mode;
   }
 }

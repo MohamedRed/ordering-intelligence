@@ -83,6 +83,7 @@ mixin MiniAppStateStoreSearchChat
   }
 
   void _selectStoreFromSearchSuggestion(StoreChoice store) {
+    _setPendingMenuViewMode(MenuViewMode.browse);
     _selectStore(store);
   }
 
@@ -118,6 +119,7 @@ mixin MiniAppStateStoreSearchChat
       _appendAssistantMessage('That store is no longer available. Try again.');
       return;
     }
+    _setPendingMenuViewMode(MenuViewMode.browse);
     _selectStore(store);
   }
 

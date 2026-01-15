@@ -12,6 +12,7 @@ import 'chat/chat_view.dart';
 import 'chat/chat_context_bar.dart';
 import 'gas/gas_order_confirmation.dart';
 import 'gas/gas_order_view.dart';
+import 'menu_view_mode.dart';
 import 'mini_app_platform.dart';
 import 'mini_app_scope.dart';
 import 'widgets/account_link_panel.dart';
@@ -23,6 +24,9 @@ import 'widgets/modifier_dialog.dart';
 import 'widgets/order_confirmation.dart';
 import 'widgets/payment_methods_panel.dart';
 import 'widgets/mini_app_drawer.dart';
+import 'widgets/menu_browse_filters.dart';
+import 'widgets/menu_item_card.dart';
+import 'widgets/menu_view_toggle.dart';
 import 'widgets/store_search_footer.dart';
 
 part 'mini_app_state_fields.dart';
@@ -64,6 +68,7 @@ part 'mini_app_state_identity_ui.dart';
 part 'mini_app_state_sign_out.dart';
 part 'mini_app_state_lifecycle.dart';
 part 'mini_app_state_build_menu_gas.dart';
+part 'mini_app_state_build_menu_browse.dart';
 part 'mini_app_state_build_menu_chat.dart';
 part 'mini_app_state_build_menu.dart';
 part 'mini_app_state_build.dart';
@@ -117,6 +122,7 @@ class _MiniAppScreenState extends State<MiniAppScreen>
         MiniAppStateChatAudio,
         MiniAppStateLifecycle,
         MiniAppStateBuildMenuGas,
+        MiniAppStateBuildMenuBrowse,
         MiniAppStateBuildMenuChat,
         MiniAppStateBuildMenu,
         MiniAppStateBuild {

@@ -49,7 +49,13 @@ mixin MiniAppStateChatActions
     final label = option.label.trim();
     final labelLower = label.toLowerCase();
     if (toolName == 'switch_to_browse') {
-      _appendAssistantMessage('Browse is now in chat. Pick a category above.');
+      _setMenuViewMode(MenuViewMode.browse);
+      _appendAssistantMessage('Switched to browse. Use the menu above.');
+      return true;
+    }
+    if (toolName == 'switch_to_chat') {
+      _setMenuViewMode(MenuViewMode.chat);
+      _appendAssistantMessage('Switched to chat. Ask me anything.');
       return true;
     }
     if (toolName == 'continue_browsing') {

@@ -14,6 +14,7 @@ class ChatContextPanel extends StatelessWidget {
     required this.onFulfillmentChanged,
     required this.expandedContent,
     this.embedded = false,
+    this.showToggle = true,
   });
 
   final bool expanded;
@@ -24,6 +25,7 @@ class ChatContextPanel extends StatelessWidget {
   final ValueChanged<bool> onFulfillmentChanged;
   final Widget expandedContent;
   final bool embedded;
+  final bool showToggle;
 
   @override
   Widget build(BuildContext context) {
@@ -44,17 +46,19 @@ class ChatContextPanel extends StatelessWidget {
             overflow: TextOverflow.ellipsis,
           ),
         ),
-        const SizedBox(width: 8),
-        ShadButton.outline(
-          size: ShadButtonSize.sm,
-          onPressed: onToggleExpanded,
-          child: Text(expanded ? 'Hide' : 'Details'),
-        ),
+        if (showToggle) ...[
+          const SizedBox(width: 8),
+          ShadButton.outline(
+            size: ShadButtonSize.sm,
+            onPressed: onToggleExpanded,
+            child: Text(expanded ? 'Hide' : 'Details'),
+          ),
+        ],
       ],
     );
 
     if (embedded) {
-      if (!expanded) {
+      if (!expanded || !showToggle) {
         return summaryRow;
       }
       return Column(
@@ -63,7 +67,7 @@ class ChatContextPanel extends StatelessWidget {
       );
     }
 
-    if (expanded) {
+    if (expanded && showToggle) {
       return Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [

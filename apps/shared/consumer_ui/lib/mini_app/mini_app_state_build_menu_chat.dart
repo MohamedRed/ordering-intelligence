@@ -23,6 +23,9 @@ mixin MiniAppStateBuildMenuChat
     if (_menu != null && hasStore) {
       _seedMenuChatIfNeeded();
     }
+    final modeToggle = hasStore
+        ? MenuViewToggle(mode: _menuViewMode, onChanged: _setMenuViewMode)
+        : null;
     final subtitle = hasStore
         ? (_groupOrder != null
               ? 'Group order active • ${_groupOrder!.participants.length} joined'
@@ -55,6 +58,7 @@ mixin MiniAppStateBuildMenuChat
           : null,
       onChangeStore: hasStore ? _changeStore : null,
       onOpenMenu: onOpenMenu,
+      modeToggle: modeToggle,
       contextSection: hasStore
           ? ChatContextPanel(
               embedded: true,

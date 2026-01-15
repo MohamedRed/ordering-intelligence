@@ -25,6 +25,7 @@ mixin MiniAppStateStore
       _categories = [];
       _activeCategory = '';
       _selectedProduct = null;
+      _menuViewMode = _pendingMenuViewMode;
       _seededIntro = null;
       _seededCategories = [];
       _seededSource = 'menu';
@@ -43,6 +44,7 @@ mixin MiniAppStateStore
       _notesController.clear();
       _resetDeliveryDraft();
     });
+    _pendingMenuViewMode = MenuViewMode.browse;
     try {
       await _api.selectStore(
         sessionId: session.sessionId,
@@ -127,6 +129,7 @@ mixin MiniAppStateStore
       _categories = [];
       _activeCategory = '';
       _selectedProduct = null;
+      _menuViewMode = MenuViewMode.browse;
       _seededIntro = null;
       _seededCategories = [];
       _seededSource = 'menu';

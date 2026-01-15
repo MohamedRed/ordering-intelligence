@@ -1,0 +1,1 @@
+enum MenuViewMode { browse, chat }
