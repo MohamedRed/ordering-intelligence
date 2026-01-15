@@ -20,6 +20,7 @@ mixin MiniAppStateChatSelection
     });
     _appendUserMessage(normalized);
     _appendProductSuggestions(normalized);
+    _collapseContextAfterSelection();
   }
 
   Future<void> _handleProductSelected(ChatProduct product) async {
@@ -56,6 +57,7 @@ mixin MiniAppStateChatSelection
         );
       });
       _scrollChatToBottom();
+      _collapseContextAfterSelection();
     }
   }
 

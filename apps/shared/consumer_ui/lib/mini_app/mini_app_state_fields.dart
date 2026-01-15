@@ -41,6 +41,7 @@ mixin MiniAppStateFields on State<MiniAppScreen> {
   String? _groupOrderError;
   bool _groupOrderBusy = false;
   bool _groupOrderCollapsed = true;
+  bool _contextExpanded = false;
   String _groupOrderPaymentMode = 'single_payer';
   String _groupOrderPaymentMethod = 'card';
   String? _latestInviteId;
@@ -58,4 +59,14 @@ mixin MiniAppStateFields on State<MiniAppScreen> {
   bool _placingOrder = false;
   String? _orderError;
   Map<String, dynamic>? _orderConfirmation;
+
+  void _setContextExpanded(bool expanded) {
+    if (_contextExpanded == expanded) return;
+    setState(() => _contextExpanded = expanded);
+  }
+
+  void _collapseContextAfterSelection() {
+    if (!_contextExpanded) return;
+    setState(() => _contextExpanded = false);
+  }
 }

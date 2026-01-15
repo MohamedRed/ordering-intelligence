@@ -76,26 +76,37 @@ mixin MiniAppStateBuildMenuChat
                 const LinearProgressIndicator(minHeight: 2),
               if (_menuError != null || _loadingMenu)
                 const SizedBox(height: 12),
-              ChatContextBar(
-                categories: _categories,
-                activeCategory: _activeCategory,
-                onCategorySelected: _handleCategorySelected,
-                selectedProduct: _selectedProduct,
-                onClearProduct: _selectedProduct == null
-                    ? null
-                    : () => setState(() => _selectedProduct = null),
-                participants: _groupOrder?.participants ?? const [],
-                selectedParticipantId: _groupOrderSelectedParticipantId,
-                onParticipantSelected: _handleParticipantSelected,
+              ChatContextPanel(
+                expanded: _contextExpanded,
+                onToggleExpanded: () => _setContextExpanded(!_contextExpanded),
+                summaryText: _buildContextSummaryText(session),
                 deliveryEnabled: _deliveryEnabled,
                 isDelivery: _isDeliverySelected,
-                onFulfillmentChanged: (isDelivery) =>
-                    _toggleDelivery(isDelivery),
+                onFulfillmentChanged: _toggleDelivery,
+                expandedContent: Column(
+                  children: [
+                    ChatContextBar(
+                      categories: _categories,
+                      activeCategory: _activeCategory,
+                      onCategorySelected: _handleCategorySelected,
+                      selectedProduct: _selectedProduct,
+                      onClearProduct: _selectedProduct == null
+                          ? null
+                          : () => setState(() => _selectedProduct = null),
+                      participants: _groupOrder?.participants ?? const [],
+                      selectedParticipantId: _groupOrderSelectedParticipantId,
+                      onParticipantSelected: _handleParticipantSelected,
+                      deliveryEnabled: _deliveryEnabled,
+                      isDelivery: _isDeliverySelected,
+                      onFulfillmentChanged: _toggleDelivery,
+                    ),
+                    if (groupOrderPanel != null) ...[
+                      const SizedBox(height: 12),
+                      groupOrderPanel,
+                    ],
+                  ],
+                ),
               ),
-              if (groupOrderPanel != null) ...[
-                const SizedBox(height: 12),
-                groupOrderPanel,
-              ],
               const SizedBox(height: 12),
             ],
           )
@@ -119,7 +130,7 @@ mixin MiniAppStateBuildMenuChat
       isSending: isBusy,
       canRecord: hasStore && _audioRecorder != null,
       footer: footer,
-      summaryText: _buildChatSummaryText(session),
+      summaryText: hasStore ? null : _buildChatSummaryText(session),
     );
     return Column(
       children: [
@@ -161,5 +172,24 @@ mixin MiniAppStateBuildMenuChat
       parts.add('Group order • ${_groupOrder!.participants.length} joined');
     }
     return 'Current order: ${parts.join(' • ')}';
+  }
+
+  String _buildContextSummaryText(SessionInfo session) {
+    if (session.storeId.isEmpty) return 'Details';
+    final parts = <String>[];
+    if (_deliveryEnabled) {
+      parts.add(_isDeliverySelected ? 'Delivery' : 'Pickup');
+    }
+    if (_activeCategory.isNotEmpty && _activeCategory.toLowerCase() != 'all') {
+      parts.add(_activeCategory);
+    }
+    if (_selectedProduct != null) {
+      parts.add(_selectedProduct!.name);
+    }
+    if (_groupOrder != null) {
+      parts.add('Group order');
+    }
+    if (parts.isEmpty) return 'Details';
+    return parts.join(' • ');
   }
 }

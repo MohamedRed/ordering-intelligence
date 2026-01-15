@@ -30,6 +30,7 @@ mixin MiniAppStateDelivery on State<MiniAppScreen>, MiniAppStateFields {
       _fulfillmentType = enabled ? 'delivery' : 'pickup';
       _deliveryError = null;
     });
+    _collapseContextAfterSelection();
     _cartSheetSetState?.call(() {});
     if (!enabled) {
       _deliveryPrewarmDebounce?.cancel();

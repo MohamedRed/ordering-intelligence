@@ -4,7 +4,10 @@ mixin MiniAppStateChatParticipants
     on MiniAppStateChatState, MiniAppStateFields, MiniAppStateChatComms {
   void _handleParticipantSelected(GroupOrderParticipant participant) {
     final name = _resolveParticipantName(participant);
-    setState(() => _groupOrderSelectedParticipantId = participant.participantId);
+    setState(
+      () => _groupOrderSelectedParticipantId = participant.participantId,
+    );
+    _collapseContextAfterSelection();
     if (name.isEmpty) {
       _sendChatText('Show this participant\'s order');
       return;

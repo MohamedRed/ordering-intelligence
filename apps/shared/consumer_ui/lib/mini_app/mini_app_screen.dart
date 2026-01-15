@@ -7,6 +7,7 @@ import 'package:shadcn_ui/shadcn_ui.dart';
 
 import '../utils/audio_recorder.dart';
 import 'chat/chat_header_card.dart';
+import 'chat/chat_context_panel.dart';
 import 'chat/chat_view.dart';
 import 'chat/chat_context_bar.dart';
 import 'gas/gas_order_confirmation.dart';
