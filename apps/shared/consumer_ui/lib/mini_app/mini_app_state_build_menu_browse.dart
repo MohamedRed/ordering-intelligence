@@ -86,6 +86,8 @@ mixin MiniAppStateBuildMenuBrowse
             groupOrderPanel,
           ],
           const SizedBox(height: 12),
+          MenuModeBar(toggle: modeToggle, onOpenMenu: null),
+          const SizedBox(height: 12),
           Expanded(
             child: filtered.isEmpty
                 ? CenteredMessage(
@@ -120,11 +122,12 @@ mixin MiniAppStateBuildMenuBrowse
           child: header,
         ),
         const SizedBox(height: 8),
-        Padding(
-          padding: const EdgeInsets.fromLTRB(12, 0, 12, 8),
-          child: MenuModeBar(toggle: modeToggle, onOpenMenu: null),
+        Expanded(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 12),
+            child: body,
+          ),
         ),
-        Expanded(child: body),
       ],
     );
   }

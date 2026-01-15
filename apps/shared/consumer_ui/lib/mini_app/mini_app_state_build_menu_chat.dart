@@ -150,11 +150,6 @@ mixin MiniAppStateBuildMenuChat
           ),
         ),
         const SizedBox(height: 8),
-        if (modeToggle != null)
-          Padding(
-            padding: const EdgeInsets.fromLTRB(12, 0, 12, 8),
-            child: MenuModeBar(toggle: modeToggle, onOpenMenu: null),
-          ),
         AnimatedCrossFade(
           duration: const Duration(milliseconds: 220),
           sizeCurve: Curves.easeOut,
@@ -164,6 +159,13 @@ mixin MiniAppStateBuildMenuChat
           firstChild: const SizedBox.shrink(),
           secondChild: contextBlock,
         ),
+        if (modeToggle != null) ...[
+          const SizedBox(height: 8),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(12, 0, 12, 8),
+            child: MenuModeBar(toggle: modeToggle, onOpenMenu: null),
+          ),
+        ],
         Expanded(child: chatView),
       ],
     );
