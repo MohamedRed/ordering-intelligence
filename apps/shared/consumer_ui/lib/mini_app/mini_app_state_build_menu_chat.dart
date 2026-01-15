@@ -26,7 +26,7 @@ mixin MiniAppStateBuildMenuChat
     final subtitle = hasStore
         ? (_groupOrder != null
               ? 'Group order active • ${_groupOrder!.participants.length} joined'
-              : 'Chat-based ordering with quick picks.')
+              : '')
         : 'Search by name or pick a recent order.';
     final cartLabel = hasStore
         ? (_cartItemCount == 0
