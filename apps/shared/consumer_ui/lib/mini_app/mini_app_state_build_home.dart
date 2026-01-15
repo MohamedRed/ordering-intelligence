@@ -6,7 +6,8 @@ mixin MiniAppStateBuildHome
         MiniAppStateFields,
         MiniAppStateSearch,
         MiniAppStateStore,
-        MiniAppStateHomeChat {
+        MiniAppStateHomeChat,
+        MiniAppStateStoreSearchChat {
   Widget _buildHomeLayout(SessionInfo session, {VoidCallback? onOpenMenu}) {
     final header = ChatHeaderCard(
       storeName: 'Find a store',

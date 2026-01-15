@@ -29,6 +29,7 @@ import 'widgets/menu_item_card.dart';
 import 'widgets/menu_view_toggle.dart';
 import 'widgets/store_search_footer.dart';
 import 'widgets/store_inline_suggestions.dart';
+import 'widgets/recommended_order_card.dart';
 
 part 'mini_app_state_fields.dart';
 part 'mini_app_state_search.dart';

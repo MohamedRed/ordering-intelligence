@@ -13,6 +13,7 @@ mixin MiniAppStateBuild
         MiniAppStateGroupOrdersView,
         MiniAppStateOrder,
         MiniAppStateGasPumpActions,
+        MiniAppStateBuildHome,
         MiniAppStateBuildMenu,
         MiniAppStateSignOut,
         MiniAppStateLifecycle {
