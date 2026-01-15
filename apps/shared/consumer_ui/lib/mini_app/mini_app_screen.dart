@@ -122,8 +122,8 @@ class _MiniAppScreenState extends State<MiniAppScreen>
         MiniAppStateChatAudio,
         MiniAppStateLifecycle,
         MiniAppStateBuildMenuGas,
-        MiniAppStateBuildMenuBrowse,
         MiniAppStateBuildMenuChat,
+        MiniAppStateBuildMenuBrowse,
         MiniAppStateBuildMenu,
         MiniAppStateBuild {
   @override
