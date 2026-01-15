@@ -7,8 +7,10 @@ mixin MiniAppStateBuildMenuBrowse
         MiniAppStateMenu,
         MiniAppStateStore,
         MiniAppStateCart,
+        MiniAppStateCartSheet,
         MiniAppStateDelivery,
         MiniAppStateGroupOrdersView,
+        MiniAppStateBuildMenuChat,
         MiniAppStateChatSelection,
         MiniAppStateChatParticipants {
   Widget _buildBrowseMenuLayout(
