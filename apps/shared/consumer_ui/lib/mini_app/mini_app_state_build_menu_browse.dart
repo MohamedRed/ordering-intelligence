@@ -72,7 +72,7 @@ mixin MiniAppStateBuildMenuBrowse
           if (groupOrderPanel != null) ...[
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 12),
-              child: groupOrderPanel,
+              child: SizedBox(width: double.infinity, child: groupOrderPanel),
             ),
             const SizedBox(height: 12),
           ],

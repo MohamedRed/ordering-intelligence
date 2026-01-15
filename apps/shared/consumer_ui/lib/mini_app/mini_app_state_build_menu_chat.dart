@@ -44,6 +44,10 @@ mixin MiniAppStateBuildMenuChat
           );
     final isBusy = hasStore ? _chatBusy : _searching;
     final groupOrderPanel = hasStore ? buildGroupOrderPanel() : null;
+    final showChatContextDetails =
+        _selectedProduct != null ||
+        (groupOrderPanel == null &&
+            (_groupOrder?.participants.isNotEmpty ?? false));
     final header = ChatHeaderCard(
       key: ValueKey(hasStore ? session.storeId : 'no-store'),
       storeName: hasStore ? session.storeName : 'Find a store',
@@ -66,7 +70,7 @@ mixin MiniAppStateBuildMenuChat
               isDelivery: _isDeliverySelected,
               onFulfillmentChanged: _toggleDelivery,
               showToggle: false,
-              showExpandedContentWhenEmbedded: true,
+              showExpandedContentWhenEmbedded: showChatContextDetails,
               expandedContent: Column(
                 children: [
                   ChatContextBar(
@@ -162,7 +166,7 @@ mixin MiniAppStateBuildMenuChat
           const SizedBox(height: 8),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 12),
-            child: groupOrderPanel,
+            child: SizedBox(width: double.infinity, child: groupOrderPanel),
           ),
         ],
         if (modeToggle != null) ...[
