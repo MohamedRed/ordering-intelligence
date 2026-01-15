@@ -20,7 +20,7 @@ class CartLineItem extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final textTheme = ShadTheme.of(context).textTheme;
-    final haptics = MiniAppScope.of(context).haptics;
+    final haptics = MiniAppScope.hapticsOf(context);
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -33,7 +33,10 @@ class CartLineItem extends StatelessWidget {
               Row(
                 children: [
                   Expanded(child: Text(item.item.name, style: textTheme.small)),
-                  Text(formatPrice(item.lineTotalCents), style: textTheme.small),
+                  Text(
+                    formatPrice(item.lineTotalCents),
+                    style: textTheme.small,
+                  ),
                 ],
               ),
               if (item.selections.isNotEmpty)
@@ -60,10 +63,7 @@ class CartLineItem extends StatelessWidget {
             ),
             SizedBox(
               width: 24,
-              child: Text(
-                '${item.quantity}',
-                textAlign: TextAlign.center,
-              ),
+              child: Text('${item.quantity}', textAlign: TextAlign.center),
             ),
             IconButton(
               onPressed: () {

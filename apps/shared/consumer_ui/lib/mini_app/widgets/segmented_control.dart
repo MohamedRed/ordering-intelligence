@@ -4,10 +4,7 @@ import 'package:shadcn_ui/shadcn_ui.dart';
 import '../mini_app_scope.dart';
 
 class SegmentedOption<T> {
-  const SegmentedOption({
-    required this.value,
-    required this.label,
-  });
+  const SegmentedOption({required this.value, required this.label});
 
   final T value;
   final String label;
@@ -28,7 +25,7 @@ class SegmentedControl<T> extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = ShadTheme.of(context);
-    final haptics = MiniAppScope.of(context).haptics;
+    final haptics = MiniAppScope.hapticsOf(context);
     return Container(
       padding: const EdgeInsets.all(4),
       decoration: BoxDecoration(

@@ -18,7 +18,7 @@ class ChatContextChip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = ShadTheme.of(context);
-    final haptics = MiniAppScope.of(context).haptics;
+    final haptics = MiniAppScope.hapticsOf(context);
     return InkWell(
       onTap: () {
         haptics.selection();

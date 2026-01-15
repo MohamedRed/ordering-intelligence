@@ -50,7 +50,7 @@ class GroupOrderPanel extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final textTheme = ShadTheme.of(context).textTheme;
-    final haptics = MiniAppScope.of(context).haptics;
+    final haptics = MiniAppScope.hapticsOf(context);
     return MinimalCard(
       padding: const EdgeInsets.all(16),
       child: Column(
@@ -65,9 +65,7 @@ class GroupOrderPanel extends StatelessWidget {
             child: Row(
               children: [
                 Expanded(child: Text('Group order', style: textTheme.large)),
-                Icon(
-                  collapsed ? Icons.expand_more : Icons.expand_less,
-                ),
+                Icon(collapsed ? Icons.expand_more : Icons.expand_less),
               ],
             ),
           ),

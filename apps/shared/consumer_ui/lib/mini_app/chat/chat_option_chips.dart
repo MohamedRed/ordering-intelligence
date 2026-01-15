@@ -17,7 +17,7 @@ class ChatOptionChips extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     if (options.isEmpty) return const SizedBox.shrink();
-    final haptics = MiniAppScope.of(context).haptics;
+    final haptics = MiniAppScope.hapticsOf(context);
     return SizedBox(
       height: 44,
       child: ListView.separated(

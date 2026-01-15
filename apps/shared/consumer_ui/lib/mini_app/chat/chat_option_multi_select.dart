@@ -31,7 +31,7 @@ class _ChatOptionMultiSelectState extends State<ChatOptionMultiSelect> {
   Widget build(BuildContext context) {
     if (widget.options.isEmpty) return const SizedBox.shrink();
     final theme = ShadTheme.of(context);
-    final haptics = MiniAppScope.of(context).haptics;
+    final haptics = MiniAppScope.hapticsOf(context);
     final minSelections = widget.minSelections ?? 1;
     final maxSelections = widget.maxSelections;
     final canConfirm =

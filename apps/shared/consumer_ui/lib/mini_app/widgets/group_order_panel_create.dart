@@ -26,7 +26,7 @@ class GroupOrderPanelCreate extends StatelessWidget {
   Widget build(BuildContext context) {
     final isSplit = paymentMode == 'split_by_participant';
     final isCard = paymentMethod == 'card';
-    final haptics = MiniAppScope.of(context).haptics;
+    final haptics = MiniAppScope.hapticsOf(context);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -36,7 +36,9 @@ class GroupOrderPanelCreate extends StatelessWidget {
           offLabel: 'One payer',
           onLabel: 'Split pay',
           onChanged: (next) {
-            onPaymentModeChanged(next ? 'split_by_participant' : 'single_payer');
+            onPaymentModeChanged(
+              next ? 'split_by_participant' : 'single_payer',
+            );
           },
         ),
         const SizedBox(height: 10),

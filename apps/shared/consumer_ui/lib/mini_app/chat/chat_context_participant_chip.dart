@@ -19,7 +19,7 @@ class ChatParticipantChip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = ShadTheme.of(context);
-    final haptics = MiniAppScope.of(context).haptics;
+    final haptics = MiniAppScope.hapticsOf(context);
     final name = _resolveName(participant);
     return InkWell(
       onTap: () {

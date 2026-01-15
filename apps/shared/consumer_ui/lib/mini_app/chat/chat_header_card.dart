@@ -25,7 +25,7 @@ class ChatHeaderCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = ShadTheme.of(context);
-    final haptics = MiniAppScope.of(context).haptics;
+    final haptics = MiniAppScope.hapticsOf(context);
     return MinimalCard(
       padding: const EdgeInsets.all(14),
       child: Column(
