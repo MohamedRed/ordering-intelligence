@@ -1,9 +1,6 @@
 name: LiveKit SIP Health
 
 on:
-  schedule:
-    # 01:00 PT / 08:00 UTC daily
-    - cron: '0 8 * * *'
   workflow_dispatch:
     inputs:
       run_call:

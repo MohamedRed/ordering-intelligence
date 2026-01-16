@@ -16,12 +16,6 @@ on:
         type: boolean
         default: false
 
-  pull_request:
-    paths:
-      - "infrastructure/twilio/**"
-      - "scripts/livekit-agent-apply.sh"
-      - ".github/workflows/infra-livekit.yml"
-
 jobs:
   twilio-plan:
     runs-on: ubuntu-latest
@@ -72,4 +66,3 @@ jobs:
           else
             ./scripts/livekit-agent-apply.sh "${{ inputs.environment }}"
           fi
-

@@ -1,9 +1,7 @@
 name: E2E Dry Run
 
 on:
-  push:
-    branches: [ main ]
-  pull_request:
+  workflow_dispatch:
 
 jobs:
   synthetic-call:
