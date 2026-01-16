@@ -34,6 +34,11 @@ jobs:
       - name: Install firebase-tools
         run: npm install -g firebase-tools@13
 
+      - name: Install UI test deps
+        run: |
+          npm install --prefix tests/integration
+          npx --yes playwright@1.49.0 install --with-deps chromium
+
       - name: Seed Firestore test tenant
         run: python3 scripts/seed_test_firestore.py --project "$FIREBASE_PROJECT_ID" --suffix "$FIRESTORE_SUFFIX"
 
@@ -86,3 +91,13 @@ jobs:
 
       - name: Run smoke tests
         run: node tests/integration/smoke.mjs
+
+      - name: Run UI flow tests
+        run: node tests/integration/ui_flow.mjs
+
+      - name: Upload UI artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: web-ui-artifacts-${{ github.sha }}
+          path: tests/integration/artifacts

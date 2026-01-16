@@ -10,6 +10,7 @@ for Phase 2.
   regressions in tooling.
 - GitHub Actions workflow `sip-health.yml` runs nightly against dev/staging/prod trunks using `npm run sip:validate`.
 - `tests/integration/smoke.mjs` performs smoke checks for the deployed web apps and channel-gateway healthz in CI.
+- `tests/integration/ui_flow.mjs` runs Playwright-based UI flows against deployed web apps in CI.
 
 ## Utility Scripts
 - `npm run --prefix tests/e2e sip:update-metadata -- --location-code fr-paris` updates the metadata JSON on the LiveKit dispatch rule so every SIP job carries the correct `voiceProfile.location_code`.

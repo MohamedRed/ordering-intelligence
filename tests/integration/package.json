@@ -1,0 +1,15 @@
+{
+  "name": "@ordering-intelligence/web-integration",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "ui": "node ui_flow.mjs"
+  },
+  "dependencies": {
+    "playwright": "^1.49.0"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

@@ -73,3 +73,4 @@ lcov.info
 report.xml
 backend/libs/shared/config/node/schema/
 tmp/
+tests/integration/artifacts/
