@@ -65,7 +65,7 @@ jobs:
       - name: Ensure Firebase Hosting sites exist
         run: |
           set -euo pipefail
-          for site in admin-app-oi business-app-oi driver-app-oi consumer-web-oi; do
+          for site in liive-dev-admin liive-dev-business liive-dev-driver liive-dev-consumer; do
             firebase hosting:sites:create "$site" --project "$FIREBASE_PROJECT_ID" || true
           done
 
@@ -84,10 +84,10 @@ jobs:
             popd >/dev/null
           }
 
-          deploy_site "admin-app-oi" "apps/admin" "/tmp/admin.json"
-          deploy_site "business-app-oi" "apps/business" "/tmp/business.json"
-          deploy_site "driver-app-oi" "apps/driver" "/tmp/driver.json"
-          deploy_site "consumer-web-oi" "apps/consumer" "/tmp/consumer.json"
+          deploy_site "liive-dev-admin" "apps/admin" "/tmp/admin.json"
+          deploy_site "liive-dev-business" "apps/business" "/tmp/business.json"
+          deploy_site "liive-dev-driver" "apps/driver" "/tmp/driver.json"
+          deploy_site "liive-dev-consumer" "apps/consumer" "/tmp/consumer.json"
 
           echo "ADMIN_APP_URL=$(jq -r '.result.urls[0]' /tmp/admin.json)" >> "$GITHUB_ENV"
           echo "BUSINESS_APP_URL=$(jq -r '.result.urls[0]' /tmp/business.json)" >> "$GITHUB_ENV"

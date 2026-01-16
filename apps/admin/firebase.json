@@ -1,6 +1,6 @@
 {
   "hosting": {
-    "site": "admin-app-oi",
+    "site": "liive-dev-admin",
     "public": "build/web",
     "ignore": [
       "firebase.json",

@@ -1,6 +1,6 @@
 {
   "hosting": {
-    "site": "driver-app-oi",
+    "site": "liive-dev-driver",
     "public": "build/web",
     "ignore": [
       "firebase.json",

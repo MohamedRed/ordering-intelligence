@@ -1,6 +1,6 @@
 {
   "hosting": {
-    "site": "consumer-web-oi",
+    "site": "liive-dev-consumer",
     "public": "build/web",
     "ignore": [
       "firebase.json",
