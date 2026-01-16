@@ -17,7 +17,7 @@ import 'features/tenants/tenant_list_screen.dart';
 import 'firebase_options.dart';
 import 'models/tenant.dart';
 import 'providers/admin_providers.dart';
-import '../../shared/ui/glass_backdrop.dart';
+import 'package:shared_ui/glass_backdrop.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -75,7 +75,7 @@ class AdminApp extends ConsumerWidget {
             textTheme: textTheme,
             cardColor: Colors.white,
             canvasColor: Colors.transparent,
-            cardTheme: CardTheme(
+            cardTheme: CardThemeData(
               color: Colors.white,
               surfaceTintColor: Colors.white,
               elevation: 6,
@@ -88,7 +88,7 @@ class AdminApp extends ConsumerWidget {
             textTheme: textTheme,
             cardColor: Colors.white,
             canvasColor: Colors.transparent,
-            cardTheme: CardTheme(
+            cardTheme: CardThemeData(
               color: Colors.white,
               surfaceTintColor: Colors.white,
               elevation: 6,

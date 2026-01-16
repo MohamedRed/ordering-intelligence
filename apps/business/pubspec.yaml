@@ -24,6 +24,8 @@ dependencies:
   shadcn_ui: ^0.40.6
   google_fonts: ^6.2.1
   fl_chart: ^0.69.0
+  shared_ui:
+    path: ../shared/ui
 
 dev_dependencies:
   flutter_test:

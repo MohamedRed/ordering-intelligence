@@ -2,7 +2,7 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
-import '../../shared/ui/glass_backdrop.dart';
+import 'package:shared_ui/glass_backdrop.dart';
 
 import 'firebase_options.dart';
 import 'screens/session_gate.dart';
@@ -68,7 +68,7 @@ class ConsumerApp extends StatelessWidget {
             textTheme: textTheme,
             primaryTextTheme: textTheme,
             cardColor: Colors.white,
-            cardTheme: CardTheme(
+            cardTheme: CardThemeData(
               color: Colors.white,
               surfaceTintColor: Colors.white,
               elevation: 6,
@@ -82,7 +82,7 @@ class ConsumerApp extends StatelessWidget {
             textTheme: textTheme,
             primaryTextTheme: textTheme,
             cardColor: Colors.white,
-            cardTheme: CardTheme(
+            cardTheme: CardThemeData(
               color: Colors.white,
               surfaceTintColor: Colors.white,
               elevation: 6,

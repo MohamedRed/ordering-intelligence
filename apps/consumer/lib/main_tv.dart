@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
 
-import '../../shared/ui/glass_backdrop.dart';
+import 'package:shared_ui/glass_backdrop.dart';
 import 'screens/tv/tv_session_gate.dart';
 
 /// TV / living‑room entrypoint for the consumer app.
@@ -74,7 +74,7 @@ class ConsumerTvApp extends StatelessWidget {
             canvasColor: Colors.transparent,
             textTheme: textTheme,
             cardColor: Colors.white,
-            cardTheme: CardTheme(
+            cardTheme: CardThemeData(
               color: Colors.white,
               surfaceTintColor: Colors.white,
               elevation: 6,

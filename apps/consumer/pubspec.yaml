@@ -13,6 +13,8 @@ dependencies:
     path: ../shared/consumer_core
   consumer_ui:
     path: ../shared/consumer_ui
+  shared_ui:
+    path: ../shared/ui
   crypto: ^3.0.3
   flutter_web_auth_2: ^4.1.0
   flutter_facebook_auth: ^7.1.5

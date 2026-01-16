@@ -9,7 +9,7 @@ import 'screens/driver_home_screen.dart';
 import 'screens/marketplace_home_screen.dart';
 import 'screens/sign_in_screen.dart';
 import 'services/store_prefs.dart';
-import '../../shared/ui/glass_backdrop.dart';
+import 'package:shared_ui/glass_backdrop.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -68,7 +68,7 @@ class DriverApp extends StatelessWidget {
             textTheme: textTheme,
             cardColor: Colors.white,
             canvasColor: Colors.transparent,
-            cardTheme: CardTheme(
+            cardTheme: CardThemeData(
               color: Colors.white,
               surfaceTintColor: Colors.white,
               elevation: 6,
@@ -81,7 +81,7 @@ class DriverApp extends StatelessWidget {
             textTheme: textTheme,
             cardColor: Colors.white,
             canvasColor: Colors.transparent,
-            cardTheme: CardTheme(
+            cardTheme: CardThemeData(
               color: Colors.white,
               surfaceTintColor: Colors.white,
               elevation: 6,

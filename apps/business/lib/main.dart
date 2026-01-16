@@ -22,7 +22,7 @@ import 'notification_service.dart';
 import 'providers/offline_queue.dart';
 import 'providers/app_providers.dart';
 import 'providers/highlight_provider.dart';
-import '../../shared/ui/glass_backdrop.dart';
+import 'package:shared_ui/glass_backdrop.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -113,7 +113,7 @@ class BusinessApp extends ConsumerWidget {
             textTheme: textTheme,
             cardColor: Colors.white,
             canvasColor: Colors.transparent,
-            cardTheme: CardTheme(
+            cardTheme: CardThemeData(
               color: Colors.white,
               surfaceTintColor: Colors.white,
               elevation: 6,
@@ -126,7 +126,7 @@ class BusinessApp extends ConsumerWidget {
             textTheme: textTheme,
             cardColor: Colors.white,
             canvasColor: Colors.transparent,
-            cardTheme: CardTheme(
+            cardTheme: CardThemeData(
               color: Colors.white,
               surfaceTintColor: Colors.white,
               elevation: 6,

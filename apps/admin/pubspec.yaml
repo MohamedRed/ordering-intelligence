@@ -23,6 +23,8 @@ dependencies:
   google_fonts: ^6.2.1
   file_picker: ^8.1.2
   url_launcher: ^6.3.2
+  shared_ui:
+    path: ../shared/ui
 
 dev_dependencies:
   flutter_test:
