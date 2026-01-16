@@ -7,6 +7,9 @@ on:
 jobs:
   web-integration-smoke:
     runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: read
     env:
       FIREBASE_PROJECT_ID: liive-dev
       FIRESTORE_SUFFIX: ci
@@ -24,7 +27,8 @@ jobs:
 
       - uses: google-github-actions/auth@v2
         with:
-          credentials_json: ${{ secrets.GCP_SA_KEY_LIIVE_DEV }}
+          workload_identity_provider: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER_LIIVE_DEV }}
+          service_account: ${{ secrets.GCP_SERVICE_ACCOUNT_LIIVE_DEV }}
           export_environment_variables: true
 
       - uses: google-github-actions/setup-gcloud@v2
