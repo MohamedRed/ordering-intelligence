@@ -76,12 +76,12 @@ jobs:
           echo "CHANNEL=$CHANNEL" >> "$GITHUB_ENV"
 
           deploy_site () {
-            local site=$1
+            local label=$1
             local dir=$2
             local out=$3
             pushd "$dir" >/dev/null
-            if ! firebase hosting:channel:deploy "$CHANNEL" --project "$FIREBASE_PROJECT_ID" --only "hosting:$site" --json > "$out"; then
-              echo "Failed to deploy $site"
+            if ! firebase hosting:channel:deploy "$CHANNEL" --project "$FIREBASE_PROJECT_ID" --only hosting --json > "$out"; then
+              echo "Failed to deploy $label"
               if [ -f "$out" ]; then
                 cat "$out"
               fi
@@ -90,10 +90,10 @@ jobs:
             popd >/dev/null
           }
 
-          deploy_site "liive-dev-admin" "apps/admin" "/tmp/admin.json"
-          deploy_site "liive-dev-business" "apps/business" "/tmp/business.json"
-          deploy_site "liive-dev-driver" "apps/driver" "/tmp/driver.json"
-          deploy_site "liive-dev-consumer" "apps/consumer" "/tmp/consumer.json"
+          deploy_site "admin" "apps/admin" "/tmp/admin.json"
+          deploy_site "business" "apps/business" "/tmp/business.json"
+          deploy_site "driver" "apps/driver" "/tmp/driver.json"
+          deploy_site "consumer" "apps/consumer" "/tmp/consumer.json"
 
           echo "ADMIN_APP_URL=$(jq -r '.result.urls[0]' /tmp/admin.json)" >> "$GITHUB_ENV"
           echo "BUSINESS_APP_URL=$(jq -r '.result.urls[0]' /tmp/business.json)" >> "$GITHUB_ENV"
