@@ -38,8 +38,11 @@ module "github_ci_sa" {
   description  = "GitHub Actions deployer for web integration smoke tests."
   project_roles = [
     "roles/datastore.user",
+    "roles/firebase.admin",
     "roles/firebasehosting.admin",
-    "roles/firebase.viewer"
+    "roles/firebase.viewer",
+    "roles/serviceusage.serviceUsageConsumer",
+    "roles/serviceusage.serviceUsageAdmin"
   ]
 }
 
