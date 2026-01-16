@@ -96,6 +96,7 @@ variable "enable_services" {
     "monitoring.googleapis.com",
     "cloudbuild.googleapis.com",
     "iamcredentials.googleapis.com",
+    "firebasehosting.googleapis.com",
     "vision.googleapis.com",
     "aiplatform.googleapis.com",
     "vpcaccess.googleapis.com",
