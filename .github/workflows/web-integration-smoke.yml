@@ -1,0 +1,88 @@
+name: Web Integration Smoke
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  web-integration-smoke:
+    runs-on: ubuntu-latest
+    env:
+      FIREBASE_PROJECT_ID: liive-dev
+      FIRESTORE_SUFFIX: ci
+      CHANNEL_GATEWAY_BASE_URL: ${{ secrets.CHANNEL_GATEWAY_BASE_URL_LIIVE_DEV }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.GCP_SA_KEY_LIIVE_DEV }}
+          export_environment_variables: true
+
+      - uses: google-github-actions/setup-gcloud@v2
+        with:
+          project_id: ${{ env.FIREBASE_PROJECT_ID }}
+
+      - name: Install firebase-tools
+        run: npm install -g firebase-tools@13
+
+      - name: Seed Firestore test tenant
+        run: python3 scripts/seed_test_firestore.py --project "$FIREBASE_PROJECT_ID" --suffix "$FIRESTORE_SUFFIX"
+
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.38.5'
+          channel: 'stable'
+
+      - name: Build web apps
+        run: |
+          set -euo pipefail
+          for app in admin business driver consumer; do
+            pushd "apps/$app" >/dev/null
+            flutter pub get
+            flutter build web
+            popd >/dev/null
+          done
+
+      - name: Ensure Firebase Hosting sites exist
+        run: |
+          set -euo pipefail
+          for site in admin-app-oi business-app-oi driver-app-oi consumer-web-oi; do
+            firebase hosting:sites:create "$site" --project "$FIREBASE_PROJECT_ID" || true
+          done
+
+      - name: Deploy preview channels
+        run: |
+          set -euo pipefail
+          CHANNEL="ci-${GITHUB_SHA::7}"
+          echo "CHANNEL=$CHANNEL" >> "$GITHUB_ENV"
+
+          deploy_site () {
+            local site=$1
+            local dir=$2
+            local out=$3
+            pushd "$dir" >/dev/null
+            firebase hosting:channel:deploy "$CHANNEL" --project "$FIREBASE_PROJECT_ID" --only "hosting:$site" --json > "$out"
+            popd >/dev/null
+          }
+
+          deploy_site "admin-app-oi" "apps/admin" "/tmp/admin.json"
+          deploy_site "business-app-oi" "apps/business" "/tmp/business.json"
+          deploy_site "driver-app-oi" "apps/driver" "/tmp/driver.json"
+          deploy_site "consumer-web-oi" "apps/consumer" "/tmp/consumer.json"
+
+          echo "ADMIN_APP_URL=$(jq -r '.result.urls[0]' /tmp/admin.json)" >> "$GITHUB_ENV"
+          echo "BUSINESS_APP_URL=$(jq -r '.result.urls[0]' /tmp/business.json)" >> "$GITHUB_ENV"
+          echo "DRIVER_APP_URL=$(jq -r '.result.urls[0]' /tmp/driver.json)" >> "$GITHUB_ENV"
+          echo "CONSUMER_APP_URL=$(jq -r '.result.urls[0]' /tmp/consumer.json)" >> "$GITHUB_ENV"
+
+      - name: Run smoke tests
+        run: node tests/integration/smoke.mjs

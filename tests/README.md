@@ -9,6 +9,7 @@ for Phase 2.
 - GitHub Actions workflow `e2e-ci.yml` runs the script in dry-run mode to catch
   regressions in tooling.
 - GitHub Actions workflow `sip-health.yml` runs nightly against dev/staging/prod trunks using `npm run sip:validate`.
+- `tests/integration/smoke.mjs` performs smoke checks for the deployed web apps and channel-gateway healthz in CI.
 
 ## Utility Scripts
 - `npm run --prefix tests/e2e sip:update-metadata -- --location-code fr-paris` updates the metadata JSON on the LiveKit dispatch rule so every SIP job carries the correct `voiceProfile.location_code`.
