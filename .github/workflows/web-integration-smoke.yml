@@ -3,6 +3,7 @@ name: Web Integration Smoke
 on:
   push:
   pull_request:
+  workflow_dispatch:
 
 jobs:
   web-integration-smoke:
