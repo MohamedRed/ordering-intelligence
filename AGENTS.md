@@ -6,3 +6,4 @@
 - I don't want quick fixes, but professional code for enterprise clients.
 - Build always enterprise-grade level products. 
 - everytime you finish a task, git commit and push the changes.
+- codify changes in Terraform when needed

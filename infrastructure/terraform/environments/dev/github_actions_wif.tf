@@ -3,26 +3,26 @@ locals {
 }
 
 resource "google_iam_workload_identity_pool" "github_actions" {
-  project                    = var.project_id
-  location                   = "global"
-  workload_identity_pool_id  = "github-actions-pool"
-  display_name               = "GitHub Actions Pool"
-  description                = "OIDC pool for GitHub Actions."
+  provider                  = google-beta
+  project                   = local.project_number
+  workload_identity_pool_id = "github-actions-pool"
+  display_name              = "GitHub Actions Pool"
+  description               = "OIDC pool for GitHub Actions."
 }
 
 resource "google_iam_workload_identity_pool_provider" "github_actions" {
-  project                             = var.project_id
-  location                            = "global"
-  workload_identity_pool_id           = google_iam_workload_identity_pool.github_actions.workload_identity_pool_id
-  workload_identity_pool_provider_id  = "github-actions-provider"
-  display_name                        = "GitHub Actions Provider"
-  attribute_condition                 = "assertion.repository == \"${local.github_actions_repository}\""
+  provider                           = google-beta
+  project                            = local.project_number
+  workload_identity_pool_id          = google_iam_workload_identity_pool.github_actions.workload_identity_pool_id
+  workload_identity_pool_provider_id = "github-actions-provider"
+  display_name                       = "GitHub Actions Provider"
+  attribute_condition                = "assertion.repository == \"${local.github_actions_repository}\""
 
   attribute_mapping = {
-    "google.subject"        = "assertion.sub"
-    "attribute.actor"       = "assertion.actor"
-    "attribute.repository"  = "assertion.repository"
-    "attribute.ref"         = "assertion.ref"
+    "google.subject"       = "assertion.sub"
+    "attribute.actor"      = "assertion.actor"
+    "attribute.repository" = "assertion.repository"
+    "attribute.ref"        = "assertion.ref"
   }
 
   oidc {

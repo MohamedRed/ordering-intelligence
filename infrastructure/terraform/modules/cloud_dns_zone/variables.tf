@@ -38,6 +38,12 @@ variable "resource_records" {
   default     = {}
 }
 
+variable "expected_record_types" {
+  description = "Expected DNS record types per domain (e.g. {\"admin.dev.liive.app\"=[\"CNAME\"]})."
+  type        = map(list(string))
+  default     = {}
+}
+
 variable "extra_records" {
   description = "Additional DNS records to create (e.g. load balancer A records)."
   type = list(object({

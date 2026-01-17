@@ -2,7 +2,7 @@ output "resource_records" {
   description = "DNS records required to validate the Cloud Run domain mappings."
   value = {
     for domain, mapping in google_cloud_run_domain_mapping.this :
-    domain => mapping.status[0].resource_records
+    domain => try(mapping.status[0].resource_records, [])
   }
 }
 

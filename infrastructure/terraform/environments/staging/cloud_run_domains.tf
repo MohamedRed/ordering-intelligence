@@ -2,10 +2,10 @@ module "cloud_run_domain_mappings" {
   source     = "../../modules/cloud_run_domain_mappings"
   project_id = var.project_id
   region     = var.region
-  domains = {
+  domains = var.enable_cloud_run_domain_mappings ? {
     for key, domain in local.domain_mappings :
     domain => local.service_names[key]
-  }
+  } : {}
 
   depends_on = [
     module.admin_service,
@@ -35,6 +35,7 @@ module "cloud_dns_zone" {
   domain     = local.dns_domain
   enabled    = var.enable_cloud_dns && local.dns_domain != ""
 
-  resource_records = module.cloud_run_domain_mappings.resource_records
-  extra_records    = local.dns_extra_records
+  resource_records      = module.cloud_run_domain_mappings.resource_records
+  extra_records         = local.dns_extra_records
+  expected_record_types = local.expected_record_types
 }

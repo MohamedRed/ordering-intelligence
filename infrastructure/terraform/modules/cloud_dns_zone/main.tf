@@ -1,42 +1,46 @@
 locals {
   dns_name = var.domain == "" ? "" : (endswith(var.domain, ".") ? var.domain : "${var.domain}.")
 
-  mapping_records = flatten([
-    for domain, records in var.resource_records : [
-      for record in records : {
-        name    = record.name
-        type    = record.type
-        ttl     = var.ttl
-        rrdatas = can(tolist(record.rrdata)) ? tolist(record.rrdata) : [tostring(record.rrdata)]
-      }
-    ]
-  ])
+  expected_record_keys = {
+    for item in flatten([
+      for domain, types in var.expected_record_types : [
+        for record_type in types : {
+          key    = "${domain}|${record_type}"
+          domain = domain
+          type   = record_type
+        }
+      ]
+      ]) : item.key => {
+      domain = item.domain
+      type   = item.type
+    }
+  }
 
-  extra_records = [
-    for record in var.extra_records : {
+  resource_record_sets = {
+    for key, meta in local.expected_record_keys :
+    key => {
+      name = endswith(meta.domain, ".") ? meta.domain : "${meta.domain}."
+      type = meta.type
+      ttl  = var.ttl
+      rrdatas = distinct(flatten([
+        for record in try(var.resource_records[meta.domain], []) :
+        can(tolist(record.rrdata)) ? tolist(record.rrdata) : [tostring(record.rrdata)]
+        if record.type == meta.type
+      ]))
+    }
+  }
+
+  extra_record_sets = {
+    for record in var.extra_records :
+    "${record.name}|${record.type}" => {
       name    = record.name
       type    = record.type
       ttl     = try(record.ttl, var.ttl)
       rrdatas = record.rrdatas
     }
-  ]
-
-  combined_records = concat(local.mapping_records, local.extra_records)
-
-  record_groups = {
-    for record in local.combined_records :
-    "${record.name}|${record.type}" => record...
   }
 
-  record_sets = {
-    for key, records in local.record_groups :
-    key => {
-      name    = records[0].name
-      type    = records[0].type
-      ttl     = records[0].ttl
-      rrdatas = distinct(flatten([for r in records : r.rrdatas]))
-    }
-  }
+  record_sets = merge(local.resource_record_sets, local.extra_record_sets)
 }
 
 resource "google_dns_managed_zone" "this" {

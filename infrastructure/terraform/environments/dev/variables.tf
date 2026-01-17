@@ -75,6 +75,12 @@ variable "enable_cloud_dns" {
   default     = false
 }
 
+variable "enable_cloud_run_domain_mappings" {
+  description = "When true, create Cloud Run domain mappings for custom domains."
+  type        = bool
+  default     = true
+}
+
 variable "cloud_dns_zone_name" {
   description = "Managed zone name for Cloud DNS (must be unique within the project)."
   type        = string

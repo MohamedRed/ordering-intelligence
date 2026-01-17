@@ -5,10 +5,19 @@ terraform {
       source  = "hashicorp/google"
       version = "~> 5.0"
     }
+    google-beta = {
+      source  = "hashicorp/google-beta"
+      version = "~> 5.0"
+    }
   }
 }
 
 provider "google" {
+  project = var.project_id
+  region  = var.region
+}
+
+provider "google-beta" {
   project = var.project_id
   region  = var.region
 }
@@ -18,11 +27,11 @@ data "google_project" "current" {
 }
 
 module "core" {
-  source          = "../../modules/core"
-  project_id      = var.project_id
-  region          = var.region
+  source             = "../../modules/core"
+  project_id         = var.project_id
+  region             = var.region
   firestore_location = var.firestore_location
-  billing_account = var.billing_account
+  billing_account    = var.billing_account
   run_service_accounts = [
     module.admin_service_sa.email,
     module.agent_customization_sa.email,
@@ -84,9 +93,9 @@ locals {
 
   default_service_domains = {
     for key, name in local.service_names :
-    key => var.custom_domain_base != "" && contains(local.custom_domain_service_keys, key)
-      ? "${local.custom_domain_prefix}${name}.${var.custom_domain_base}"
-      : ""
+    key => var.enable_cloud_run_domain_mappings && var.custom_domain_base != "" && contains(local.custom_domain_service_keys, key)
+    ? "${local.custom_domain_prefix}${name}.${var.custom_domain_base}"
+    : ""
   }
 
   order_service_domain_override = length(var.order_service_lb_managed_domains) > 0 ? {
@@ -102,8 +111,8 @@ locals {
   service_urls = {
     for key, name in local.service_names :
     key => local.custom_service_domains[key] != ""
-      ? "https://${local.custom_service_domains[key]}"
-      : "https://${name}-${local.project_number}.${var.region}.run.app"
+    ? "https://${local.custom_service_domains[key]}"
+    : "https://${name}-${local.project_number}.${var.region}.run.app"
   }
 
   domain_mappings = {
@@ -112,8 +121,12 @@ locals {
     if domain != "" && contains(local.custom_domain_service_keys, key)
   }
 
-  dns_domain = var.cloud_dns_domain != "" ? var.cloud_dns_domain : var.custom_domain_base
+  dns_domain        = var.cloud_dns_domain != "" ? var.cloud_dns_domain : var.custom_domain_base
   dns_extra_records = []
+  expected_record_types = {
+    for key, domain in local.domain_mappings :
+    domain => (domain == local.dns_domain ? ["A", "AAAA"] : ["CNAME"])
+  }
 
   cloud_run_defaults = {
     admin_service = {
@@ -142,9 +155,9 @@ locals {
       memory                = "512Mi"
       startup_cpu_boost     = true
       env_overrides = {
-        ENVIRONMENT          = var.environment_name
-        FIRESTORE_PROJECT_ID = var.project_id
-        CORS_ORIGINS         = "*"
+        ENVIRONMENT             = var.environment_name
+        FIRESTORE_PROJECT_ID    = var.project_id
+        CORS_ORIGINS            = "*"
         ELEVENLABS_API_BASE_URL = "https://api.elevenlabs.io"
       }
       secret_env_overrides = {}
@@ -257,10 +270,10 @@ locals {
       memory                = "512Mi"
       startup_cpu_boost     = true
       env_overrides = {
-        ENVIRONMENT               = var.environment_name
-        FIRESTORE_PROJECT_ID      = var.project_id
-        ELEVENLABS_API_BASE_URL   = "https://api.elevenlabs.io"
-        SESSION_IDLE_MINUTES      = "20"
+        ENVIRONMENT                  = var.environment_name
+        FIRESTORE_PROJECT_ID         = var.project_id
+        ELEVENLABS_API_BASE_URL      = "https://api.elevenlabs.io"
+        SESSION_IDLE_MINUTES         = "20"
         CUSTOMER_PROFILE_SERVICE_URL = local.service_urls.customer_profile
         RECOMMENDATION_SERVICE_URL   = local.service_urls.recommendation
         WAIT_TIME_SERVICE_URL        = local.service_urls.wait_time_service
@@ -352,22 +365,22 @@ locals {
       memory                = "512Mi"
       startup_cpu_boost     = true
       env_overrides = {
-        ENVIRONMENT             = var.environment_name
-        FIRESTORE_PROJECT_ID    = var.project_id
-        REQUIRE_AUTH            = "true"
-        INTERNAL_AUTH_AUDIENCE  = local.service_urls.dispatch_service
+        ENVIRONMENT            = var.environment_name
+        FIRESTORE_PROJECT_ID   = var.project_id
+        REQUIRE_AUTH           = "true"
+        INTERNAL_AUTH_AUDIENCE = local.service_urls.dispatch_service
         INTERNAL_ALLOWED_EMAILS = join(",", [
           module.agent_tools_sa.email,
           module.channel_gateway_sa.email,
         ])
-        ORDER_SERVICE_URL       = local.service_urls.order_service
-        DISPATCH_EVENTS_TOPIC   = module.core.pubsub_topics["dispatch-events"]
-        ASSIGNMENT_TTL_SECONDS  = "30"
-        TOP_K_CANDIDATES        = "5"
-        DISPATCH_SERVICE_URL    = local.service_urls.dispatch_service
-        CLOUD_TASKS_PROJECT_ID  = var.project_id
-        CLOUD_TASKS_LOCATION    = var.region
-        CLOUD_TASKS_ASSIGNMENT_QUEUE = "dispatch-assignments-${var.environment_name}"
+        ORDER_SERVICE_URL                      = local.service_urls.order_service
+        DISPATCH_EVENTS_TOPIC                  = module.core.pubsub_topics["dispatch-events"]
+        ASSIGNMENT_TTL_SECONDS                 = "30"
+        TOP_K_CANDIDATES                       = "5"
+        DISPATCH_SERVICE_URL                   = local.service_urls.dispatch_service
+        CLOUD_TASKS_PROJECT_ID                 = var.project_id
+        CLOUD_TASKS_LOCATION                   = var.region
+        CLOUD_TASKS_ASSIGNMENT_QUEUE           = "dispatch-assignments-${var.environment_name}"
         CLOUD_TASKS_OIDC_SERVICE_ACCOUNT_EMAIL = module.dispatch_tasks_sa.email
         CLOUD_TASKS_OIDC_AUDIENCE              = local.service_urls.dispatch_service
       }
@@ -1347,7 +1360,7 @@ module "order_service" {
     PUBSUB_TOPIC_ORDERS           = "orders-events"
     ORDERS_EVENTS_PAYLOAD_VERSION = "v2"
     # Allow agent-tools to authenticate using Cloud Run IAM-style ID tokens.
-    INTERNAL_AUTH_AUDIENCE  = local.service_urls.order_service
+    INTERNAL_AUTH_AUDIENCE = local.service_urls.order_service
     INTERNAL_ALLOWED_EMAILS = join(",", [
       module.agent_tools_sa.email,
       module.dispatch_service_sa.email,
@@ -1864,10 +1877,10 @@ module "agent_customization_service" {
   service_account       = module.agent_customization_sa.email
 
   env_vars = merge({
-    ENVIRONMENT          = var.environment_name
-    FIRESTORE_PROJECT_ID = var.project_id
+    ENVIRONMENT             = var.environment_name
+    FIRESTORE_PROJECT_ID    = var.project_id
     ELEVENLABS_API_BASE_URL = "https://api.elevenlabs.io"
-    CORS_ORIGINS         = "*"
+    CORS_ORIGINS            = "*"
   }, lookup(local.cloud_run_config.agent_customization, "env_overrides", {}))
   secret_env_vars = merge({
     ELEVENLABS_API_KEY = google_secret_manager_secret.elevenlabs_api_key.secret_id
@@ -2265,8 +2278,8 @@ resource "google_cloud_run_service_iam_member" "notification_service_public" {
 }
 
 resource "google_eventarc_trigger" "typesense_indexer_stores" {
-  name     = "typesense-indexer-stores-${var.environment_name}"
-  location = var.firestore_location
+  name                    = "typesense-indexer-stores-${var.environment_name}"
+  location                = var.firestore_location
   event_data_content_type = "application/protobuf"
 
   matching_criteria {
@@ -2300,8 +2313,8 @@ resource "google_eventarc_trigger" "typesense_indexer_stores" {
 }
 
 resource "google_eventarc_trigger" "typesense_indexer_tenants" {
-  name     = "typesense-indexer-tenants-${var.environment_name}"
-  location = var.firestore_location
+  name                    = "typesense-indexer-tenants-${var.environment_name}"
+  location                = var.firestore_location
   event_data_content_type = "application/protobuf"
 
   matching_criteria {
