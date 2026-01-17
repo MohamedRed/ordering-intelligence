@@ -34,7 +34,7 @@ variable "ttl" {
 
 variable "resource_records" {
   description = "Cloud Run domain mapping resource records keyed by domain."
-  type        = map(list(any))
+  type        = any
   default     = {}
 }
 

@@ -6,7 +6,7 @@ enable_agent_tools_redis_cache = true
 typesense_host = "fl497zkby30xopqip-1.a1.typesense.net"
 custom_domain_base = "liive.app"
 custom_domain_prefix = "dev-"
-enable_cloud_dns = false
+enable_cloud_dns = true
 enable_cloud_run_domain_mappings = true
 
 cloud_run_overrides = {

@@ -35,7 +35,10 @@ module "cloud_dns_zone" {
   domain     = local.dns_domain
   enabled    = var.enable_cloud_dns && local.dns_domain != ""
 
-  resource_records      = module.cloud_run_domain_mappings.resource_records
+  resource_records = {
+    for domain, records in module.cloud_run_domain_mappings.resource_records :
+    domain => try(tolist(records), [])
+  }
   extra_records         = local.dns_extra_records
   expected_record_types = local.expected_record_types
 }
