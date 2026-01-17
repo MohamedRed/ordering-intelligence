@@ -16,6 +16,7 @@ import {
   registerDeliveryPartnerStripeRoutes,
   upsertDeliveryPartnerStripeFromAccount,
 } from './delivery_partner_stripe.js';
+import { registerMerchantStripeEmbedRoutes } from './merchant_stripe_embed.js';
 
 const app = express();
 const upload = multer({ storage: multer.memoryStorage() });
@@ -342,6 +343,13 @@ app.use(
 );
 
 registerDeliveryPartnerStripeRoutes({
+  app,
+  firestore,
+  stripe,
+  publicBaseUrl: PUBLIC_BASE_URL,
+  stripePublishableKey: STRIPE_PUBLISHABLE_KEY,
+});
+registerMerchantStripeEmbedRoutes({
   app,
   firestore,
   stripe,
@@ -1424,30 +1432,6 @@ app.post('/stripe/account-session', async (req, res) => {
   } catch (err: any) {
     console.error('stripe account-session error', err);
     res.status(500).json({ error: 'stripe_account_session_failed', message: err.message });
-  }
-});
-
-// Hosted onboarding link (fallback for mobile)
-app.post('/stripe/account-link', async (req, res) => {
-  if (!stripe) return res.status(500).json({ error: 'stripe_not_configured' });
-  try {
-    const { session_id, refresh_url, return_url } = req.body || {};
-    if (!session_id) return res.status(400).json({ error: 'session_id_required' });
-    const sessionDoc = await getSession(session_id, res);
-    if (!sessionDoc) return;
-    const account_id = sessionDoc.stripe?.account_id;
-    if (!account_id) return res.status(400).json({ error: 'account_id_missing_for_link' });
-
-    const link = await stripe.accountLinks.create({
-      account: account_id,
-      refresh_url: refresh_url || 'https://example.com/stripe/refresh',
-      return_url: return_url || 'https://example.com/stripe/return',
-      type: 'account_onboarding',
-    });
-    res.status(201).json({ url: link.url });
-  } catch (err: any) {
-    console.error('stripe account-link error', err);
-    res.status(500).json({ error: 'stripe_account_link_failed', message: err.message });
   }
 });
 

@@ -300,19 +300,17 @@ class TenantApi {
     return data['client_secret'] as String;
   }
 
-  Future<String> createStripeAccountLink(String sessionId) async {
+  Future<String> createStripeEmbeddedSession(String sessionId) async {
     final token = await _token();
     final resp = await _client.post(
-      Uri.parse('$_onboardingBaseUrl/stripe/account-link'),
+      Uri.parse('$_onboardingBaseUrl/stripe/embedded-session'),
       headers: _headers(token),
       body: jsonEncode({
         'session_id': sessionId,
-        'refresh_url': 'https://admin.onboarding/stripe/refresh',
-        'return_url': 'https://admin.onboarding/stripe/return',
       }),
     );
     if (resp.statusCode != 201) {
-      throw Exception('Stripe account-link failed (${resp.statusCode})');
+      throw Exception('Stripe embedded session failed (${resp.statusCode})');
     }
     final data = jsonDecode(resp.body) as Map<String, dynamic>;
     return data['url'] as String;

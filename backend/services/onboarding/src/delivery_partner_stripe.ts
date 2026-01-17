@@ -2,6 +2,7 @@ import type express from 'express';
 import type Stripe from 'stripe';
 import { FieldValue, Firestore, Timestamp } from '@google-cloud/firestore';
 import { v4 as uuidv4 } from 'uuid';
+import { buildStripeEmbedHtml } from './stripe_embed.js';
 
 const DELIVERY_PARTNER_STRIPE = 'delivery_partner_stripe';
 const DELIVERY_PARTNER_STRIPE_SESSIONS = 'delivery_partner_stripe_sessions';
@@ -141,80 +142,6 @@ const baseUrlFromRequest = (req: express.Request, publicBaseUrl?: string): strin
   return `${proto}://${host}`.replace(/\/$/, '');
 };
 
-const jsEscape = (value: string): string =>
-  value.replace(/\\/g, '\\\\').replace(/'/g, "\\'");
-
-const buildEmbedHtml = (params: {
-  publishableKey: string;
-  baseUrl: string;
-  token: string;
-}) => {
-  const publishableKey = jsEscape(params.publishableKey);
-  const baseUrl = jsEscape(params.baseUrl);
-  const token = jsEscape(params.token);
-  return `<!doctype html>
-<html lang="en">
-<head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Stripe onboarding</title>
-  <style>
-    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; margin: 0; background: #f6f7fb; }
-    .container { max-width: 920px; margin: 0 auto; padding: 24px; }
-    #connect-root { background: #fff; border-radius: 16px; padding: 16px; box-shadow: 0 12px 30px rgba(0,0,0,0.08); }
-    .header { padding: 24px 24px 0; }
-    .header h1 { margin: 0 0 8px; font-size: 22px; }
-    .header p { margin: 0 0 16px; color: #5a5a5a; }
-    .error { color: #b42318; padding: 16px; }
-  </style>
-  <script src="https://connect-js.stripe.com/v1.0/connect.js" async></script>
-</head>
-<body>
-  <div class="header">
-    <h1>Complete your payout setup</h1>
-    <p>Stripe will collect the details needed to enable payouts.</p>
-  </div>
-  <div class="container">
-    <div id="connect-root"></div>
-  </div>
-  <script>
-    const publishableKey = '${publishableKey}';
-    const baseUrl = '${baseUrl}';
-    const token = '${token}';
-
-    const fetchClientSecret = async () => {
-      const response = await fetch(baseUrl + '/delivery-partners/stripe/connect/' + token + '/session', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-      });
-      const payload = await response.json().catch(() => ({}));
-      if (!response.ok || !payload.client_secret) {
-        throw new Error(payload.error || 'session_failed');
-      }
-      return payload.client_secret;
-    };
-
-    window.StripeConnect = window.StripeConnect || {};
-    window.StripeConnect.onLoad = () => {
-      try {
-        if (!publishableKey) {
-          document.getElementById('connect-root').innerHTML = '<div class="error">Stripe publishable key not configured.</div>';
-          return;
-        }
-        const stripeConnectInstance = window.StripeConnect.init({
-          publishableKey: publishableKey,
-          fetchClientSecret: fetchClientSecret,
-        });
-        const onboarding = stripeConnectInstance.create('account-onboarding');
-        onboarding.mount('#connect-root');
-      } catch (err) {
-        document.getElementById('connect-root').innerHTML = '<div class="error">Unable to load Stripe onboarding.</div>';
-      }
-    };
-  </script>
-</body>
-</html>`;
-};
 
 export const upsertDeliveryPartnerStripeFromAccount = async (
   firestore: Firestore,
@@ -422,10 +349,11 @@ export const registerDeliveryPartnerStripeRoutes = ({
 
       const publishableKey = stripePublishableKey || '';
       const baseUrl = baseUrlFromRequest(req, publicBaseUrl);
-      const html = buildEmbedHtml({
+      const html = buildStripeEmbedHtml({
         publishableKey,
-        baseUrl,
-        token,
+        fetchClientSecretUrl: `${baseUrl}/delivery-partners/stripe/connect/${token}/session`,
+        title: 'Complete your payout setup',
+        subtitle: 'Stripe will collect the details needed to enable payouts.',
       });
       res.setHeader('Content-Type', 'text/html; charset=utf-8');
       res.status(200).send(html);

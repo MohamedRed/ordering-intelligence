@@ -2338,7 +2338,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                     try {
                       final api = ref.read(tenantApiProvider);
                       final sessionId = await _ensureSession(api);
-                      final url = await api.createStripeAccountLink(sessionId);
+                      final url = await api.createStripeEmbeddedSession(sessionId);
                       if (!await launchUrl(Uri.parse(url),
                           mode: LaunchMode.externalApplication)) {
                         throw Exception('Could not launch Stripe onboarding');
@@ -2355,7 +2355,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                 ),
                 const SizedBox(height: 10),
                 Text(
-                  'A new browser tab will open. When finished, come back here and press Next.',
+                  'A new browser tab will open with embedded Stripe onboarding. When finished, come back here and press Next.',
                   style: TextStyle(color: cs.onSurfaceVariant),
                 ),
               ] else if (!demoSkip) ...[
@@ -3289,35 +3289,6 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
         ),
       ),
     );
-  }
-}
-
-class _EmbeddedStripeOnboarding extends StatefulWidget {
-  const _EmbeddedStripeOnboarding({required this.clientSecret});
-  final String clientSecret;
-
-  @override
-  State<_EmbeddedStripeOnboarding> createState() =>
-      _EmbeddedStripeOnboardingState();
-}
-
-class _EmbeddedStripeOnboardingState extends State<_EmbeddedStripeOnboarding> {
-  @override
-  void initState() {
-    super.initState();
-    _init();
-  }
-
-  Future<void> _init() async {
-    // Embed not supported via flutter_stripe; we rely on hosted onboarding instead.
-    // This placeholder remains for future SDK support.
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    // The actual UI is rendered by the Stripe SDK when presentAccountSession is called.
-    return const Text(
-        'Use the “Continue in Stripe” button to finish onboarding.');
   }
 }
 
