@@ -1,14 +1,18 @@
 export const footerColumns = [
   {
-    title: 'Product',
-    links: ['Voice Agents', 'Integrations', 'Security', 'Pricing'],
+    title: 'Platform',
+    links: ['Voice AI', 'Menu intelligence', 'Live ops', 'Integrations'],
+  },
+  {
+    title: 'Channels',
+    links: ['Phone', 'Drive-thru', 'Web', 'Kiosk'],
   },
   {
     title: 'Company',
-    links: ['About', 'Careers', 'Blog', 'Contact'],
+    links: ['About', 'Careers', 'Contact', 'Security'],
   },
   {
     title: 'Resources',
-    links: ['Docs', 'API Status', 'Support', 'Privacy'],
+    links: ['Docs', 'Status', 'Privacy', 'Terms'],
   },
 ];

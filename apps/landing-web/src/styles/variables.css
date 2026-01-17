@@ -1,21 +1,21 @@
 :root {
-  color-scheme: light;
-  --font-display: -apple-system, BlinkMacSystemFont, 'SF Pro Display',
-    'SF Pro Text', 'Helvetica Neue', Helvetica, Arial, sans-serif;
-  --font-body: -apple-system, BlinkMacSystemFont, 'SF Pro Text',
-    'SF Pro Display', 'Helvetica Neue', Helvetica, Arial, sans-serif;
-  --text-dark: #0b1220;
-  --text-muted: #52607a;
-  --surface: #ffffff;
-  --surface-muted: #f5f7fb;
-  --surface-dark: #0b1220;
-  --accent: #1a78ff;
-  --accent-soft: #e5f1ff;
-  --border: rgba(12, 18, 32, 0.1);
-  --shadow: 0 24px 60px rgba(12, 18, 32, 0.12);
-  --radius-lg: 28px;
-  --radius-md: 18px;
-  --section-space: 120px;
+  color-scheme: dark;
+  --font-display: 'Sora', 'Helvetica Neue', Arial, sans-serif;
+  --font-body: 'Manrope', 'Helvetica Neue', Arial, sans-serif;
+  --bg: #0b0b0d;
+  --surface: #111116;
+  --surface-strong: #17171d;
+  --surface-soft: #1d1d24;
+  --text: #f7f7f5;
+  --text-muted: #b4b4c2;
+  --accent: #ff2f2f;
+  --accent-soft: #ff5e5e;
+  --accent-glow: rgba(255, 47, 47, 0.35);
+  --border: rgba(255, 255, 255, 0.08);
+  --shadow: 0 30px 70px rgba(0, 0, 0, 0.45);
+  --radius-lg: 26px;
+  --radius-md: 16px;
+  --section-space: 110px;
 }
 
 @media (max-width: 900px) {

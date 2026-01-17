@@ -4,8 +4,10 @@ const Footer = () => (
   <footer className="footer">
     <div className="container footer-grid">
       <div>
-        <div className="logo">Ordering Intelligence</div>
-        <p>Conversational agents built for modern restaurants.</p>
+        <div className="logo">
+          <img src="/assets/liive-logo.svg" alt="Liive" />
+        </div>
+        <p>Real-time ordering for modern restaurant teams.</p>
       </div>
       <div className="footer-columns">
         {footerColumns.map((column) => (
@@ -23,7 +25,7 @@ const Footer = () => (
       </div>
     </div>
     <div className="footer-bottom">
-      <span>© 2025 Ordering Intelligence</span>
+      <span>© 2026 Liive</span>
       <div className="footer-socials">
         <button type="button">LinkedIn</button>
         <button type="button">X</button>

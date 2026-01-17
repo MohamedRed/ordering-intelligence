@@ -1,7 +1,7 @@
 export const navItems = [
-  'Product',
-  'Solutions',
-  'Pricing',
-  'Docs',
+  'Platform',
+  'Channels',
+  'Industries',
+  'Security',
   'Company',
 ];

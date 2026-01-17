@@ -1,17 +1,30 @@
 export const showcaseCards = [
   {
-    title: 'Natural language ordering',
-    description: 'Turn any menu into a conversation with instant upsells.',
-    image: '/placeholders/showcase-1.svg',
+    tag: 'Voice AI',
+    title: 'Drive-thru speed without missed items.',
+    description:
+      'Agents handle modifiers, upsells, and edge cases while keeping pace with peak rush.',
+    tone: 'sunrise',
   },
   {
-    title: '24/7 phone coverage',
-    description: 'Never miss a call with human-level voice quality.',
-    image: '/placeholders/showcase-2.svg',
+    tag: 'Live routing',
+    title: 'Route every order to the right station.',
+    description:
+      'Location-aware logic splits orders by prep line, pickup, or delivery in real time.',
+    tone: 'lime',
   },
   {
-    title: 'Real-time ops dashboard',
-    description: 'Monitor calls, conversions, and live agent metrics.',
-    image: '/placeholders/showcase-3.svg',
+    tag: 'Menu intelligence',
+    title: 'Menus stay accurate everywhere.',
+    description:
+      'One source of truth across voice, web, kiosk, and partner channels.',
+    tone: 'blue',
+  },
+  {
+    tag: 'Ops console',
+    title: 'Live oversight for every location.',
+    description:
+      'QA, call review, and intervention tools built for multi-unit teams.',
+    tone: 'graphite',
   },
 ];

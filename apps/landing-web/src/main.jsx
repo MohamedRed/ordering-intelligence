@@ -11,7 +11,6 @@ import './styles/sections.css';
 import './styles/feature.css';
 import './styles/metrics.css';
 import './styles/process.css';
-import './styles/faq.css';
 import './styles/cta.css';
 import './styles/footer.css';
 

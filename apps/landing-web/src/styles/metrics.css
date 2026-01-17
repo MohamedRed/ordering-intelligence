@@ -1,5 +1,5 @@
 .metrics {
-  background: var(--surface-muted);
+  background: var(--surface);
 }
 
 .metrics-grid {
@@ -10,26 +10,29 @@
 
 .metrics-cards {
   display: grid;
-  gap: 18px;
+  gap: 16px;
 }
 
 .metrics-cards article {
-  background: #fff;
-  padding: 22px;
+  background: var(--surface-strong);
+  padding: 20px 24px;
   border-radius: var(--radius-md);
+  border: 1px solid rgba(255, 255, 255, 0.08);
   box-shadow: var(--shadow);
 }
 
 .metrics-cards strong {
-  font-size: 1.6rem;
   display: block;
+  font-size: 1.1rem;
+  margin-bottom: 6px;
 }
 
 .metrics-cards span {
   color: var(--text-muted);
+  font-size: 0.9rem;
 }
 
-@media (min-width: 900px) {
+@media (min-width: 980px) {
   .metrics-grid {
     grid-template-columns: 1.1fr 0.9fr;
   }

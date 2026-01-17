@@ -1,12 +1,11 @@
 import Navbar from './components/Navbar';
 import Hero from './components/Hero';
-import LogoRow from './components/LogoRow';
+import ChannelRow from './components/ChannelRow';
 import Showcase from './components/Showcase';
-import VoiceAgents from './components/VoiceAgents';
+import LiveOps from './components/LiveOps';
 import FeatureSeries from './components/FeatureSeries';
 import Metrics from './components/Metrics';
 import Process from './components/Process';
-import Faq from './components/Faq';
 import CTA from './components/CTA';
 import Footer from './components/Footer';
 
@@ -15,13 +14,12 @@ const App = () => (
     <Navbar />
     <main>
       <Hero />
-      <LogoRow />
+      <ChannelRow />
       <Showcase />
-      <VoiceAgents />
+      <LiveOps />
       <FeatureSeries />
       <Metrics />
       <Process />
-      <Faq />
       <CTA />
     </main>
     <Footer />

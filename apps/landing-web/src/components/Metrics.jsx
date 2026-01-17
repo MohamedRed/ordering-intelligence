@@ -3,27 +3,27 @@ const Metrics = () => (
     <div className="container metrics-grid">
       <div>
         <span className="eyebrow">Outcomes</span>
-        <h2>Start in days, not months.</h2>
+        <h2>Launch without disrupting operations.</h2>
         <p>
-          Launch quickly with curated templates, automated menu ingestion, and
-          real-time QA.
+          Liive rolls out fast with guided onboarding, store-level routing, and
+          real-time quality checks.
         </p>
         <button className="btn primary" type="button">
-          See launch plan
+          View deployment plan
         </button>
       </div>
       <div className="metrics-cards">
         <article>
-          <strong>45%</strong>
-          <span>average call containment</span>
+          <strong>Multi-channel</strong>
+          <span>One order stream for every surface</span>
         </article>
         <article>
-          <strong>3.4x</strong>
-          <span>faster onboarding</span>
+          <strong>Location-aware</strong>
+          <span>Routing rules per store and daypart</span>
         </article>
         <article>
-          <strong>15%</strong>
-          <span>higher ticket sizes</span>
+          <strong>Enterprise-ready</strong>
+          <span>Security and governance built in</span>
         </article>
       </div>
     </div>

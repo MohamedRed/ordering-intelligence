@@ -1,18 +1,22 @@
 export const processSteps = [
   {
-    title: 'Connect your phone lines',
-    description: 'Port existing numbers or provision new ones in minutes.',
+    title: 'Map your menu',
+    description:
+      'Ingest menus, modifiers, and location rules in one guided intake.',
   },
   {
-    title: 'Upload menus and policies',
-    description: 'Sync menus, taxes, and location data automatically.',
+    title: 'Shape the experience',
+    description:
+      'Tune brand voice, upsells, and escalation policies in minutes.',
   },
   {
-    title: 'Launch agents with guardrails',
-    description: 'Configure tone, scripts, and escalation rules.',
+    title: 'Connect your channels',
+    description:
+      'Launch across phone, drive-thru, web, kiosk, and POS integrations.',
   },
   {
-    title: 'Optimize with live insights',
-    description: 'Monitor conversions and refine your playbooks.',
+    title: 'Go live and optimize',
+    description:
+      'Monitor quality, review calls, and improve every location with live data.',
   },
 ];

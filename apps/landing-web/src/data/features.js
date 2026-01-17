@@ -1,27 +1,31 @@
 export const features = [
   {
-    eyebrow: 'Voice Agents',
-    title: 'Built for conversational ordering at scale.',
+    eyebrow: 'Menu intelligence',
+    title: 'Menus translated into live ordering logic.',
     description:
-      'Design agents that understand modifiers, handle interruptions, and stay on-brand with every guest.',
-    bullets: ['Multi-turn ordering', 'Menu-aware guidance', 'Delightful upsells'],
+      'Liive turns every menu into structured logic so agents can guide guests with confidence.',
+    bullets: [
+      'Photo and PDF ingestion',
+      'Modifier trees and combos',
+      'Multilingual menu support',
+    ],
     image: '/placeholders/feature-1.svg',
   },
   {
-    eyebrow: 'Orchestration',
-    title: 'Route calls, triage edge cases, and stay in control.',
+    eyebrow: 'Live orchestration',
+    title: 'Keep humans in the loop without slowing the order.',
     description:
-      'Configure fallback logic, live handoffs, and escalation policies without rebuilding your stack.',
-    bullets: ['Instant handoff', 'Policy routing', 'QA review mode'],
+      'Route edge cases to staff, supervise performance, and keep every location consistent.',
+    bullets: ['Live handoff', 'Queue management', 'Location-level routing'],
     image: '/placeholders/feature-2.svg',
     reversed: true,
   },
   {
-    eyebrow: 'Reliability',
-    title: 'Enterprise-grade uptime with real-time monitoring.',
+    eyebrow: 'Trust and compliance',
+    title: 'Enterprise controls from day one.',
     description:
-      'See every call, track conversion rates, and replay transcripts with built-in compliance controls.',
-    bullets: ['Live call view', 'Transcript export', 'Security controls'],
+      'Operational visibility, recordings, and governance built for multi-unit brands.',
+    bullets: ['Role-based access', 'Audit trails', 'Secure transcripts'],
     image: '/placeholders/feature-3.svg',
   },
 ];

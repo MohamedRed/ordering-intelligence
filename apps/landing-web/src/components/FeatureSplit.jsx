@@ -1,11 +1,11 @@
 const FeatureSplit = ({ eyebrow, title, description, bullets, image, reversed }) => (
-  <section className={`feature ${reversed ? 'reverse' : ''}`}>
+  <div className={`feature ${reversed ? 'reverse' : ''}`}>
     <div className="container feature-grid">
       <div className="feature-copy">
         <span className="eyebrow">{eyebrow}</span>
-        <h2>{title}</h2>
+        <h3>{title}</h3>
         <p>{description}</p>
-        <ul>
+        <ul className="feature-list">
           {bullets.map((item) => (
             <li key={item}>{item}</li>
           ))}
@@ -15,7 +15,7 @@ const FeatureSplit = ({ eyebrow, title, description, bullets, image, reversed })
         <img src={image} alt="" loading="lazy" />
       </div>
     </div>
-  </section>
+  </div>
 );
 
 export default FeatureSplit;

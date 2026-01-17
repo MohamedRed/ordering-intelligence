@@ -2,42 +2,46 @@ const Hero = () => (
   <section className="hero">
     <div className="container hero-grid">
       <div className="hero-content reveal">
-        <span className="eyebrow">Conversational Agents</span>
-        <h1>The conversational agents platform.</h1>
+        <span className="eyebrow">Real-time ordering</span>
+        <h1>Liive turns ordering into a live, location-aware experience.</h1>
         <p>
-          Build voice agents that sound human, resolve orders instantly, and
-          scale across every location.
+          Capture every order across phone, drive-thru, web, and kiosk with AI
+          that understands menus, modifiers, and store-level operations.
         </p>
         <div className="hero-actions">
           <button className="btn primary" type="button">
-            Book a demo
+            Request demo
           </button>
           <button className="btn secondary" type="button">
-            Watch overview
+            See live flow
           </button>
         </div>
         <div className="hero-meta">
           <div>
-            <strong>99.9%</strong>
-            <span>uptime SLA</span>
+            <strong>Live ops</strong>
+            <span>Monitor and intervene instantly</span>
           </div>
           <div>
-            <strong>2 weeks</strong>
-            <span>avg launch</span>
+            <strong>Menu intelligence</strong>
+            <span>Structured logic for every item</span>
           </div>
           <div>
-            <strong>24/7</strong>
-            <span>coverage</span>
+            <strong>Multi-location</strong>
+            <span>Built for enterprise rollout</span>
           </div>
         </div>
       </div>
       <div className="hero-visual reveal delay-1">
-        <div className="hero-glow" />
-        <img
-          src="/placeholders/hero.svg"
-          alt="Hero product preview"
-          loading="lazy"
-        />
+        <div className="hero-orbit" />
+        <div className="hero-rings">
+          <span />
+          <span />
+          <span />
+        </div>
+        <div className="hero-pin">
+          <span />
+        </div>
+        <div className="hero-chip">Live order stream</div>
       </div>
     </div>
   </section>

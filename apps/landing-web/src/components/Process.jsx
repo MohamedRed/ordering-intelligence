@@ -5,8 +5,8 @@ const Process = () => (
     <div className="container">
       <div className="section-title">
         <span className="eyebrow">How it works</span>
-        <h2>Launch a production-ready agent in four steps.</h2>
-        <p>Designed for enterprise teams with multiple locations.</p>
+        <h2>Launch a live ordering layer in four steps.</h2>
+        <p>Designed for enterprise teams managing multiple locations.</p>
       </div>
       <div className="process-grid">
         <div className="process-steps">
@@ -21,7 +21,12 @@ const Process = () => (
           ))}
         </div>
         <div className="process-visual">
-          <img src="/placeholders/process.svg" alt="" loading="lazy" />
+          <div className="process-orbit" />
+          <div className="process-card">
+            <p>Live rollout map</p>
+            <strong>All locations synced</strong>
+            <span>Ops, menus, and routing in one console.</span>
+          </div>
         </div>
       </div>
     </div>

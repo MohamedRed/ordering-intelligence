@@ -2,16 +2,16 @@ const CTA = () => (
   <section className="cta">
     <div className="container cta-inner">
       <div>
-        <span className="eyebrow">Ready to launch?</span>
-        <h2>See how Ordering Intelligence transforms call volume.</h2>
-        <p>Let us build your pilot and go live this quarter.</p>
+        <span className="eyebrow">Ready to go live?</span>
+        <h2>See how Liive transforms ordering throughput.</h2>
+        <p>Let us build your pilot and deliver a rollout plan.</p>
       </div>
       <div className="cta-actions">
         <button className="btn primary" type="button">
-          Book a demo
+          Request demo
         </button>
         <button className="btn secondary" type="button">
-          Download one-pager
+          Download overview
         </button>
       </div>
     </div>

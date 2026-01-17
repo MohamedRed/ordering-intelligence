@@ -1,16 +1,21 @@
 .cta {
-  padding: 120px 0;
-  background: radial-gradient(circle at 30% 20%, #e0f1ff 0%, #ffffff 55%);
+  padding: calc(var(--section-space) * 0.9) 0;
 }
 
 .cta-inner {
   display: grid;
-  gap: 28px;
+  gap: 24px;
   align-items: center;
-  background: #fff;
+  background: linear-gradient(135deg, #ff4040 0%, #1a0f12 70%, #0f0f14 100%);
   border-radius: var(--radius-lg);
-  padding: 40px;
+  padding: 48px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
   box-shadow: var(--shadow);
+}
+
+.cta-inner h2,
+.cta-inner p {
+  color: #fff;
 }
 
 .cta-actions {
@@ -19,7 +24,7 @@
   gap: 12px;
 }
 
-@media (min-width: 960px) {
+@media (min-width: 900px) {
   .cta-inner {
     grid-template-columns: 1.2fr 0.8fr;
   }
