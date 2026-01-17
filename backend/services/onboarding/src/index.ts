@@ -16,6 +16,7 @@ import {
   registerDeliveryPartnerStripeRoutes,
   upsertDeliveryPartnerStripeFromAccount,
 } from './delivery_partner_stripe.js';
+import { registerDeliveryPartnerComplianceRoutes } from './delivery_partner_compliance.js';
 import { registerMerchantStripeEmbedRoutes } from './merchant_stripe_embed.js';
 
 const app = express();
@@ -348,6 +349,13 @@ registerDeliveryPartnerStripeRoutes({
   stripe,
   publicBaseUrl: PUBLIC_BASE_URL,
   stripePublishableKey: STRIPE_PUBLISHABLE_KEY,
+});
+registerDeliveryPartnerComplianceRoutes({
+  app,
+  firestore,
+  bucket,
+  publicBaseUrl: PUBLIC_BASE_URL,
+  makePublic: MAKE_PUBLIC,
 });
 registerMerchantStripeEmbedRoutes({
   app,

@@ -106,6 +106,13 @@ func listActiveMarketplaceDeliverers(ctx context.Context, fs *cloudfirestore.Cli
 		if record.DelivererID == "" {
 			record.DelivererID = doc.Ref.ID
 		}
+		eligible, _, err := ensureDelivererEligible(ctx, fs, record.DelivererID)
+		if err != nil {
+			continue
+		}
+		if !eligible {
+			continue
+		}
 		out = append(out, record)
 	}
 	return out, nil

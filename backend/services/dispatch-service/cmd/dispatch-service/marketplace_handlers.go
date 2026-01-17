@@ -50,6 +50,15 @@ func handleMarketplaceDelivererRegister(
 	record.Available = true
 	record.Status = marketplaceDelivererStatusAvailable
 	record.UpdatedAt = now
+	eligible, _, err := ensureDelivererEligible(r.Context(), fs, uid)
+	if err != nil {
+		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "deliverer_eligibility_failed"})
+		return
+	}
+	if !eligible {
+		record.Available = false
+		record.Status = marketplaceDelivererStatusUnavailable
+	}
 	if err := upsertMarketplaceDeliverer(r.Context(), fs, *record); err != nil {
 		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "deliverer_update_failed"})
 		return
@@ -73,6 +82,17 @@ func handleMarketplaceAvailability(
 	if err := json.NewDecoder(r.Body).Decode(&payload); err != nil {
 		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "invalid_payload"})
 		return
+	}
+	if payload.Available {
+		eligible, eligibility, err := ensureDelivererEligible(r.Context(), fs, uid)
+		if err != nil {
+			writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "deliverer_eligibility_failed"})
+			return
+		}
+		if !eligible {
+			writeJSON(w, http.StatusForbidden, map[string]any{"error": "deliverer_not_ready", "eligibility": eligibility})
+			return
+		}
 	}
 	record, err := fetchMarketplaceDeliverer(r.Context(), fs, uid)
 	if err != nil {
@@ -208,6 +228,15 @@ func handleMarketplaceOfferAccept(
 	deliverer, err := fetchMarketplaceDeliverer(ctx, fs, uid)
 	if err != nil || deliverer == nil {
 		writeJSON(w, http.StatusForbidden, map[string]string{"error": "deliverer_not_found"})
+		return
+	}
+	eligible, eligibility, err := ensureDelivererEligible(ctx, fs, uid)
+	if err != nil {
+		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "deliverer_eligibility_failed"})
+		return
+	}
+	if !eligible {
+		writeJSON(w, http.StatusForbidden, map[string]any{"error": "deliverer_not_ready", "eligibility": eligibility})
 		return
 	}
 	if deliverer.CurrentOrderID != "" {
