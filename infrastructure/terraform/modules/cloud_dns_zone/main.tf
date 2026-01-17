@@ -33,7 +33,7 @@ locals {
   extra_record_sets = {
     for record in var.extra_records :
     "${record.name}|${record.type}" => {
-      name    = record.name
+      name    = endswith(record.name, ".") ? record.name : "${record.name}."
       type    = record.type
       ttl     = try(record.ttl, var.ttl)
       rrdatas = record.rrdatas

@@ -80,7 +80,7 @@ locals {
   custom_domain_prefix = var.custom_domain_prefix != "" ? var.custom_domain_prefix : (
     var.environment_name == "prod" ? "" : "${var.environment_name}-"
   )
-  skip_onboarding_domain_mapping = true
+  skip_onboarding_domain_mapping = false
 
   default_custom_domain_exclusions = concat(
     ["agent_tools", "agent_webhooks"],
@@ -125,8 +125,19 @@ locals {
     if domain != "" && contains(local.custom_domain_service_keys, key)
   }
 
-  dns_domain        = var.cloud_dns_domain != "" ? var.cloud_dns_domain : var.custom_domain_base
-  dns_extra_records = []
+  dns_domain = var.cloud_dns_domain != "" ? var.cloud_dns_domain : var.custom_domain_base
+  dns_extra_records = local.skip_onboarding_domain_mapping ? [] : (
+    local.custom_service_domains.onboarding_service != ""
+      ? [
+        {
+          name    = local.custom_service_domains.onboarding_service
+          type    = "CNAME"
+          ttl     = 300
+          rrdatas = ["ghs.googlehosted.com."]
+        }
+      ]
+      : []
+  )
   expected_record_types = {
     for key, domain in local.domain_mappings :
     domain => (domain == local.dns_domain ? ["A", "AAAA"] : ["CNAME"])
