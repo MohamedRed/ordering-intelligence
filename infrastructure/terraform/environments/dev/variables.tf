@@ -96,6 +96,7 @@ variable "cloud_dns_domain" {
 variable "cloud_run_overrides" {
   description = "Optional per-service overrides for Cloud Run runtime settings and environment variables."
   type = map(object({
+    image                 = optional(string)
     min_scale             = optional(number)
     max_scale             = optional(number)
     container_concurrency = optional(number)

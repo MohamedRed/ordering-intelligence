@@ -24,4 +24,10 @@ cloud_run_overrides = {
       TWILIO_MESSAGING_NUMBER  = "+13292120971"
     }
   }
+  dispatch_service = {
+    image = "europe-west1-docker.pkg.dev/liive-dev/services/dispatch-service:64b0d87a"
+  }
+  onboarding_service = {
+    image = "europe-west1-docker.pkg.dev/liive-dev/services/onboarding-service:64b0d87a"
+  }
 }

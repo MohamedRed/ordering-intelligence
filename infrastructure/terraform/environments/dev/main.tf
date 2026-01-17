@@ -443,11 +443,37 @@ locals {
     }
   }
 
-  cloud_run_config = {
+  cloud_run_defaults_normalized = {
     for key, defaults in local.cloud_run_defaults :
     key => merge(
       defaults,
-      try(var.cloud_run_overrides[key], {})
+      {
+        image                = lookup(defaults, "image", null)
+        env_overrides        = tomap(lookup(defaults, "env_overrides", {}))
+        secret_env_overrides = tomap(lookup(defaults, "secret_env_overrides", {}))
+      }
+    )
+  }
+
+  cloud_run_overrides_normalized = {
+    for key, overrides in var.cloud_run_overrides :
+    key => {
+      for k, v in merge(
+        overrides,
+        {
+          env_overrides        = tomap(lookup(overrides, "env_overrides", {}))
+          secret_env_overrides = tomap(lookup(overrides, "secret_env_overrides", {}))
+        }
+      ) : k => v if v != null
+    }
+  }
+
+  cloud_run_config = {
+    for key, defaults in local.cloud_run_defaults_normalized :
+    key => (
+      contains(keys(local.cloud_run_overrides_normalized), key)
+      ? merge(defaults, local.cloud_run_overrides_normalized[key])
+      : defaults
     )
   }
 }
@@ -1369,7 +1395,7 @@ module "order_service" {
   project_id            = var.project_id
   location              = var.region
   service_name          = local.service_names.order_service
-  image                 = "${local.image_registry_host}/${local.image_registry_project}/services/order-service:latest"
+  image                 = coalesce(local.cloud_run_config.order_service.image, "${local.image_registry_host}/${local.image_registry_project}/services/order-service:latest")
   min_scale             = local.cloud_run_config.order_service.min_scale
   max_scale             = local.cloud_run_config.order_service.max_scale
   container_concurrency = local.cloud_run_config.order_service.container_concurrency
@@ -1408,7 +1434,7 @@ module "menu_ingestion" {
   project_id            = var.project_id
   location              = var.region
   service_name          = local.service_names.menu_ingestion
-  image                 = "${local.image_registry_host}/${local.image_registry_project}/services/menu-ingestion:latest"
+  image                 = coalesce(local.cloud_run_config.menu_ingestion.image, "${local.image_registry_host}/${local.image_registry_project}/services/menu-ingestion:latest")
   min_scale             = local.cloud_run_config.menu_ingestion.min_scale
   max_scale             = local.cloud_run_config.menu_ingestion.max_scale
   container_concurrency = local.cloud_run_config.menu_ingestion.container_concurrency
@@ -1435,7 +1461,7 @@ module "notification_service" {
   project_id            = var.project_id
   location              = var.region
   service_name          = local.service_names.notification_service
-  image                 = "${local.image_registry_host}/${local.image_registry_project}/services/notification-service:latest"
+  image                 = coalesce(local.cloud_run_config.notification_service.image, "${local.image_registry_host}/${local.image_registry_project}/services/notification-service:latest")
   min_scale             = local.cloud_run_config.notification_service.min_scale
   max_scale             = local.cloud_run_config.notification_service.max_scale
   container_concurrency = local.cloud_run_config.notification_service.container_concurrency
@@ -1477,7 +1503,7 @@ module "payments_service" {
   project_id            = var.project_id
   location              = var.region
   service_name          = local.service_names.payments_service
-  image                 = "${local.image_registry_host}/${local.image_registry_project}/services/payments-service:latest"
+  image                 = coalesce(local.cloud_run_config.payments_service.image, "${local.image_registry_host}/${local.image_registry_project}/services/payments-service:latest")
   min_scale             = local.cloud_run_config.payments_service.min_scale
   max_scale             = local.cloud_run_config.payments_service.max_scale
   container_concurrency = local.cloud_run_config.payments_service.container_concurrency
@@ -1509,7 +1535,7 @@ module "onboarding_service" {
   project_id            = var.project_id
   location              = var.region
   service_name          = local.service_names.onboarding_service
-  image                 = "${local.image_registry_host}/${local.image_registry_project}/services/onboarding-service:64b0d87a"
+  image                 = coalesce(local.cloud_run_config.onboarding_service.image, "${local.image_registry_host}/${local.image_registry_project}/services/onboarding-service:latest")
   min_scale             = local.cloud_run_config.onboarding_service.min_scale
   max_scale             = local.cloud_run_config.onboarding_service.max_scale
   container_concurrency = local.cloud_run_config.onboarding_service.container_concurrency
@@ -1546,7 +1572,7 @@ module "agent_webhooks" {
   project_id            = var.project_id
   location              = var.region
   service_name          = local.service_names.agent_webhooks
-  image                 = "${local.image_registry_host}/${local.image_registry_project}/services/agent-webhooks:latest"
+  image                 = coalesce(local.cloud_run_config.agent_webhooks.image, "${local.image_registry_host}/${local.image_registry_project}/services/agent-webhooks:latest")
   min_scale             = local.cloud_run_config.agent_webhooks.min_scale
   max_scale             = local.cloud_run_config.agent_webhooks.max_scale
   container_concurrency = local.cloud_run_config.agent_webhooks.container_concurrency
@@ -1580,7 +1606,7 @@ module "channel_gateway" {
   project_id            = var.project_id
   location              = var.region
   service_name          = local.service_names.channel_gateway
-  image                 = "${local.image_registry_host}/${local.image_registry_project}/services/channel-gateway:latest"
+  image                 = coalesce(local.cloud_run_config.channel_gateway.image, "${local.image_registry_host}/${local.image_registry_project}/services/channel-gateway:latest")
   min_scale             = local.cloud_run_config.channel_gateway.min_scale
   max_scale             = local.cloud_run_config.channel_gateway.max_scale
   container_concurrency = local.cloud_run_config.channel_gateway.container_concurrency
@@ -1631,7 +1657,7 @@ module "channel_comms" {
   project_id            = var.project_id
   location              = var.region
   service_name          = local.service_names.channel_comms
-  image                 = "${local.image_registry_host}/${local.image_registry_project}/services/channel-comms:latest"
+  image                 = coalesce(local.cloud_run_config.channel_comms.image, "${local.image_registry_host}/${local.image_registry_project}/services/channel-comms:latest")
   min_scale             = local.cloud_run_config.channel_comms.min_scale
   max_scale             = local.cloud_run_config.channel_comms.max_scale
   container_concurrency = local.cloud_run_config.channel_comms.container_concurrency
@@ -1662,7 +1688,7 @@ module "customer_profile" {
   project_id            = var.project_id
   location              = var.region
   service_name          = local.service_names.customer_profile
-  image                 = "${local.image_registry_host}/${local.image_registry_project}/services/customer-profile-service:latest"
+  image                 = coalesce(local.cloud_run_config.customer_profile.image, "${local.image_registry_host}/${local.image_registry_project}/services/customer-profile-service:latest")
   min_scale             = local.cloud_run_config.customer_profile.min_scale
   max_scale             = local.cloud_run_config.customer_profile.max_scale
   container_concurrency = local.cloud_run_config.customer_profile.container_concurrency
@@ -1686,7 +1712,7 @@ module "recommendation" {
   project_id            = var.project_id
   location              = var.region
   service_name          = local.service_names.recommendation
-  image                 = "${local.image_registry_host}/${local.image_registry_project}/services/recommendation-service:latest"
+  image                 = coalesce(local.cloud_run_config.recommendation.image, "${local.image_registry_host}/${local.image_registry_project}/services/recommendation-service:latest")
   min_scale             = local.cloud_run_config.recommendation.min_scale
   max_scale             = local.cloud_run_config.recommendation.max_scale
   container_concurrency = local.cloud_run_config.recommendation.container_concurrency
@@ -1710,7 +1736,7 @@ module "wait_time_service" {
   project_id            = var.project_id
   location              = var.region
   service_name          = local.service_names.wait_time_service
-  image                 = "${local.image_registry_host}/${local.image_registry_project}/services/wait-time-service:latest"
+  image                 = coalesce(local.cloud_run_config.wait_time_service.image, "${local.image_registry_host}/${local.image_registry_project}/services/wait-time-service:latest")
   min_scale             = local.cloud_run_config.wait_time_service.min_scale
   max_scale             = local.cloud_run_config.wait_time_service.max_scale
   container_concurrency = local.cloud_run_config.wait_time_service.container_concurrency
@@ -1734,7 +1760,7 @@ module "typesense_indexer" {
   project_id            = var.project_id
   location              = var.region
   service_name          = local.service_names.typesense_indexer
-  image                 = "${local.image_registry_host}/${local.image_registry_project}/services/typesense-indexer:latest"
+  image                 = coalesce(local.cloud_run_config.typesense_indexer.image, "${local.image_registry_host}/${local.image_registry_project}/services/typesense-indexer:latest")
   min_scale             = local.cloud_run_config.typesense_indexer.min_scale
   max_scale             = local.cloud_run_config.typesense_indexer.max_scale
   container_concurrency = local.cloud_run_config.typesense_indexer.container_concurrency
@@ -1759,7 +1785,7 @@ module "dispatch_service" {
   project_id            = var.project_id
   location              = var.region
   service_name          = local.service_names.dispatch_service
-  image                 = "${local.image_registry_host}/${local.image_registry_project}/services/dispatch-service:64b0d87a"
+  image                 = coalesce(local.cloud_run_config.dispatch_service.image, "${local.image_registry_host}/${local.image_registry_project}/services/dispatch-service:latest")
   min_scale             = local.cloud_run_config.dispatch_service.min_scale
   max_scale             = local.cloud_run_config.dispatch_service.max_scale
   container_concurrency = local.cloud_run_config.dispatch_service.container_concurrency
@@ -1786,7 +1812,7 @@ module "delivery_service" {
   project_id            = var.project_id
   location              = var.region
   service_name          = local.service_names.delivery_service
-  image                 = "${local.image_registry_host}/${local.image_registry_project}/services/delivery-service:latest"
+  image                 = coalesce(local.cloud_run_config.delivery_service.image, "${local.image_registry_host}/${local.image_registry_project}/services/delivery-service:latest")
   min_scale             = local.cloud_run_config.delivery_service.min_scale
   max_scale             = local.cloud_run_config.delivery_service.max_scale
   container_concurrency = local.cloud_run_config.delivery_service.container_concurrency
@@ -1821,7 +1847,7 @@ module "agent_tools" {
   project_id            = var.project_id
   location              = var.region
   service_name          = local.service_names.agent_tools
-  image                 = "${local.image_registry_host}/${local.image_registry_project}/services/agent-tools:latest"
+  image                 = coalesce(local.cloud_run_config.agent_tools.image, "${local.image_registry_host}/${local.image_registry_project}/services/agent-tools:latest")
   min_scale             = local.cloud_run_config.agent_tools.min_scale
   max_scale             = local.cloud_run_config.agent_tools.max_scale
   container_concurrency = local.cloud_run_config.agent_tools.container_concurrency
@@ -1868,7 +1894,7 @@ module "admin_service" {
   project_id            = var.project_id
   location              = var.region
   service_name          = local.service_names.admin_service
-  image                 = "${local.image_registry_host}/${local.image_registry_project}/services/admin-service:latest"
+  image                 = coalesce(local.cloud_run_config.admin_service.image, "${local.image_registry_host}/${local.image_registry_project}/services/admin-service:latest")
   min_scale             = local.cloud_run_config.admin_service.min_scale
   max_scale             = local.cloud_run_config.admin_service.max_scale
   container_concurrency = local.cloud_run_config.admin_service.container_concurrency
@@ -1892,7 +1918,7 @@ module "agent_customization_service" {
   project_id            = var.project_id
   location              = var.region
   service_name          = local.service_names.agent_customization
-  image                 = "${local.image_registry_host}/${local.image_registry_project}/services/agent-customization-service:latest"
+  image                 = coalesce(local.cloud_run_config.agent_customization.image, "${local.image_registry_host}/${local.image_registry_project}/services/agent-customization-service:latest")
   min_scale             = local.cloud_run_config.agent_customization.min_scale
   max_scale             = local.cloud_run_config.agent_customization.max_scale
   container_concurrency = local.cloud_run_config.agent_customization.container_concurrency
