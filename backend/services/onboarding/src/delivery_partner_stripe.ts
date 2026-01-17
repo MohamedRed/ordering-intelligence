@@ -1,12 +1,12 @@
 import type express from 'express';
 import type Stripe from 'stripe';
 import { FieldValue, Firestore, Timestamp } from '@google-cloud/firestore';
+import { v4 as uuidv4 } from 'uuid';
 
 const DELIVERY_PARTNER_STRIPE = 'delivery_partner_stripe';
+const DELIVERY_PARTNER_STRIPE_SESSIONS = 'delivery_partner_stripe_sessions';
 const MARKETPLACE_DELIVERERS = 'marketplace_deliverers';
-
-const defaultReturnUrl = 'https://driver.onboarding/stripe/return';
-const defaultRefreshUrl = 'https://driver.onboarding/stripe/refresh';
+const EMBED_SESSION_TTL_MINUTES = 30;
 
 type StripeRequirements = {
   currently_due: string[];
@@ -34,10 +34,20 @@ type StripeStatusDoc = {
   audit?: Array<{ ts: FirebaseFirestore.Timestamp; actor: string; event: string; data?: any }>;
 };
 
+type DeliveryPartnerStripeSession = {
+  deliverer_id: string;
+  account_id: string;
+  created_at: FirebaseFirestore.Timestamp;
+  expires_at: FirebaseFirestore.Timestamp;
+  updated_at?: FirebaseFirestore.Timestamp;
+};
+
 type DeliveryPartnerStripeDeps = {
   app: express.Express;
   firestore: Firestore;
   stripe: Stripe | null;
+  publicBaseUrl?: string;
+  stripePublishableKey?: string;
 };
 
 const normalizeDelivererId = (value: unknown): string => {
@@ -117,6 +127,95 @@ const upsertStripeDoc = async (
   await appendAudit(ref, event, eventData);
 };
 
+const isExpired = (ts?: FirebaseFirestore.Timestamp | null): boolean => {
+  if (!ts) return true;
+  return ts.toDate().getTime() <= Date.now();
+};
+
+const baseUrlFromRequest = (req: express.Request, publicBaseUrl?: string): string => {
+  if (publicBaseUrl && publicBaseUrl.trim().length > 0) {
+    return publicBaseUrl.replace(/\/$/, '');
+  }
+  const proto = (req.headers['x-forwarded-proto'] || req.protocol || 'https') as string;
+  const host = (req.headers['x-forwarded-host'] || req.headers['host'] || '').toString();
+  return `${proto}://${host}`.replace(/\/$/, '');
+};
+
+const jsEscape = (value: string): string =>
+  value.replace(/\\/g, '\\\\').replace(/'/g, "\\'");
+
+const buildEmbedHtml = (params: {
+  publishableKey: string;
+  baseUrl: string;
+  token: string;
+}) => {
+  const publishableKey = jsEscape(params.publishableKey);
+  const baseUrl = jsEscape(params.baseUrl);
+  const token = jsEscape(params.token);
+  return `<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Stripe onboarding</title>
+  <style>
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; margin: 0; background: #f6f7fb; }
+    .container { max-width: 920px; margin: 0 auto; padding: 24px; }
+    #connect-root { background: #fff; border-radius: 16px; padding: 16px; box-shadow: 0 12px 30px rgba(0,0,0,0.08); }
+    .header { padding: 24px 24px 0; }
+    .header h1 { margin: 0 0 8px; font-size: 22px; }
+    .header p { margin: 0 0 16px; color: #5a5a5a; }
+    .error { color: #b42318; padding: 16px; }
+  </style>
+  <script src="https://connect-js.stripe.com/v1.0/connect.js" async></script>
+</head>
+<body>
+  <div class="header">
+    <h1>Complete your payout setup</h1>
+    <p>Stripe will collect the details needed to enable payouts.</p>
+  </div>
+  <div class="container">
+    <div id="connect-root"></div>
+  </div>
+  <script>
+    const publishableKey = '${publishableKey}';
+    const baseUrl = '${baseUrl}';
+    const token = '${token}';
+
+    const fetchClientSecret = async () => {
+      const response = await fetch(baseUrl + '/delivery-partners/stripe/connect/' + token + '/session', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+      });
+      const payload = await response.json().catch(() => ({}));
+      if (!response.ok || !payload.client_secret) {
+        throw new Error(payload.error || 'session_failed');
+      }
+      return payload.client_secret;
+    };
+
+    window.StripeConnect = window.StripeConnect || {};
+    window.StripeConnect.onLoad = () => {
+      try {
+        if (!publishableKey) {
+          document.getElementById('connect-root').innerHTML = '<div class="error">Stripe publishable key not configured.</div>';
+          return;
+        }
+        const stripeConnectInstance = window.StripeConnect.init({
+          publishableKey: publishableKey,
+          fetchClientSecret: fetchClientSecret,
+        });
+        const onboarding = stripeConnectInstance.create('account-onboarding');
+        onboarding.mount('#connect-root');
+      } catch (err) {
+        document.getElementById('connect-root').innerHTML = '<div class="error">Unable to load Stripe onboarding.</div>';
+      }
+    };
+  </script>
+</body>
+</html>`;
+};
+
 export const upsertDeliveryPartnerStripeFromAccount = async (
   firestore: Firestore,
   account: Stripe.Account,
@@ -144,7 +243,45 @@ export const upsertDeliveryPartnerStripeFromAccount = async (
   });
 };
 
-export const registerDeliveryPartnerStripeRoutes = ({ app, firestore, stripe }: DeliveryPartnerStripeDeps) => {
+const createEmbeddedSession = async (params: {
+  firestore: Firestore;
+  delivererId: string;
+  accountId: string;
+}): Promise<string> => {
+  const token = uuidv4();
+  const now = Timestamp.now();
+  const expiresAt = Timestamp.fromDate(
+    new Date(Date.now() + EMBED_SESSION_TTL_MINUTES * 60 * 1000),
+  );
+  const payload: DeliveryPartnerStripeSession = {
+    deliverer_id: params.delivererId,
+    account_id: params.accountId,
+    created_at: now,
+    expires_at: expiresAt,
+  };
+  await params.firestore
+    .collection(DELIVERY_PARTNER_STRIPE_SESSIONS)
+    .doc(token)
+    .set(payload);
+  return token;
+};
+
+const fetchSessionDoc = async (
+  firestore: Firestore,
+  token: string,
+): Promise<FirebaseFirestore.DocumentSnapshot | null> => {
+  const doc = await firestore.collection(DELIVERY_PARTNER_STRIPE_SESSIONS).doc(token).get();
+  if (!doc.exists) return null;
+  return doc;
+};
+
+export const registerDeliveryPartnerStripeRoutes = ({
+  app,
+  firestore,
+  stripe,
+  publicBaseUrl,
+  stripePublishableKey,
+}: DeliveryPartnerStripeDeps) => {
   app.post('/delivery-partners/stripe/account', async (req, res) => {
     if (!stripe) return res.status(500).json({ error: 'stripe_not_configured' });
     try {
@@ -221,32 +358,80 @@ export const registerDeliveryPartnerStripeRoutes = ({ app, firestore, stripe }: 
     }
   });
 
-  app.post('/delivery-partners/stripe/account-link', async (req, res) => {
+  app.post('/delivery-partners/stripe/embedded-session', async (req, res) => {
     if (!stripe) return res.status(500).json({ error: 'stripe_not_configured' });
     try {
       const delivererId = normalizeDelivererId(req.body?.deliverer_id ?? req.body?.delivererId);
       if (!delivererId) return res.status(400).json({ error: 'deliverer_id_required' });
 
-      const docRef = firestore.collection(DELIVERY_PARTNER_STRIPE).doc(delivererId);
-      const doc = await docRef.get();
+      const doc = await firestore.collection(DELIVERY_PARTNER_STRIPE).doc(delivererId).get();
       const accountId = doc.data()?.stripe?.account_id as string | undefined;
       if (!accountId) return res.status(400).json({ error: 'stripe_account_missing' });
 
-      const refreshUrl = String(req.body?.refresh_url || defaultRefreshUrl);
-      const returnUrl = String(req.body?.return_url || defaultReturnUrl);
-
-      const link = await stripe.accountLinks.create({
-        account: accountId,
-        refresh_url: refreshUrl,
-        return_url: returnUrl,
-        type: 'account_onboarding',
+      const token = await createEmbeddedSession({
+        firestore,
+        delivererId,
+        accountId,
       });
 
-      await appendAudit(docRef, 'stripe_account_link', { account_id: accountId });
-      res.status(201).json({ url: link.url });
+      await appendAudit(doc.ref, 'stripe_embedded_session', { token });
+
+      const baseUrl = baseUrlFromRequest(req, publicBaseUrl);
+      res.status(201).json({ url: `${baseUrl}/delivery-partners/stripe/connect/${token}` });
     } catch (err: any) {
-      console.error('delivery partner stripe account link error', err);
-      res.status(500).json({ error: 'delivery_partner_stripe_link_failed', message: err.message });
+      console.error('delivery partner stripe embedded session error', err);
+      res.status(500).json({ error: 'delivery_partner_stripe_embedded_session_failed', message: err.message });
+    }
+  });
+
+  app.post('/delivery-partners/stripe/connect/:token/session', async (req, res) => {
+    if (!stripe) return res.status(500).json({ error: 'stripe_not_configured' });
+    try {
+      const token = String(req.params.token || '').trim();
+      if (!token) return res.status(400).json({ error: 'token_required' });
+      const doc = await fetchSessionDoc(firestore, token);
+      if (!doc) return res.status(404).json({ error: 'session_not_found' });
+      const session = doc.data() as DeliveryPartnerStripeSession;
+      if (!session || isExpired(session.expires_at)) return res.status(410).json({ error: 'session_expired' });
+
+      const stripeSession = await stripe.accountSessions.create({
+        account: session.account_id,
+        components: {
+          account_onboarding: { enabled: true },
+          payouts: { enabled: true },
+        },
+      });
+
+      await doc.ref.set({ updated_at: Timestamp.now() }, { merge: true });
+
+      res.status(201).json({ client_secret: stripeSession.client_secret });
+    } catch (err: any) {
+      console.error('delivery partner stripe connect session error', err);
+      res.status(500).json({ error: 'delivery_partner_stripe_connect_session_failed', message: err.message });
+    }
+  });
+
+  app.get('/delivery-partners/stripe/connect/:token', async (req, res) => {
+    try {
+      const token = String(req.params.token || '').trim();
+      if (!token) return res.status(400).send('token_required');
+      const doc = await fetchSessionDoc(firestore, token);
+      if (!doc) return res.status(404).send('session_not_found');
+      const session = doc.data() as DeliveryPartnerStripeSession;
+      if (!session || isExpired(session.expires_at)) return res.status(410).send('session_expired');
+
+      const publishableKey = stripePublishableKey || '';
+      const baseUrl = baseUrlFromRequest(req, publicBaseUrl);
+      const html = buildEmbedHtml({
+        publishableKey,
+        baseUrl,
+        token,
+      });
+      res.setHeader('Content-Type', 'text/html; charset=utf-8');
+      res.status(200).send(html);
+    } catch (err: any) {
+      console.error('delivery partner stripe connect page error', err);
+      res.status(500).send('internal_error');
     }
   });
 

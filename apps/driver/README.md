@@ -16,3 +16,4 @@ Driver-facing Flutter app for owned-fleet dispatch.
 
 - Auto location uses an Android foreground service notification; true background execution still requires a dedicated background isolate (planned).
 - For iOS background location, ensure the iOS target includes `UIBackgroundModes` with `location` and `NSLocationAlwaysAndWhenInUseUsageDescription`/`NSLocationWhenInUseUsageDescription` entries in `Info.plist`.
+- Marketplace payout onboarding opens Stripe embedded onboarding in an external browser. The driver build must set `ONBOARDING_SERVICE_URL`, and the onboarding service must have `STRIPE_PUBLISHABLE_KEY` configured.

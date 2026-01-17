@@ -713,6 +713,7 @@ resource "google_secret_manager_secret_iam_binding" "onboarding_secret_access" {
   for_each = {
     stripe_secret_key     = google_secret_manager_secret.stripe_secret_key.secret_id
     stripe_webhook_secret = google_secret_manager_secret.stripe_webhook_secret.secret_id
+    stripe_publishable_key = google_secret_manager_secret.stripe_publishable_key.secret_id
     twilio_account_sid    = google_secret_manager_secret.twilio_account_sid.secret_id
   }
   project   = var.project_id
@@ -849,6 +850,15 @@ resource "google_secret_manager_secret" "stripe_secret_key" {
 resource "google_secret_manager_secret" "stripe_webhook_secret" {
   project   = var.project_id
   secret_id = "stripe-webhook-secret"
+
+  replication {
+    auto {}
+  }
+}
+
+resource "google_secret_manager_secret" "stripe_publishable_key" {
+  project   = var.project_id
+  secret_id = "stripe-publishable-key"
 
   replication {
     auto {}
@@ -1219,6 +1229,7 @@ module "onboarding_service" {
   secret_env_vars = {
     STRIPE_SECRET_KEY     = google_secret_manager_secret.stripe_secret_key.secret_id
     STRIPE_WEBHOOK_SECRET = google_secret_manager_secret.stripe_webhook_secret.secret_id
+    STRIPE_PUBLISHABLE_KEY = google_secret_manager_secret.stripe_publishable_key.secret_id
     TWILIO_ACCOUNT_SID    = google_secret_manager_secret.twilio_account_sid.secret_id
     TWILIO_AUTH_TOKEN     = "twilio-auth-token"
     ELEVENLABS_API_KEY    = google_secret_manager_secret.elevenlabs_api_key.secret_id

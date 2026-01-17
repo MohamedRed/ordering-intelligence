@@ -10,16 +10,6 @@ const onboardingBaseUrl = String.fromEnvironment(
   defaultValue: 'https://onboarding-service-878404493774.europe-west1.run.app',
 );
 
-const stripeReturnUrl = String.fromEnvironment(
-  'DRIVER_STRIPE_RETURN_URL',
-  defaultValue: 'https://driver.onboarding/stripe/return',
-);
-
-const stripeRefreshUrl = String.fromEnvironment(
-  'DRIVER_STRIPE_REFRESH_URL',
-  defaultValue: 'https://driver.onboarding/stripe/refresh',
-);
-
 class DeliveryPartnerOnboardingApi {
   DeliveryPartnerOnboardingApi({http.Client? client})
       : _client = client ?? http.Client();
@@ -69,27 +59,22 @@ class DeliveryPartnerOnboardingApi {
     }
   }
 
-  Future<String> createAccountLink({
-    String? returnUrl,
-    String? refreshUrl,
-  }) async {
+  Future<String> createEmbeddedSessionUrl() async {
     final delivererId = await _delivererId();
     final resp = await _client.post(
-      _uri('/delivery-partners/stripe/account-link'),
+      _uri('/delivery-partners/stripe/embedded-session'),
       headers: {'Content-Type': 'application/json'},
       body: jsonEncode({
         'delivererId': delivererId,
-        'return_url': returnUrl ?? stripeReturnUrl,
-        'refresh_url': refreshUrl ?? stripeRefreshUrl,
       }),
     );
     if (resp.statusCode != 200 && resp.statusCode != 201) {
-      throw Exception('Stripe link failed: ${resp.statusCode} ${resp.body}');
+      throw Exception('Stripe session failed: ${resp.statusCode} ${resp.body}');
     }
     final payload = jsonDecode(resp.body) as Map<String, dynamic>;
     final url = payload['url'];
     if (url is! String || url.isEmpty) {
-      throw Exception('Stripe link missing URL');
+      throw Exception('Stripe session missing URL');
     }
     return url;
   }

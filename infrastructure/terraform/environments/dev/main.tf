@@ -726,6 +726,15 @@ resource "google_secret_manager_secret" "stripe_webhook_secret" {
   }
 }
 
+resource "google_secret_manager_secret" "stripe_publishable_key" {
+  project   = var.project_id
+  secret_id = "stripe-publishable-key"
+
+  replication {
+    auto {}
+  }
+}
+
 resource "google_secret_manager_secret" "twilio_account_sid" {
   project   = var.project_id
   secret_id = "twilio-account-sid"
@@ -939,6 +948,7 @@ resource "google_secret_manager_secret_iam_binding" "onboarding_secret_access" {
   for_each = {
     stripe_secret_key     = google_secret_manager_secret.stripe_secret_key.secret_id
     stripe_webhook_secret = google_secret_manager_secret.stripe_webhook_secret.secret_id
+    stripe_publishable_key = google_secret_manager_secret.stripe_publishable_key.secret_id
     twilio_account_sid    = google_secret_manager_secret.twilio_account_sid.secret_id
     google_maps_api_key   = google_secret_manager_secret.google_maps_api_key.secret_id
   }
@@ -1502,6 +1512,7 @@ module "onboarding_service" {
   secret_env_vars = merge({
     STRIPE_SECRET_KEY     = google_secret_manager_secret.stripe_secret_key.secret_id,
     STRIPE_WEBHOOK_SECRET = google_secret_manager_secret.stripe_webhook_secret.secret_id,
+    STRIPE_PUBLISHABLE_KEY = google_secret_manager_secret.stripe_publishable_key.secret_id,
     TWILIO_ACCOUNT_SID    = google_secret_manager_secret.twilio_account_sid.secret_id,
     TWILIO_AUTH_TOKEN     = "twilio-auth-token",
     GOOGLE_MAPS_API_KEY   = google_secret_manager_secret.google_maps_api_key.secret_id,

@@ -30,6 +30,7 @@ const PUBLIC_BASE_URL = process.env.PUBLIC_BASE_URL; // optional override for re
 const MAKE_PUBLIC = (process.env.MAKE_PUBLIC || 'true').toLowerCase() !== 'false';
 const STRIPE_SECRET_KEY = process.env.STRIPE_SECRET_KEY || '';
 const STRIPE_WEBHOOK_SECRET = process.env.STRIPE_WEBHOOK_SECRET || '';
+const STRIPE_PUBLISHABLE_KEY = process.env.STRIPE_PUBLISHABLE_KEY || '';
 const stripe = STRIPE_SECRET_KEY
   ? new Stripe(STRIPE_SECRET_KEY, { apiVersion: '2023-10-16' })
   : null;
@@ -340,7 +341,13 @@ app.use(
   }),
 );
 
-registerDeliveryPartnerStripeRoutes({ app, firestore, stripe });
+registerDeliveryPartnerStripeRoutes({
+  app,
+  firestore,
+  stripe,
+  publicBaseUrl: PUBLIC_BASE_URL,
+  stripePublishableKey: STRIPE_PUBLISHABLE_KEY,
+});
 // Dedicated raw parser for Pub/Sub push (accept any content-type)
 const pubsubRaw = bodyParser.raw({ type: '*/*' });
 

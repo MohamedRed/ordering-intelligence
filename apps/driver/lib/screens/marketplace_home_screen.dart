@@ -1,5 +1,4 @@
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -141,12 +140,7 @@ class _MarketplaceHomeScreenState extends State<MarketplaceHomeScreen> {
       await _onboardingApi.ensureStripeAccount(
         phone: phone.isEmpty ? null : phone,
       );
-      final returnUrl = kIsWeb ? Uri.base.toString() : null;
-      final refreshUrl = kIsWeb ? Uri.base.toString() : null;
-      final url = await _onboardingApi.createAccountLink(
-        returnUrl: returnUrl,
-        refreshUrl: refreshUrl,
-      );
+      final url = await _onboardingApi.createEmbeddedSessionUrl();
       final uri = Uri.parse(url);
       final launched = await launchUrl(
         uri,
