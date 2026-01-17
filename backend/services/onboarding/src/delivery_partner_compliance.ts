@@ -1,4 +1,4 @@
-import type express from 'express';
+import express from 'express';
 import { FieldValue, Firestore, Timestamp } from '@google-cloud/firestore';
 import type { Bucket } from '@google-cloud/storage';
 import multer from 'multer';

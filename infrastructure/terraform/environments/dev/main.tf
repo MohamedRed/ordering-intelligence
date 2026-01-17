@@ -1509,7 +1509,7 @@ module "onboarding_service" {
   project_id            = var.project_id
   location              = var.region
   service_name          = local.service_names.onboarding_service
-  image                 = "${local.image_registry_host}/${local.image_registry_project}/services/onboarding-service:latest"
+  image                 = "${local.image_registry_host}/${local.image_registry_project}/services/onboarding-service:64b0d87a"
   min_scale             = local.cloud_run_config.onboarding_service.min_scale
   max_scale             = local.cloud_run_config.onboarding_service.max_scale
   container_concurrency = local.cloud_run_config.onboarding_service.container_concurrency
@@ -1759,7 +1759,7 @@ module "dispatch_service" {
   project_id            = var.project_id
   location              = var.region
   service_name          = local.service_names.dispatch_service
-  image                 = "${local.image_registry_host}/${local.image_registry_project}/services/dispatch-service:latest"
+  image                 = "${local.image_registry_host}/${local.image_registry_project}/services/dispatch-service:64b0d87a"
   min_scale             = local.cloud_run_config.dispatch_service.min_scale
   max_scale             = local.cloud_run_config.dispatch_service.max_scale
   container_concurrency = local.cloud_run_config.dispatch_service.container_concurrency

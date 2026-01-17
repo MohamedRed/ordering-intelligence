@@ -3,10 +3,13 @@ steps:
     args:
       - "build"
       - "-t"
-      - "us-central1-docker.pkg.dev/$PROJECT_ID/services/dispatch-service:latest"
+      - "${_AR_HOST}/$PROJECT_ID/services/dispatch-service:${_TAG}"
       - "-f"
       - "backend/services/dispatch-service/Dockerfile"
       - "."
 images:
-  - "us-central1-docker.pkg.dev/$PROJECT_ID/services/dispatch-service:latest"
+  - "${_AR_HOST}/$PROJECT_ID/services/dispatch-service:${_TAG}"
 
+substitutions:
+  _AR_HOST: "europe-west1-docker.pkg.dev"
+  _TAG: "latest"
