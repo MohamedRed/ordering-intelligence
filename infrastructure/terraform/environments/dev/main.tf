@@ -80,6 +80,7 @@ locals {
   custom_domain_prefix = var.custom_domain_prefix != "" ? var.custom_domain_prefix : (
     var.environment_name == "prod" ? "" : "${var.environment_name}-"
   )
+  skip_onboarding_domain_mapping = true
 
   default_custom_domain_exclusions = concat(
     ["agent_tools", "agent_webhooks"],
@@ -102,11 +103,14 @@ locals {
     order_service = var.order_service_lb_managed_domains[0]
   } : {}
 
-  custom_service_domains = merge(
+  raw_custom_service_domains = merge(
     local.default_service_domains,
     var.custom_service_domain_overrides,
     local.order_service_domain_override
   )
+  custom_service_domains = local.skip_onboarding_domain_mapping
+    ? merge(local.raw_custom_service_domains, { onboarding_service = "" })
+    : local.raw_custom_service_domains
 
   service_urls = {
     for key, name in local.service_names :
