@@ -108,9 +108,9 @@ locals {
     var.custom_service_domain_overrides,
     local.order_service_domain_override
   )
-  custom_service_domains = local.skip_onboarding_domain_mapping
-    ? merge(local.raw_custom_service_domains, { onboarding_service = "" })
-    : local.raw_custom_service_domains
+  custom_service_domains = local.skip_onboarding_domain_mapping ? merge(local.raw_custom_service_domains, {
+    onboarding_service = ""
+  }) : local.raw_custom_service_domains
 
   service_urls = {
     for key, name in local.service_names :
