@@ -277,7 +277,7 @@ func deleteDraft(
 	groupOrderID string,
 ) {
 	docID := draftDocID(customerID, storeID, orderType, groupOrderID)
-	_ = client.Collection(orderDraftsCollection).Doc(docID).Delete(ctx)
+	_, _ = client.Collection(orderDraftsCollection).Doc(docID).Delete(ctx)
 }
 
 func draftPayloadHasData(payload webAppDraftPayload) bool {
