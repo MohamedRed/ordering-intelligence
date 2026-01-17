@@ -7,7 +7,8 @@ mixin MiniAppStateOrder
         MiniAppStateGas,
         MiniAppStatePayments,
         MiniAppStateDelivery,
-        MiniAppStateRecommendations {
+        MiniAppStateRecommendations,
+        MiniAppStateDrafts {
   Future<void> _placeOrder() async {
     final session = _session;
     if (session == null || session.storeId.isEmpty || _cart.isEmpty) {
@@ -49,6 +50,10 @@ mixin MiniAppStateOrder
         _notesController.clear();
         _resetDeliveryDraft();
       });
+      final scope = _currentDraftScope();
+      if (scope != null) {
+        await _clearDraft(scope);
+      }
       if (paymentMethod == 'card') {
         await _handleOrderPayment(orderResponse: result, session: session);
       }
@@ -76,6 +81,10 @@ mixin MiniAppStateOrder
         _resetFuelDraft();
       }
     });
+    final scope = _currentDraftScope();
+    if (scope != null) {
+      _clearDraft(scope);
+    }
   }
 
   Future<void> _handleOrderUpdates(String orderId) async {

@@ -1,6 +1,7 @@
 part of 'mini_app_screen.dart';
 
-mixin MiniAppStateGroupOrdersItems on State<MiniAppScreen>, MiniAppStateFields {
+mixin MiniAppStateGroupOrdersItems
+    on State<MiniAppScreen>, MiniAppStateFields, MiniAppStateDrafts {
   Future<void> _submitGroupOrderItems() async {
     final session = _session;
     final groupOrder = _groupOrder;
@@ -33,6 +34,10 @@ mixin MiniAppStateGroupOrdersItems on State<MiniAppScreen>, MiniAppStateFields {
         _cart = [];
         _notesController.clear();
       });
+      final scope = _currentDraftScope();
+      if (scope != null) {
+        await _clearDraft(scope);
+      }
       Navigator.of(context).maybePop();
     } catch (e) {
       if (!mounted) return;

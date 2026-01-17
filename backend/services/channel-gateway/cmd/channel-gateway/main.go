@@ -43,6 +43,7 @@ const (
 	tvSessionsCollection      = "tv_sessions"
 	storesCollection          = "stores"
 	tenantsCollection         = "tenants"
+	orderDraftsCollection     = "order_drafts"
 )
 
 type serviceConfig struct {

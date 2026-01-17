@@ -5,7 +5,8 @@ mixin MiniAppStateGroupOrdersActions
         State<MiniAppScreen>,
         MiniAppStateFields,
         MiniAppStateMenu,
-        MiniAppStateRecommendations {
+        MiniAppStateRecommendations,
+        MiniAppStateDrafts {
   Future<void> _createGroupOrder() async {
     final session = _session;
     if (session == null || session.storeId.isEmpty) return;
@@ -35,6 +36,7 @@ mixin MiniAppStateGroupOrdersActions
         _latestInviteId = null;
         _groupOrderBusy = false;
       });
+      await _loadDraftIfAvailable();
     } catch (e) {
       if (!mounted) return;
       setState(() {

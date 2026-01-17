@@ -6,7 +6,8 @@ mixin MiniAppStateGroupOrdersEntry
         MiniAppStateFields,
         MiniAppStateMenu,
         MiniAppStateGroupOrdersActions,
-        MiniAppStateGroupOrdersHydrate {
+        MiniAppStateGroupOrdersHydrate,
+        MiniAppStateDrafts {
   Future<bool> _maybeJoinGroupOrderFromUrl() async {
     final inviteId = _pendingInviteId;
     if (inviteId == null || inviteId.isEmpty) {
@@ -52,6 +53,7 @@ mixin MiniAppStateGroupOrdersEntry
         _groupOrderBusy = false;
       });
       await _hydrateGroupOrderStore(joined.storeId);
+      await _loadDraftIfAvailable();
       return true;
     } catch (e) {
       if (!mounted) return false;

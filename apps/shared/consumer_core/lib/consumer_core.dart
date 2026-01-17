@@ -4,6 +4,7 @@ export 'models/cart_models.dart';
 export 'models/chat_models.dart';
 export 'models/customer_profile.dart';
 export 'models/delivery_models.dart';
+export 'models/draft_order.dart';
 export 'models/fuel_order.dart';
 export 'models/group_order_allocation.dart';
 export 'models/group_order_checkout_response.dart';
@@ -32,6 +33,7 @@ export 'models/store_models.dart';
 export 'services/channel_gateway_api.dart';
 
 export 'logic/cart_logic.dart';
+export 'logic/draft_order_logic.dart';
 export 'logic/reorder_logic.dart';
 
 export 'adapters/auth_adapter.dart';

@@ -48,6 +48,15 @@ func registerWebAppRoutes(
 		r.Post("/chat/turn", func(w http.ResponseWriter, req *http.Request) {
 			handleWebAppChatTurn(w, req, cfg, firestoreClient, manager)
 		})
+		r.Get("/drafts", func(w http.ResponseWriter, req *http.Request) {
+			handleWebAppDraftGet(w, req, cfg, firestoreClient)
+		})
+		r.Put("/drafts", func(w http.ResponseWriter, req *http.Request) {
+			handleWebAppDraftUpsert(w, req, cfg, firestoreClient)
+		})
+		r.Delete("/drafts", func(w http.ResponseWriter, req *http.Request) {
+			handleWebAppDraftDelete(w, req, cfg, firestoreClient)
+		})
 		r.Post("/orders", func(w http.ResponseWriter, req *http.Request) {
 			handleWebAppOrderCreate(w, req, cfg, firestoreClient, orderHTTPClient, paymentsHTTPClient)
 		})

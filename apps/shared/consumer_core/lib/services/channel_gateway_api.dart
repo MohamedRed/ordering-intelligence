@@ -8,6 +8,7 @@ import '../models/cart_models.dart';
 import '../models/chat_models.dart';
 import '../models/customer_profile.dart';
 import '../models/delivery_models.dart';
+import '../models/draft_order.dart';
 import '../models/group_order_checkout_response.dart';
 import '../models/group_order_invite.dart';
 import '../models/group_order_session.dart';
@@ -30,6 +31,7 @@ part 'channel_gateway_api_recommendations.dart';
 part 'channel_gateway_api_order_updates.dart';
 part 'channel_gateway_api_chat.dart';
 part 'channel_gateway_api_chat_decode.dart';
+part 'channel_gateway_api_drafts.dart';
 part 'channel_gateway_api_group_orders_read.dart';
 part 'channel_gateway_api_group_orders_utils.dart';
 part 'channel_gateway_api_group_orders_write.dart';
@@ -76,6 +78,7 @@ class ChannelGatewayApi extends ChannelGatewayApiBase
         ChannelGatewayRecommendationsApi,
         ChannelGatewayOrderUpdatesApi,
         ChannelGatewayChatApi,
+        ChannelGatewayDraftsApi,
         ChannelGatewayIdentityApi,
         ChannelGatewayNotificationsApi,
         ChannelGatewayGroupOrdersReadApi,

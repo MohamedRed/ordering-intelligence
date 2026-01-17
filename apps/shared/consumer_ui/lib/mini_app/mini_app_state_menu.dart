@@ -1,6 +1,7 @@
 part of 'mini_app_screen.dart';
 
-mixin MiniAppStateMenu on State<MiniAppScreen>, MiniAppStateFields {
+mixin MiniAppStateMenu
+    on State<MiniAppScreen>, MiniAppStateFields, MiniAppStateDrafts {
   Future<void> _loadMenu(String storeId) async {
     setState(() {
       _loadingMenu = true;
@@ -27,6 +28,7 @@ mixin MiniAppStateMenu on State<MiniAppScreen>, MiniAppStateFields {
         _activeCategory = active;
         _loadingMenu = false;
       });
+      await _loadDraftIfAvailable();
     } catch (e) {
       if (!mounted) {
         return;

@@ -9,7 +9,8 @@ mixin MiniAppStateLifecycle
         MiniAppStateGroupOrdersEntry,
         MiniAppStateMenu,
         MiniAppStateChatState,
-        MiniAppStateDelivery {
+        MiniAppStateDelivery,
+        MiniAppStateDrafts {
   @override
   void initState() {
     _platform = widget.platform;
@@ -22,6 +23,7 @@ mixin MiniAppStateLifecycle
     _pendingLinkToken = _launchContext.linkToken;
     _pendingStartGroupOrder = _launchContext.startGroupOrder;
     _searchController.addListener(_onSearchChanged);
+    _initDraftObservers();
     super.initState();
     _bootstrap();
   }
@@ -31,6 +33,7 @@ mixin MiniAppStateLifecycle
     _searchDebounce?.cancel();
     _searchController.dispose();
     _notesController.dispose();
+    _disposeDraftObservers();
     super.dispose();
   }
 

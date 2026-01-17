@@ -25,6 +25,7 @@ mixin MiniAppStateReorders
       _cart = result.cart;
     });
     _cartSheetSetState?.call(() {});
+    _onDraftRelevantChange();
     if (!mounted) return;
     if (added > 0) {
       ScaffoldMessenger.of(context).showSnackBar(

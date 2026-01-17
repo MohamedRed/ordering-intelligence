@@ -52,6 +52,7 @@ part 'mini_app_state_group_orders_items.dart';
 part 'mini_app_state_group_orders_checkout.dart';
 part 'mini_app_state_group_orders_share.dart';
 part 'mini_app_state_group_orders_view.dart';
+part 'mini_app_state_drafts.dart';
 part 'mini_app_state_chat.dart';
 part 'mini_app_state_chat_actions.dart';
 part 'mini_app_state_chat_comms.dart';
@@ -116,6 +117,7 @@ class _MiniAppScreenState extends State<MiniAppScreen>
         MiniAppStateGroupOrdersHydrate,
         MiniAppStateGroupOrdersEntry,
         MiniAppStateGroupOrdersView,
+        MiniAppStateDrafts,
         MiniAppStateChatState,
         MiniAppStateStore,
         MiniAppStateSearch,

@@ -8,7 +8,8 @@ mixin MiniAppStateStore
         MiniAppStateMenu,
         MiniAppStateIdentity,
         MiniAppStateDelivery,
-        MiniAppStateGroupOrdersActions {
+        MiniAppStateGroupOrdersActions,
+        MiniAppStateDrafts {
   Future<void> _selectStore(StoreChoice store) async {
     final session = _session;
     if (session == null) {
@@ -19,6 +20,7 @@ mixin MiniAppStateStore
       _storeSearchSeeded = false;
       _needsStoreIntro = true;
       _needsHomePrompt = false;
+      _resetDraftContext();
       _menu = null;
       _menuError = null;
       _loadingMenu = true;
@@ -104,6 +106,7 @@ mixin MiniAppStateStore
       _pendingStartGroupOrder = false;
       _needsStoreIntro = false;
       _needsHomePrompt = true;
+      _resetDraftContext();
       final nextSession = SessionInfo(
         sessionId: session.sessionId,
         accountId: session.accountId,

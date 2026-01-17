@@ -38,6 +38,7 @@ mixin MiniAppStateCart
       _cart = CartLogic.addItem(_cart, newItem);
     });
     _cartSheetSetState?.call(() {});
+    _onDraftRelevantChange();
   }
 
   void _updateCartQuantity(CartItem item, int delta) {
@@ -46,5 +47,6 @@ mixin MiniAppStateCart
       _cart = CartLogic.updateQuantity(_cart, item, delta);
     });
     _cartSheetSetState?.call(() {});
+    _onDraftRelevantChange();
   }
 }

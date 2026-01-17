@@ -1,6 +1,7 @@
 part of 'mini_app_screen.dart';
 
-mixin MiniAppStateDelivery on State<MiniAppScreen>, MiniAppStateFields {
+mixin MiniAppStateDelivery
+    on State<MiniAppScreen>, MiniAppStateFields {
   final TextEditingController _deliveryAddressController =
       TextEditingController();
   final TextEditingController _deliveryInstructionsController =
@@ -32,6 +33,7 @@ mixin MiniAppStateDelivery on State<MiniAppScreen>, MiniAppStateFields {
     });
     _collapseContextAfterSelection();
     _cartSheetSetState?.call(() {});
+    _onDraftRelevantChange();
     if (!enabled) {
       _deliveryPrewarmDebounce?.cancel();
     } else {
@@ -98,8 +100,10 @@ mixin MiniAppStateDelivery on State<MiniAppScreen>, MiniAppStateFields {
         _deliveryError = null;
       });
       _cartSheetSetState?.call(() {});
+      _onDraftRelevantChange();
       return;
     }
+    _onDraftRelevantChange();
     _scheduleDeliveryPrewarm(query);
   }
 

@@ -80,4 +80,6 @@ mixin MiniAppStateFields on State<MiniAppScreen> {
   void _setPendingMenuViewMode(MenuViewMode mode) {
     _pendingMenuViewMode = mode;
   }
+
+  void _onDraftRelevantChange() {}
 }
