@@ -1,0 +1,39 @@
+.footer {
+  padding: 40px 0 60px;
+  border-top: 1px solid var(--border);
+  background: #0a0a0c;
+}
+
+.footer-inner {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  align-items: flex-start;
+}
+
+.footer-brand img {
+  width: 90px;
+}
+
+.footer-links {
+  display: flex;
+  gap: 16px;
+  color: var(--text-muted);
+}
+
+.footer-links button:hover {
+  color: var(--text);
+}
+
+.footer-meta {
+  color: var(--text-muted);
+  font-size: 0.85rem;
+}
+
+@media (min-width: 900px) {
+  .footer-inner {
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+  }
+}

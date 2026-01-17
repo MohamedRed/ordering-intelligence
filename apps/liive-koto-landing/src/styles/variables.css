@@ -1,0 +1,24 @@
+:root {
+  color-scheme: dark;
+  --font-display: 'Space Grotesk', 'Helvetica Neue', Arial, sans-serif;
+  --font-body: 'DM Sans', 'Helvetica Neue', Arial, sans-serif;
+  --bg: #0b0b0d;
+  --surface: #121214;
+  --surface-soft: #1a1a1f;
+  --surface-strong: #1f1f26;
+  --text: #f5f4f3;
+  --text-muted: #9c9cab;
+  --accent: #ff2f2f;
+  --accent-bright: #ff6b6b;
+  --border: rgba(255, 255, 255, 0.08);
+  --shadow: 0 30px 70px rgba(0, 0, 0, 0.45);
+  --radius-lg: 26px;
+  --radius-md: 16px;
+  --section-space: 120px;
+}
+
+@media (max-width: 900px) {
+  :root {
+    --section-space: 80px;
+  }
+}
