@@ -1,10 +1,15 @@
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:url_launcher/url_launcher.dart';
 
+import '../models/delivery_partner_stripe_status.dart';
 import '../models/marketplace_offer.dart';
+import '../services/delivery_partner_onboarding_api.dart';
 import '../services/fcm_token_manager.dart';
 import '../services/location_service.dart';
 import '../services/marketplace_api.dart';
+import '../services/store_prefs.dart';
 
 class MarketplaceHomeScreen extends StatefulWidget {
   const MarketplaceHomeScreen({super.key});
@@ -15,6 +20,7 @@ class MarketplaceHomeScreen extends StatefulWidget {
 
 class _MarketplaceHomeScreenState extends State<MarketplaceHomeScreen> {
   late MarketplaceDispatchApi _api;
+  late DeliveryPartnerOnboardingApi _onboardingApi;
   late LocationService _locationService;
   final _latCtrl = TextEditingController();
   final _lngCtrl = TextEditingController();
@@ -25,6 +31,7 @@ class _MarketplaceHomeScreenState extends State<MarketplaceHomeScreen> {
   bool _busy = false;
   String? _error;
   List<MarketplaceOffer> _offers = const [];
+  DeliveryPartnerStripeStatus? _stripeStatus;
   DateTime? _lastRefreshAt;
   double? _lastLat;
   double? _lastLng;
@@ -35,6 +42,7 @@ class _MarketplaceHomeScreenState extends State<MarketplaceHomeScreen> {
   void initState() {
     super.initState();
     _api = MarketplaceDispatchApi();
+    _onboardingApi = DeliveryPartnerOnboardingApi();
     _locationService = LocationService(
       api: _api,
       onPosition: (pos) {
@@ -56,6 +64,7 @@ class _MarketplaceHomeScreenState extends State<MarketplaceHomeScreen> {
     );
     _initFcm();
     _refreshOffers();
+    _loadStripeStatus();
   }
 
   Future<void> _initFcm() async {
@@ -94,6 +103,17 @@ class _MarketplaceHomeScreenState extends State<MarketplaceHomeScreen> {
     }
   }
 
+  Future<void> _loadStripeStatus() async {
+    try {
+      final status = await _onboardingApi.fetchStripeStatus();
+      if (!mounted) return;
+      setState(() => _stripeStatus = status);
+    } catch (e) {
+      if (!mounted) return;
+      setState(() => _error = e.toString());
+    }
+  }
+
   Future<void> _setAvailability(bool value) async {
     setState(() {
       _busy = true;
@@ -103,6 +123,38 @@ class _MarketplaceHomeScreenState extends State<MarketplaceHomeScreen> {
       await _api.setAvailability(value);
       if (!mounted) return;
       setState(() => _available = value);
+    } catch (e) {
+      if (!mounted) return;
+      setState(() => _error = e.toString());
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
+  }
+
+  Future<void> _startStripeOnboarding() async {
+    setState(() {
+      _busy = true;
+      _error = null;
+    });
+    try {
+      final phone = StorePrefs.instance.phone();
+      await _onboardingApi.ensureStripeAccount(
+        phone: phone.isEmpty ? null : phone,
+      );
+      final returnUrl = kIsWeb ? Uri.base.toString() : null;
+      final refreshUrl = kIsWeb ? Uri.base.toString() : null;
+      final url = await _onboardingApi.createAccountLink(
+        returnUrl: returnUrl,
+        refreshUrl: refreshUrl,
+      );
+      final uri = Uri.parse(url);
+      final launched = await launchUrl(
+        uri,
+        mode: LaunchMode.externalApplication,
+      );
+      if (!launched) {
+        throw Exception('Unable to open Stripe onboarding');
+      }
     } catch (e) {
       if (!mounted) return;
       setState(() => _error = e.toString());
@@ -183,6 +235,58 @@ class _MarketplaceHomeScreenState extends State<MarketplaceHomeScreen> {
     }
   }
 
+  Widget _buildStripeCard() {
+    final status = _stripeStatus;
+    final ready = status != null && status.payoutsEnabled && status.detailsSubmitted;
+    final missingCount = status == null
+        ? 0
+        : status.currentlyDue.length +
+            status.pendingVerification.length +
+            status.pastDue.length;
+    final title = ready ? 'Payouts enabled' : 'Complete payout setup';
+    final subtitle = status == null
+        ? 'Connect a Stripe Express account to receive payouts.'
+        : ready
+            ? 'You can receive payouts for completed deliveries.'
+            : 'Stripe needs more details to enable payouts.';
+    final statusLine = status == null
+        ? 'Status: not started'
+        : 'Status: ${status.status.isEmpty ? 'pending' : status.status}';
+    final actionLabel = ready ? 'Update details' : 'Start setup';
+
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(12),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(title, style: Theme.of(context).textTheme.titleMedium),
+            const SizedBox(height: 6),
+            Text(subtitle),
+            const SizedBox(height: 6),
+            Text(statusLine),
+            if (missingCount > 0)
+              Text('Requirements due: $missingCount'),
+            const SizedBox(height: 12),
+            Row(
+              children: [
+                ElevatedButton(
+                  onPressed: _busy ? null : _startStripeOnboarding,
+                  child: Text(actionLabel),
+                ),
+                const SizedBox(width: 12),
+                TextButton(
+                  onPressed: _busy ? null : _loadStripeStatus,
+                  child: const Text('Refresh status'),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final uid = FirebaseAuth.instance.currentUser?.uid ?? '';
@@ -191,7 +295,12 @@ class _MarketplaceHomeScreenState extends State<MarketplaceHomeScreen> {
         title: const Text('Marketplace courier'),
         actions: [
           IconButton(
-            onPressed: _busy ? null : _refreshOffers,
+            onPressed: _busy
+                ? null
+                : () {
+                    _refreshOffers();
+                    _loadStripeStatus();
+                  },
             icon: const Icon(Icons.refresh),
           ),
           IconButton(
@@ -259,6 +368,9 @@ class _MarketplaceHomeScreenState extends State<MarketplaceHomeScreen> {
           ],
           if (_lastSentAt != null)
             Text('Last sent: ${_lastSentAt!.toIso8601String()}'),
+          const SizedBox(height: 16),
+          _sectionTitle('Payout setup'),
+          _buildStripeCard(),
           const SizedBox(height: 16),
           _sectionTitle('Offers'),
           if (_lastRefreshAt != null)

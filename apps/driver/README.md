@@ -6,6 +6,7 @@ Driver-facing Flutter app for owned-fleet dispatch.
 
 - Phone auth (Firebase).
 - Claim driver record by phone number.
+- Marketplace courier mode with Stripe Express payout onboarding.
 - Shift start/pause/end.
 - Manual and auto location updates (foreground).
 - Accept/decline assignments.

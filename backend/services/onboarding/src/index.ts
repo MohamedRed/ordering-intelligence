@@ -12,6 +12,10 @@ import { v4 as uuidv4 } from 'uuid';
 import Stripe from 'stripe';
 import { VertexAI } from '@google-cloud/vertexai';
 import fetch from 'node-fetch';
+import {
+  registerDeliveryPartnerStripeRoutes,
+  upsertDeliveryPartnerStripeFromAccount,
+} from './delivery_partner_stripe.js';
 
 const app = express();
 const upload = multer({ storage: multer.memoryStorage() });
@@ -335,6 +339,8 @@ app.use(
     origin: CORS_ORIGINS.includes('*') ? true : CORS_ORIGINS,
   }),
 );
+
+registerDeliveryPartnerStripeRoutes({ app, firestore, stripe });
 // Dedicated raw parser for Pub/Sub push (accept any content-type)
 const pubsubRaw = bodyParser.raw({ type: '*/*' });
 
@@ -1497,6 +1503,11 @@ app.post('/stripe/webhook', express.raw({ type: 'application/json' }), async (re
           status,
           enriched: Boolean(tz.timezone),
         });
+      }
+      try {
+        await upsertDeliveryPartnerStripeFromAccount(firestore, acct);
+      } catch (err) {
+        console.error('delivery partner stripe webhook update failed', err);
       }
     }
     console.log('stripe event', event.type);
