@@ -115,8 +115,14 @@ jobs:
       - name: Run driver onboarding flow test
         run: node tests/integration/driver_onboarding.mjs
 
+      - name: Run driver compliance upload test
+        run: node tests/integration/driver_compliance_upload.mjs
+
       - name: Run business onboarding flow test
         run: node tests/integration/business_onboarding.mjs
+
+      - name: Run merchant onboarding finalize test
+        run: node tests/integration/merchant_onboarding_finalize.mjs
 
       - name: Run order flow test
         run: node tests/integration/order_flow.mjs
