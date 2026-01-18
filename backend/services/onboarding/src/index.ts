@@ -335,7 +335,13 @@ function extractBucketKeyFromUrl(url: string): { bucket?: string; key?: string }
   return {};
 }
 
-app.use(express.json());
+const jsonParser = express.json();
+app.use((req, res, next) => {
+  if (req.path === '/stripe/webhook' || req.path === '/ingest-pubsub' || req.path === '/') {
+    return next();
+  }
+  return jsonParser(req, res, next);
+});
 app.use(morgan('tiny'));
 app.use(
   cors({
