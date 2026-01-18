@@ -7,6 +7,8 @@ export interface PaymentsConfig {
   STRIPE_SECRET_KEY?: string;
   STRIPE_PUBLISHABLE_KEY?: string;
   STRIPE_WEBHOOK_SECRET?: string;
+  STRIPE_WEBHOOK_ALLOWED_EVENTS?: string;
+  STRIPE_WEBHOOK_REQUIRE_UA?: string;
   ORDER_SERVICE_URL?: string;
   NOTIFICATION_SERVICE_URL?: string;
 }
@@ -21,6 +23,8 @@ export function getConfig(): PaymentsConfig {
     STRIPE_SECRET_KEY: (process.env.STRIPE_SECRET_KEY || "").toString(),
     STRIPE_PUBLISHABLE_KEY: (process.env.STRIPE_PUBLISHABLE_KEY || cfg.STRIPE_PUBLISHABLE_KEY || "").toString(),
     STRIPE_WEBHOOK_SECRET: (process.env.STRIPE_WEBHOOK_SECRET || "").toString(),
+    STRIPE_WEBHOOK_ALLOWED_EVENTS: (process.env.STRIPE_WEBHOOK_ALLOWED_EVENTS || cfg.STRIPE_WEBHOOK_ALLOWED_EVENTS || "").toString(),
+    STRIPE_WEBHOOK_REQUIRE_UA: (process.env.STRIPE_WEBHOOK_REQUIRE_UA || cfg.STRIPE_WEBHOOK_REQUIRE_UA || "").toString(),
     ORDER_SERVICE_URL: (process.env.ORDER_SERVICE_URL || cfg.ORDER_SERVICE_URL || "").toString(),
     NOTIFICATION_SERVICE_URL: (process.env.NOTIFICATION_SERVICE_URL || cfg.NOTIFICATION_SERVICE_URL || "").toString()
   };

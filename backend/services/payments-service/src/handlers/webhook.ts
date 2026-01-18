@@ -14,12 +14,23 @@ export async function handleWebhook(
   stripe: Stripe,
   webhookSecret: string,
   orderServiceUrl?: string,
-  notificationServiceUrl?: string
+  notificationServiceUrl?: string,
+  options?: {
+    allowedEvents?: string[];
+    requireStripeUserAgent?: boolean;
+  }
 ) {
   const sig = req.headers["stripe-signature"] as string | undefined;
   if (!sig || !webhookSecret) {
     res.status(400).send("missing_signature");
     return;
+  }
+  if (options?.requireStripeUserAgent) {
+    const userAgent = String(req.headers["user-agent"] || "");
+    if (!userAgent.toLowerCase().includes("stripe")) {
+      res.status(400).send("invalid_user_agent");
+      return;
+    }
   }
   let event: Stripe.Event;
   try {
@@ -27,6 +38,13 @@ export async function handleWebhook(
   } catch (err) {
     res.status(400).send("invalid_signature");
     return;
+  }
+  if (options?.allowedEvents && options.allowedEvents.length > 0) {
+    if (!options.allowedEvents.includes(event.type)) {
+      console.warn("stripe webhook ignored", { type: event.type });
+      res.status(200).json({ received: true, ignored: true });
+      return;
+    }
   }
 
   if (event.type === "checkout.session.completed") {

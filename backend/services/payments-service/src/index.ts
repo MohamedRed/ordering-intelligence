@@ -99,7 +99,13 @@ app.post("/group-orders/:groupOrderId/refund", express.json(), (req, res) =>
   handleGroupOrderRefund(req, res, firestore, stripe)
 );
 
-app.post("/webhooks/stripe", express.raw({ type: "application/json" }), (req, res) =>
+const allowedWebhookEvents = config.STRIPE_WEBHOOK_ALLOWED_EVENTS
+  ? config.STRIPE_WEBHOOK_ALLOWED_EVENTS.split(",").map((event) => event.trim()).filter(Boolean)
+  : [];
+const requireStripeUserAgent =
+  (config.STRIPE_WEBHOOK_REQUIRE_UA || "").toLowerCase() === "true";
+
+app.post("/webhooks/stripe", express.raw({ type: "application/json", limit: "1mb" }), (req, res) =>
   handleWebhook(
     req,
     res,
@@ -107,7 +113,11 @@ app.post("/webhooks/stripe", express.raw({ type: "application/json" }), (req, re
     stripe,
     config.STRIPE_WEBHOOK_SECRET || "",
     config.ORDER_SERVICE_URL,
-    config.NOTIFICATION_SERVICE_URL
+    config.NOTIFICATION_SERVICE_URL,
+    {
+      allowedEvents: allowedWebhookEvents,
+      requireStripeUserAgent
+    }
   )
 );
 
