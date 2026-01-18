@@ -20,6 +20,7 @@ jobs:
       DISPATCH_SERVICE_BASE_URL: https://dev-dispatch-service.liive.app
       DELIVERY_SERVICE_BASE_URL: https://dev-delivery-service.liive.app
       PAYMENTS_SERVICE_BASE_URL: https://dev-payments-service.liive.app
+      INTERNAL_DELIVERER_ID: ${{ secrets.GCP_SERVICE_ACCOUNT_LIIVE_DEV }}
     steps:
       - uses: actions/checkout@v4
 
@@ -129,8 +130,14 @@ jobs:
       - name: Run delivery dispatch test
         run: node tests/integration/delivery_dispatch.mjs
 
+      - name: Run delivery quote test
+        run: node tests/integration/delivery_quote.mjs
+
       - name: Run marketplace status update test
         run: node tests/integration/marketplace_status.mjs
+
+      - name: Run marketplace offer accept test
+        run: node tests/integration/marketplace_offer_accept.mjs
 
       - name: Run payments setup intent test
         run: node tests/integration/payments_setup_intent.mjs
