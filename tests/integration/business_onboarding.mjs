@@ -1,5 +1,8 @@
+import { patchFirestoreDoc } from './lib/firestore_admin.mjs';
+
 const DEFAULT_TIMEOUT_MS = 20000;
 const baseUrl = process.env.ONBOARDING_BASE_URL;
+const projectId = process.env.FIREBASE_PROJECT_ID || process.env.GOOGLE_CLOUD_PROJECT || '';
 const suffix = (process.env.FIRESTORE_SUFFIX || 'ci').trim();
 const tenantId = `test-tenant-${suffix}`;
 const storeId = `test-store-${suffix}`;
@@ -69,6 +72,18 @@ const run = async () => {
     throw new Error('stripe account missing account_id');
   }
   console.log(`✓ stripe account ok (${accountData.account_id})`);
+
+  if (projectId) {
+    await patchFirestoreDoc({
+      projectId,
+      documentPath: `tenants/${tenantId}`,
+      fields: {
+        stripe_account_id: accountData.account_id,
+        stripeAccountId: accountData.account_id
+      }
+    });
+    console.log('✓ tenant stripe account updated');
+  }
 
   const { res: sessionStripeRes, data: sessionStripeData } = await fetchJson(
     `${apiBase}/stripe/account-session`,

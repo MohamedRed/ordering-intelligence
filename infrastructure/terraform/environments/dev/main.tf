@@ -1427,6 +1427,7 @@ module "order_service" {
     INTERNAL_AUTH_AUDIENCE = local.service_urls.order_service
     INTERNAL_ALLOWED_EMAILS = join(",", [
       module.agent_tools_sa.email,
+      module.payments_service_sa.email,
       module.dispatch_service_sa.email,
       module.delivery_service_sa.email,
       module.channel_gateway_sa.email,

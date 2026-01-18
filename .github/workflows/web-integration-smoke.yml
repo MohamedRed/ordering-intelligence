@@ -19,6 +19,7 @@ jobs:
       ORDER_SERVICE_BASE_URL: https://dev-order-service.liive.app
       DISPATCH_SERVICE_BASE_URL: https://dev-dispatch-service.liive.app
       DELIVERY_SERVICE_BASE_URL: https://dev-delivery-service.liive.app
+      PAYMENTS_SERVICE_BASE_URL: https://dev-payments-service.liive.app
     steps:
       - uses: actions/checkout@v4
 
@@ -127,6 +128,15 @@ jobs:
 
       - name: Run delivery dispatch test
         run: node tests/integration/delivery_dispatch.mjs
+
+      - name: Run marketplace status update test
+        run: node tests/integration/marketplace_status.mjs
+
+      - name: Run payments setup intent test
+        run: node tests/integration/payments_setup_intent.mjs
+
+      - name: Run payments refund test
+        run: node tests/integration/payments_refund.mjs
 
       - name: Upload UI artifacts
         if: always()
