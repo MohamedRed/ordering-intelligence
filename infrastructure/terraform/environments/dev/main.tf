@@ -2317,6 +2317,16 @@ resource "google_cloud_run_service_iam_member" "payments_service_channel_gateway
   depends_on = [module.payments_service, module.channel_gateway_sa]
 }
 
+resource "google_cloud_run_service_iam_member" "payments_service_public" {
+  project  = var.project_id
+  location = var.region
+  service  = local.service_names.payments_service
+  role     = "roles/run.invoker"
+  member   = "allUsers"
+
+  depends_on = [module.payments_service]
+}
+
 resource "google_cloud_run_service_iam_member" "channel_comms_orders_events_invoker" {
   project  = var.project_id
   location = var.region
