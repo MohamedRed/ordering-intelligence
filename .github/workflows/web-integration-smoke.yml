@@ -15,6 +15,7 @@ jobs:
       FIREBASE_PROJECT_ID: liive-dev
       FIRESTORE_SUFFIX: ci
       CHANNEL_GATEWAY_BASE_URL: ${{ secrets.CHANNEL_GATEWAY_BASE_URL_LIIVE_DEV }}
+      ONBOARDING_BASE_URL: https://dev-onboarding-service.liive.app
     steps:
       - uses: actions/checkout@v4
 
@@ -105,6 +106,9 @@ jobs:
 
       - name: Run UI flow tests
         run: node tests/integration/ui_flow.mjs
+
+      - name: Run driver onboarding flow test
+        run: node tests/integration/driver_onboarding.mjs
 
       - name: Upload UI artifacts
         if: always()

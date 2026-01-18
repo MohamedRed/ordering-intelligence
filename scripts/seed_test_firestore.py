@@ -392,6 +392,24 @@ def main():
         }
     ]
 
+    marketplace_deliverers = [
+        {
+            "id": f"test-deliverer-{suffix}",
+            "fields": {
+                "delivererId": f"test-deliverer-{suffix}",
+                "displayName": "Test Deliverer",
+                "phoneE164": "+33123450001",
+                "status": "available",
+                "active": True,
+                "available": True,
+                "createdAt": now - dt.timedelta(days=1),
+                "updatedAt": now,
+                "is_test": True,
+                "test_tag": suffix,
+            },
+        }
+    ]
+
     for store in stores:
         _patch_doc(base_url, token, "stores", store["id"], store["fields"])
 
@@ -418,6 +436,9 @@ def main():
 
     for driver in driver_docs:
         _patch_doc(base_url, token, driver["collection"], driver["id"], driver["fields"])
+
+    for deliverer in marketplace_deliverers:
+        _patch_doc(base_url, token, "marketplace_deliverers", deliverer["id"], deliverer["fields"])
 
     print(f"Seeded test data in project {project} (suffix={suffix}).")
 
