@@ -1532,6 +1532,11 @@ module "payments_service" {
     FIREBASE_PROJECT_ID      = var.project_id
     ORDER_SERVICE_URL        = local.service_urls.order_service
     NOTIFICATION_SERVICE_URL = local.service_urls.notification_service
+    INTERNAL_AUTH_AUDIENCE   = local.service_urls.payments_service
+    INTERNAL_ALLOWED_EMAILS  = join(",", [
+      module.agent_tools_sa.email,
+      module.github_ci_sa.email,
+    ])
     STRIPE_WEBHOOK_ALLOWED_EVENTS = "checkout.session.completed,checkout.session.expired,payment_intent.succeeded,payment_intent.payment_failed,setup_intent.succeeded"
   }, lookup(local.cloud_run_config.payments_service, "env_overrides", {}))
   secret_env_vars = merge({

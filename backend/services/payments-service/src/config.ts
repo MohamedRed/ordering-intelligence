@@ -10,6 +10,8 @@ export interface PaymentsConfig {
   STRIPE_WEBHOOK_ALLOWED_EVENTS?: string;
   ORDER_SERVICE_URL?: string;
   NOTIFICATION_SERVICE_URL?: string;
+  INTERNAL_AUTH_AUDIENCE?: string;
+  INTERNAL_ALLOWED_EMAILS?: string;
 }
 
 export function getConfig(): PaymentsConfig {
@@ -24,6 +26,8 @@ export function getConfig(): PaymentsConfig {
     STRIPE_WEBHOOK_SECRET: (process.env.STRIPE_WEBHOOK_SECRET || "").toString(),
     STRIPE_WEBHOOK_ALLOWED_EVENTS: (process.env.STRIPE_WEBHOOK_ALLOWED_EVENTS || cfg.STRIPE_WEBHOOK_ALLOWED_EVENTS || "").toString(),
     ORDER_SERVICE_URL: (process.env.ORDER_SERVICE_URL || cfg.ORDER_SERVICE_URL || "").toString(),
-    NOTIFICATION_SERVICE_URL: (process.env.NOTIFICATION_SERVICE_URL || cfg.NOTIFICATION_SERVICE_URL || "").toString()
+    NOTIFICATION_SERVICE_URL: (process.env.NOTIFICATION_SERVICE_URL || cfg.NOTIFICATION_SERVICE_URL || "").toString(),
+    INTERNAL_AUTH_AUDIENCE: (process.env.INTERNAL_AUTH_AUDIENCE || cfg.INTERNAL_AUTH_AUDIENCE || "").toString(),
+    INTERNAL_ALLOWED_EMAILS: (process.env.INTERNAL_ALLOWED_EMAILS || cfg.INTERNAL_ALLOWED_EMAILS || "").toString()
   };
 }

@@ -20,6 +20,7 @@ jobs:
       DISPATCH_SERVICE_BASE_URL: https://dev-dispatch-service.liive.app
       DELIVERY_SERVICE_BASE_URL: https://dev-delivery-service.liive.app
       PAYMENTS_SERVICE_BASE_URL: https://dev-payments-service.liive.app
+      NOTIFICATION_SERVICE_BASE_URL: https://dev-notification-service.liive.app
       INTERNAL_DELIVERER_ID: ${{ secrets.GCP_SERVICE_ACCOUNT_LIIVE_DEV }}
     steps:
       - uses: actions/checkout@v4
@@ -124,6 +125,12 @@ jobs:
       - name: Run merchant onboarding finalize test
         run: node tests/integration/merchant_onboarding_finalize.mjs
 
+      - name: Run onboarding agent create test
+        run: node tests/integration/onboarding_agent_create.mjs
+
+      - name: Run mobile session auth test
+        run: node tests/integration/mobile_session_start.mjs
+
       - name: Run order flow test
         run: node tests/integration/order_flow.mjs
 
@@ -159,6 +166,12 @@ jobs:
 
       - name: Run payments refund test
         run: node tests/integration/payments_refund.mjs
+
+      - name: Run payments webhook test
+        run: node tests/integration/payments_webhook.mjs
+
+      - name: Run notification events test
+        run: node tests/integration/notifications_events.mjs
 
       - name: Upload UI artifacts
         if: always()

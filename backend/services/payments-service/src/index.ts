@@ -20,7 +20,8 @@ import {
 import { handleGroupOrderPaymentIntent } from "./handlers/group_order_payment_intent";
 import { handleGroupOrderOffSession } from "./handlers/group_order_off_session";
 import { handleGroupOrderRefund } from "./handlers/group_order_refund";
-import { handleWebhook } from "./handlers/webhook";
+import { handleWebhook, handleWebhookEvent } from "./handlers/webhook";
+import { requireInternalAuth } from "./internal_auth";
 
 const config = getConfig();
 const firestore = initFirestore(config.FIREBASE_PROJECT_ID);
@@ -117,6 +118,26 @@ app.post("/webhooks/stripe", express.raw({ type: "application/json", limit: "1mb
     }
   )
 );
+
+app.post("/internal/test/stripe-webhook", express.json({ limit: "1mb" }), async (req, res) => {
+  if (!(await requireInternalAuth(req, res, config))) {
+    return;
+  }
+  const event = req.body as any;
+  if (!event || typeof event.type !== "string") {
+    res.status(400).json({ error: "invalid_event" });
+    return;
+  }
+  const result = await handleWebhookEvent(
+    event,
+    firestore,
+    stripe,
+    config.ORDER_SERVICE_URL,
+    config.NOTIFICATION_SERVICE_URL,
+    { allowedEvents: allowedWebhookEvents }
+  );
+  res.status(200).json({ received: true, ignored: result.ignored, test: true });
+});
 
 app.listen(config.PORT, () => {
   console.log(`payments-service listening on ${config.PORT}`);

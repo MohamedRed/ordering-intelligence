@@ -7,35 +7,20 @@ import { fetchGroupOrder, fetchTenantStripeAccount, updateGroupOrderStatus } fro
 import { submitGroupOrder, updateOrderStatus } from "../order_service";
 import { sendGroupOrderNotification } from "../notification_service";
 
-export async function handleWebhook(
-  req: Request,
-  res: Response,
+export async function handleWebhookEvent(
+  event: Stripe.Event,
   firestore: Firestore,
   stripe: Stripe,
-  webhookSecret: string,
   orderServiceUrl?: string,
   notificationServiceUrl?: string,
   options?: {
     allowedEvents?: string[];
   }
-) {
-  const sig = req.headers["stripe-signature"] as string | undefined;
-  if (!sig || !webhookSecret) {
-    res.status(400).send("missing_signature");
-    return;
-  }
-  let event: Stripe.Event;
-  try {
-    event = stripe.webhooks.constructEvent(req.body, sig, webhookSecret);
-  } catch (err) {
-    res.status(400).send("invalid_signature");
-    return;
-  }
+): Promise<{ ignored: boolean }> {
   if (options?.allowedEvents && options.allowedEvents.length > 0) {
     if (!options.allowedEvents.includes(event.type)) {
       console.warn("stripe webhook ignored", { type: event.type });
-      res.status(200).json({ received: true, ignored: true });
-      return;
+      return { ignored: true };
     }
   }
 
@@ -204,7 +189,43 @@ export async function handleWebhook(
     }
   }
 
-  res.status(200).json({ received: true });
+  return { ignored: false };
+}
+
+export async function handleWebhook(
+  req: Request,
+  res: Response,
+  firestore: Firestore,
+  stripe: Stripe,
+  webhookSecret: string,
+  orderServiceUrl?: string,
+  notificationServiceUrl?: string,
+  options?: {
+    allowedEvents?: string[];
+  }
+) {
+  const sig = req.headers["stripe-signature"] as string | undefined;
+  if (!sig || !webhookSecret) {
+    res.status(400).send("missing_signature");
+    return;
+  }
+  let event: Stripe.Event;
+  try {
+    event = stripe.webhooks.constructEvent(req.body, sig, webhookSecret);
+  } catch (err) {
+    res.status(400).send("invalid_signature");
+    return;
+  }
+
+  const result = await handleWebhookEvent(
+    event,
+    firestore,
+    stripe,
+    orderServiceUrl,
+    notificationServiceUrl,
+    options
+  );
+  res.status(200).json({ received: true, ignored: result.ignored });
 }
 
 async function handleGroupOrderPaymentSuccess(
