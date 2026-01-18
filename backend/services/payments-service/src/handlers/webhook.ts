@@ -17,20 +17,12 @@ export async function handleWebhook(
   notificationServiceUrl?: string,
   options?: {
     allowedEvents?: string[];
-    requireStripeUserAgent?: boolean;
   }
 ) {
   const sig = req.headers["stripe-signature"] as string | undefined;
   if (!sig || !webhookSecret) {
     res.status(400).send("missing_signature");
     return;
-  }
-  if (options?.requireStripeUserAgent) {
-    const userAgent = String(req.headers["user-agent"] || "");
-    if (!userAgent.toLowerCase().includes("stripe")) {
-      res.status(400).send("invalid_user_agent");
-      return;
-    }
   }
   let event: Stripe.Event;
   try {
