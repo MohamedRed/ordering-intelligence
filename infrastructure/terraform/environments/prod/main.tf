@@ -936,7 +936,7 @@ resource "google_secret_manager_secret" "agent_tools_jwt_signing_secret" {
   }
 }
 
-resource "google_secret_manager_secret_iam_binding" "onboarding_secret_access" {
+resource "google_secret_manager_secret_iam_member" "onboarding_secret_access" {
   for_each = {
     stripe_secret_key     = google_secret_manager_secret.stripe_secret_key.secret_id
     stripe_webhook_secret = google_secret_manager_secret.stripe_webhook_secret.secret_id
@@ -946,10 +946,10 @@ resource "google_secret_manager_secret_iam_binding" "onboarding_secret_access" {
   project   = var.project_id
   secret_id = each.value
   role      = "roles/secretmanager.secretAccessor"
-  members   = ["serviceAccount:${module.onboarding_service_sa.email}"]
+  member    = "serviceAccount:${module.onboarding_service_sa.email}"
 }
 
-resource "google_secret_manager_secret_iam_binding" "payments_service_secret_access" {
+resource "google_secret_manager_secret_iam_member" "payments_service_secret_access" {
   for_each = {
     stripe_secret_key     = google_secret_manager_secret.stripe_secret_key.secret_id
     stripe_webhook_secret = google_secret_manager_secret.stripe_webhook_secret.secret_id
@@ -957,7 +957,7 @@ resource "google_secret_manager_secret_iam_binding" "payments_service_secret_acc
   project   = var.project_id
   secret_id = each.value
   role      = "roles/secretmanager.secretAccessor"
-  members   = ["serviceAccount:${module.payments_service_sa.email}"]
+  member    = "serviceAccount:${module.payments_service_sa.email}"
 }
 
 resource "google_secret_manager_secret_iam_member" "agent_customization_elevenlabs_access" {
@@ -1485,7 +1485,7 @@ module "payments_service" {
   depends_on = [
     module.core,
     module.payments_service_sa,
-    google_secret_manager_secret_iam_binding.payments_service_secret_access
+    google_secret_manager_secret_iam_member.payments_service_secret_access
   ]
 }
 
