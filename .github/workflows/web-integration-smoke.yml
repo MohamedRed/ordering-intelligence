@@ -16,6 +16,9 @@ jobs:
       FIRESTORE_SUFFIX: ci
       CHANNEL_GATEWAY_BASE_URL: ${{ secrets.CHANNEL_GATEWAY_BASE_URL_LIIVE_DEV }}
       ONBOARDING_BASE_URL: https://dev-onboarding-service.liive.app
+      ORDER_SERVICE_BASE_URL: https://dev-order-service.liive.app
+      DISPATCH_SERVICE_BASE_URL: https://dev-dispatch-service.liive.app
+      DELIVERY_SERVICE_BASE_URL: https://dev-delivery-service.liive.app
     steps:
       - uses: actions/checkout@v4
 
@@ -109,6 +112,21 @@ jobs:
 
       - name: Run driver onboarding flow test
         run: node tests/integration/driver_onboarding.mjs
+
+      - name: Run business onboarding flow test
+        run: node tests/integration/business_onboarding.mjs
+
+      - name: Run order flow test
+        run: node tests/integration/order_flow.mjs
+
+      - name: Run group order flow test
+        run: node tests/integration/group_order_flow.mjs
+
+      - name: Run dispatch prewarm test
+        run: node tests/integration/dispatch_prewarm.mjs
+
+      - name: Run delivery dispatch test
+        run: node tests/integration/delivery_dispatch.mjs
 
       - name: Upload UI artifacts
         if: always()

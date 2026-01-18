@@ -387,6 +387,7 @@ locals {
         INTERNAL_ALLOWED_EMAILS = join(",", [
           module.agent_tools_sa.email,
           module.channel_gateway_sa.email,
+          module.github_ci_sa.email,
         ])
         ORDER_SERVICE_URL                      = local.service_urls.order_service
         DISPATCH_EVENTS_TOPIC                  = module.core.pubsub_topics["dispatch-events"]
@@ -414,7 +415,10 @@ locals {
         FIRESTORE_PROJECT_ID        = var.project_id
         REQUIRE_AUTH                = "true"
         INTERNAL_AUTH_AUDIENCE      = local.service_urls.delivery_service
-        INTERNAL_ALLOWED_EMAILS     = module.agent_tools_sa.email
+        INTERNAL_ALLOWED_EMAILS     = join(",", [
+          module.agent_tools_sa.email,
+          module.github_ci_sa.email,
+        ])
         ORDER_SERVICE_URL           = local.service_urls.order_service
         DISPATCH_SERVICE_URL        = local.service_urls.dispatch_service
         ORDERS_EVENTS_OIDC_AUDIENCE = local.service_urls.delivery_service
@@ -1426,6 +1430,7 @@ module "order_service" {
       module.dispatch_service_sa.email,
       module.delivery_service_sa.email,
       module.channel_gateway_sa.email,
+      module.github_ci_sa.email,
     ])
     # CORS: Allow Flutter web dev server and other localhost ports
     CORS_ORIGINS = "http://localhost:3000,http://localhost:4000,http://localhost:4001,http://localhost:8080,http://localhost:65269,http://127.0.0.1:4000"
