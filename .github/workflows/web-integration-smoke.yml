@@ -124,6 +124,12 @@ jobs:
       - name: Run group order flow test
         run: node tests/integration/group_order_flow.mjs
 
+      - name: Run group order submit flow test
+        run: node tests/integration/group_order_submit.mjs
+
+      - name: Run order status lifecycle test
+        run: node tests/integration/order_status_lifecycle.mjs
+
       - name: Run dispatch prewarm test
         run: node tests/integration/dispatch_prewarm.mjs
 
@@ -135,6 +141,9 @@ jobs:
 
       - name: Run marketplace status update test
         run: node tests/integration/marketplace_status.mjs
+
+      - name: Run marketplace availability test
+        run: node tests/integration/marketplace_availability.mjs
 
       - name: Run marketplace offer accept test
         run: node tests/integration/marketplace_offer_accept.mjs
