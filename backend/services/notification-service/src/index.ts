@@ -37,6 +37,8 @@ interface NotificationConfig {
   ELEVENLABS_API_KEY?: string;
   ELEVENLABS_API_BASE_URL?: string;
 
+  NOTIFICATIONS_DRY_RUN?: string;
+
   NOTIFICATION_SERVICE_URL?: string;
   CLOUD_TASKS_PROJECT_ID?: string;
   CLOUD_TASKS_LOCATION?: string;
@@ -207,6 +209,8 @@ let pushFailed = 0;
 let smsFailed = 0;
 let emailFailed = 0;
 const ALERT_TTL_DAYS = 14;
+const notificationsDryRun =
+  String(process.env.NOTIFICATIONS_DRY_RUN ?? config.NOTIFICATIONS_DRY_RUN ?? "").toLowerCase() === "true";
 
 const twilioClient =
   config.TWILIO_ACCOUNT_SID && config.TWILIO_AUTH_TOKEN
@@ -238,7 +242,8 @@ app.get("/metrics", (_req: Request, res: Response) => {
       `notifications_email_sent_total ${emailSent}\n` +
       `notifications_push_failed_total ${pushFailed}\n` +
       `notifications_sms_failed_total ${smsFailed}\n` +
-      `notifications_email_failed_total ${emailFailed}\n`
+      `notifications_email_failed_total ${emailFailed}\n` +
+      `notifications_dry_run ${notificationsDryRun ? 1 : 0}\n`
   );
 });
 
@@ -1197,6 +1202,11 @@ async function resolveCustomerContact(params: { tenantId: string; callerId: stri
 }
 
 async function sendCustomerSms(params: { to: string; from: string; body: string }): Promise<void> {
+  if (notificationsDryRun) {
+    smsSent += 1;
+    console.log(JSON.stringify({ level: "info", event: "customer_sms_dry_run", to: params.to, from: params.from }));
+    return;
+  }
   if (!twilioClient) return;
   await twilioClient.messages.create({
     to: params.to,
@@ -1214,6 +1224,17 @@ async function startElevenLabsOutboundCall(params: {
   tenantId: string;
   storeId: string;
 }): Promise<void> {
+  if (notificationsDryRun) {
+    console.log(
+      JSON.stringify({
+        level: "info",
+        event: "elevenlabs_outbound_call_dry_run",
+        to: params.toNumber,
+        storeId: params.storeId
+      })
+    );
+    return;
+  }
   const apiKey = String(config.ELEVENLABS_API_KEY ?? "").trim();
   if (!apiKey) {
     console.warn(JSON.stringify({ level: "warn", event: "elevenlabs_api_key_missing" }));
@@ -1311,6 +1332,18 @@ async function sendPushNotification(payload: NotifyRequest, source: string): Pro
   ]);
 
   if (target.deviceTokens?.length) {
+    if (notificationsDryRun) {
+      pushSent += target.deviceTokens.length;
+      console.log(
+        JSON.stringify({
+          level: "info",
+          event: "push_multicast_dry_run",
+          source,
+          tokens: target.deviceTokens.length,
+          title: payload.payload.title
+        })
+      );
+    } else {
     const multicast: admin.messaging.MulticastMessage = {
       tokens: target.deviceTokens,
       data: baseData,
@@ -1330,9 +1363,23 @@ async function sendPushNotification(payload: NotifyRequest, source: string): Pro
         title: payload.payload.title
       })
     );
+    }
   }
 
   if (target.topic) {
+    if (notificationsDryRun) {
+      pushSent += 1;
+      console.log(
+        JSON.stringify({
+          level: "info",
+          event: "push_topic_dry_run",
+          source,
+          topic: target.topic,
+          title: payload.payload.title
+        })
+      );
+      return;
+    }
     const message: admin.messaging.Message = {
       topic: target.topic,
       data: baseData,
@@ -1356,6 +1403,18 @@ async function sendPushNotification(payload: NotifyRequest, source: string): Pro
 }
 
 async function sendSmsNotification(payload: NotifyRequest): Promise<void> {
+  if (notificationsDryRun) {
+    smsSent += 1;
+    console.log(
+      JSON.stringify({
+        level: "info",
+        event: "sms_dry_run",
+        to: payload.target.phoneNumber ?? config.OPS_PHONE,
+        title: payload.payload.title
+      })
+    );
+    return;
+  }
   if (!twilioClient) {
     return;
   }
@@ -1384,6 +1443,18 @@ async function sendSmsNotification(payload: NotifyRequest): Promise<void> {
 }
 
 async function sendEmailNotification(payload: NotifyRequest): Promise<void> {
+  if (notificationsDryRun) {
+    emailSent += 1;
+    console.log(
+      JSON.stringify({
+        level: "info",
+        event: "email_dry_run",
+        to: payload.target.email ?? config.OPS_EMAIL,
+        title: payload.payload.title
+      })
+    );
+    return;
+  }
   if (!config.SENDGRID_API_KEY) {
     return;
   }

@@ -27,6 +27,8 @@ type serviceConfig struct {
 	ProjectID                 string
 	Credentials               string
 	Secret                    string
+	InternalAuthAudience      string
+	InternalAllowedEmails     []string
 	CustomerProfileServiceURL string
 	RecommendationServiceURL  string
 	WaitTimeServiceURL        string
@@ -63,6 +65,9 @@ func main() {
 	router.Post("/elevenlabs/conversation-init", func(w http.ResponseWriter, r *http.Request) {
 		handleConversationInit(w, r, firestoreClient, cfg)
 	})
+	router.Post("/internal/test/conversation-init", func(w http.ResponseWriter, r *http.Request) {
+		handleTestConversationInit(w, r, firestoreClient, cfg)
+	})
 
 	log.Printf("Agent webhooks service listening on port %s", cfg.Port)
 	if err := http.ListenAndServe(":"+cfg.Port, router); err != nil {
@@ -93,6 +98,14 @@ func loadConfig() (*serviceConfig, error) {
 		ProjectID:   stringOrDefault(values["FIRESTORE_PROJECT_ID"], ""),
 		Credentials: stringOrDefault(values["GOOGLE_APPLICATION_CREDENTIALS"], ""),
 		Secret:      strings.TrimSpace(secret),
+		InternalAuthAudience: strings.TrimSpace(firstNonEmpty(
+			os.Getenv("INTERNAL_AUTH_AUDIENCE"),
+			stringOrDefault(values["INTERNAL_AUTH_AUDIENCE"], ""),
+		)),
+		InternalAllowedEmails: splitCSV(firstNonEmpty(
+			os.Getenv("INTERNAL_ALLOWED_EMAILS"),
+			stringOrDefault(values["INTERNAL_ALLOWED_EMAILS"], ""),
+		)),
 		CustomerProfileServiceURL: strings.TrimSpace(firstNonEmpty(
 			os.Getenv("CUSTOMER_PROFILE_SERVICE_URL"),
 			stringOrDefault(values["CUSTOMER_PROFILE_SERVICE_URL"], ""),
@@ -307,6 +320,23 @@ func firstNonEmpty(values ...string) string {
 		}
 	}
 	return ""
+}
+
+func splitCSV(value string) []string {
+	value = strings.TrimSpace(value)
+	if value == "" {
+		return nil
+	}
+	parts := strings.Split(value, ",")
+	var out []string
+	for _, p := range parts {
+		p = strings.TrimSpace(p)
+		if p == "" {
+			continue
+		}
+		out = append(out, p)
+	}
+	return out
 }
 
 func getString(m map[string]any, key string) string {

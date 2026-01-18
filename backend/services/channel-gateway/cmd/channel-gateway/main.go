@@ -77,6 +77,8 @@ type serviceConfig struct {
 	SessionIdleMinutes        int
 	MobileSessionSecret       string
 	MobileSessionSkewSeconds  int
+	InternalAuthAudience      string
+	InternalAllowedEmails     []string
 	OrderServiceURL           string
 	PaymentsServiceURL        string
 	DispatchServiceURL        string
@@ -231,6 +233,10 @@ func main() {
 
 	registerWebAppRoutes(router, "/tv", cfg, firestoreClient, orderHTTPClient, paymentsHTTPClient, dispatchHTTPClient, manager)
 	registerTvRoutes(router, cfg, firestoreClient)
+
+	router.Post("/internal/test/webapp/session", func(w http.ResponseWriter, r *http.Request) {
+		handleWebAppTestSession(w, r, cfg, firestoreClient)
+	})
 
 	router.Post("/mobile/session/start", func(w http.ResponseWriter, r *http.Request) {
 		handleMobileSessionStart(w, r, cfg, firestoreClient)
@@ -425,6 +431,14 @@ func loadConfig() (*serviceConfig, error) {
 			stringOrDefault(values["MOBILE_SESSION_SHARED_SECRET"], ""),
 		)),
 		MobileSessionSkewSeconds: mobileSkew,
+		InternalAuthAudience: strings.TrimSpace(firstNonEmpty(
+			os.Getenv("INTERNAL_AUTH_AUDIENCE"),
+			stringOrDefault(values["INTERNAL_AUTH_AUDIENCE"], ""),
+		)),
+		InternalAllowedEmails: splitCSV(firstNonEmpty(
+			os.Getenv("INTERNAL_ALLOWED_EMAILS"),
+			stringOrDefault(values["INTERNAL_ALLOWED_EMAILS"], ""),
+		)),
 		OrderServiceURL: strings.TrimSpace(firstNonEmpty(
 			os.Getenv("ORDER_SERVICE_URL"),
 			stringOrDefault(values["ORDER_SERVICE_URL"], ""),
@@ -2637,6 +2651,19 @@ func stringOrDefault(value interface{}, fallback string) string {
 	default:
 		return fallback
 	}
+}
+
+func splitCSV(value string) []string {
+	parts := strings.Split(value, ",")
+	out := make([]string, 0, len(parts))
+	for _, part := range parts {
+		part = strings.TrimSpace(part)
+		if part == "" {
+			continue
+		}
+		out = append(out, part)
+	}
+	return out
 }
 
 func intOrDefault(value interface{}, fallback int) int {

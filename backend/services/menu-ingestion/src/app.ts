@@ -34,6 +34,7 @@ import { ingestRouter } from './routes/ingest.js';
 import { agentRouter } from './routes/agent.js';
 import { tasksRouter } from './routes/tasks.js';
 import { cleanupRouter } from './routes/cleanup.js';
+import { testRouter } from './routes/test.js';
 
 export type AppContext = {
   firestore: Firestore;
@@ -186,6 +187,7 @@ app.use(ingestRouter(ctx));
 app.use(agentRouter(ctx));
 app.use(tasksRouter(ctx));
 app.use(cleanupRouter(ctx));
+app.use(testRouter(ctx));
 
 console.log(
   'menu-ingestion config',

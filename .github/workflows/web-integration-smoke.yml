@@ -15,12 +15,14 @@ jobs:
       FIREBASE_PROJECT_ID: liive-dev
       FIRESTORE_SUFFIX: ci
       CHANNEL_GATEWAY_BASE_URL: ${{ secrets.CHANNEL_GATEWAY_BASE_URL_LIIVE_DEV }}
+      MENU_INGESTION_BASE_URL: https://dev-menu-ingestion.liive.app
       ONBOARDING_BASE_URL: https://dev-onboarding-service.liive.app
       ORDER_SERVICE_BASE_URL: https://dev-order-service.liive.app
       DISPATCH_SERVICE_BASE_URL: https://dev-dispatch-service.liive.app
       DELIVERY_SERVICE_BASE_URL: https://dev-delivery-service.liive.app
       PAYMENTS_SERVICE_BASE_URL: https://dev-payments-service.liive.app
       NOTIFICATION_SERVICE_BASE_URL: https://dev-notification-service.liive.app
+      AGENT_WEBHOOKS_BASE_URL: https://dev-agent-webhooks.liive.app
       INTERNAL_DELIVERER_ID: ${{ secrets.GCP_SERVICE_ACCOUNT_LIIVE_DEV }}
     steps:
       - uses: actions/checkout@v4
@@ -42,6 +44,13 @@ jobs:
       - uses: google-github-actions/setup-gcloud@v2
         with:
           project_id: ${{ env.FIREBASE_PROJECT_ID }}
+
+      - name: Load Stripe webhook secret
+        run: |
+          set -euo pipefail
+          SECRET=$(gcloud secrets versions access latest --secret="stripe-payments-webhook-secret" --project "$FIREBASE_PROJECT_ID")
+          echo "::add-mask::$SECRET"
+          echo "STRIPE_PAYMENTS_WEBHOOK_SECRET=$SECRET" >> "$GITHUB_ENV"
 
       - name: Install firebase-tools
         run: npm install -g firebase-tools@13
@@ -131,6 +140,12 @@ jobs:
       - name: Run mobile session auth test
         run: node tests/integration/mobile_session_start.mjs
 
+      - name: Run channel webapp auth simulation test
+        run: node tests/integration/channel_oauth_sim.mjs
+
+      - name: Run menu ingest e2e test
+        run: node tests/integration/menu_ingest_e2e.mjs
+
       - name: Run order flow test
         run: node tests/integration/order_flow.mjs
 
@@ -170,8 +185,17 @@ jobs:
       - name: Run payments webhook test
         run: node tests/integration/payments_webhook.mjs
 
+      - name: Run payments signed webhook test
+        run: node tests/integration/payments_webhook_signed.mjs
+
       - name: Run notification events test
         run: node tests/integration/notifications_events.mjs
+
+      - name: Run driver route lifecycle test
+        run: node tests/integration/driver_route_lifecycle.mjs
+
+      - name: Run voice conversation init test
+        run: node tests/integration/voice_conversation_init.mjs
 
       - name: Upload UI artifacts
         if: always()

@@ -215,6 +215,11 @@ locals {
         USE_GENAI_IMAGE      = "true"
         AGENT_COMPOSITE_URL  = "https://genai-app-fastfoodmenuextraction-1-1764171394659-230152279015.us-central1.run.app"
         AGENT_ANALYSIS_URL   = "https://genai-app-countingcardsincomposite-1-176417409497-230152279015.us-central1.run.app"
+        ALLOW_GOOGLE_ID_TOKENS = "true"
+        GOOGLE_ID_TOKEN_ALLOWED_EMAILS = join(",", [
+          module.agent_tools_sa.email,
+          module.github_ci_sa.email,
+        ])
       }
       secret_env_overrides = {}
     }
@@ -1023,6 +1028,13 @@ resource "google_secret_manager_secret_iam_member" "payments_service_secret_acce
   member    = "serviceAccount:${module.payments_service_sa.email}"
 }
 
+resource "google_secret_manager_secret_iam_member" "payments_webhook_secret_github_ci_access" {
+  project   = var.project_id
+  secret_id = google_secret_manager_secret.stripe_payments_webhook_secret.secret_id
+  role      = "roles/secretmanager.secretAccessor"
+  member    = "serviceAccount:${module.github_ci_sa.email}"
+}
+
 resource "google_secret_manager_secret_iam_member" "agent_customization_elevenlabs_access" {
   project   = var.project_id
   secret_id = google_secret_manager_secret.elevenlabs_api_key.secret_id
@@ -1500,6 +1512,7 @@ module "notification_service" {
     CLOUD_TASKS_OIDC_SERVICE_ACCOUNT_EMAIL = module.notification_tasks_sa.email
     CLOUD_TASKS_OIDC_AUDIENCE              = local.service_urls.notification_service
     ELEVENLABS_API_BASE_URL                = "https://api.elevenlabs.io"
+    NOTIFICATIONS_DRY_RUN                  = "true"
   }, lookup(local.cloud_run_config.notification_service, "env_overrides", {}))
   secret_env_vars = merge({
     TWILIO_ACCOUNT_SID = google_secret_manager_secret.twilio_account_sid.secret_id,
@@ -1610,6 +1623,11 @@ module "agent_webhooks" {
     RECOMMENDATION_SERVICE_URL       = local.service_urls.recommendation
     WAIT_TIME_SERVICE_URL            = local.service_urls.wait_time_service
     CUSTOMER_PERSONALIZATION_VERSION = "v1"
+    INTERNAL_AUTH_AUDIENCE           = local.service_urls.agent_webhooks
+    INTERNAL_ALLOWED_EMAILS          = join(",", [
+      module.agent_tools_sa.email,
+      module.github_ci_sa.email,
+    ])
   }, lookup(local.cloud_run_config.agent_webhooks, "env_overrides", {}))
   secret_env_vars = merge({
     ELEVENLABS_CONVERSATION_INIT_SECRET = google_secret_manager_secret.elevenlabs_conversation_init_secret.secret_id
@@ -1655,6 +1673,11 @@ module "channel_gateway" {
     TYPESENSE_HOST               = var.typesense_host
     TYPESENSE_COLLECTION         = "stores"
     CORS_ORIGINS                 = "*"
+    INTERNAL_AUTH_AUDIENCE       = local.service_urls.channel_gateway
+    INTERNAL_ALLOWED_EMAILS      = join(",", [
+      module.agent_tools_sa.email,
+      module.github_ci_sa.email,
+    ])
   }, lookup(local.cloud_run_config.channel_gateway, "env_overrides", {}))
   secret_env_vars = merge({
     ELEVENLABS_API_KEY       = google_secret_manager_secret.elevenlabs_api_key.secret_id
