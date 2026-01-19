@@ -19,6 +19,10 @@ jobs:
       FIREBASE_PROJECT_ID: liive-dev
       FIRESTORE_SUFFIX: ci
       CHANNEL_GATEWAY_BASE_URL: ${{ secrets.CHANNEL_GATEWAY_BASE_URL_LIIVE_DEV }}
+      CONSUMER_APP_URL: https://liive-dev-consumer.web.app
+      BUSINESS_APP_URL: https://liive-dev-business.web.app
+      DRIVER_APP_URL: https://liive-dev-driver.web.app
+      ADMIN_APP_URL: https://liive-dev-admin.web.app
       MENU_INGESTION_BASE_URL: https://dev-menu-ingestion.liive.app
       ONBOARDING_BASE_URL: https://dev-onboarding-service.liive.app
       ORDER_SERVICE_BASE_URL: https://dev-order-service.liive.app
@@ -156,6 +160,10 @@ jobs:
       FIREBASE_PROJECT_ID: liive-dev
       FIRESTORE_SUFFIX: ci
       CHANNEL_GATEWAY_BASE_URL: ${{ secrets.CHANNEL_GATEWAY_BASE_URL_LIIVE_DEV }}
+      CONSUMER_APP_URL: https://liive-dev-consumer.web.app
+      BUSINESS_APP_URL: https://liive-dev-business.web.app
+      DRIVER_APP_URL: https://liive-dev-driver.web.app
+      ADMIN_APP_URL: https://liive-dev-admin.web.app
       ONBOARDING_BASE_URL: https://dev-onboarding-service.liive.app
       ORDER_SERVICE_BASE_URL: https://dev-order-service.liive.app
       DISPATCH_SERVICE_BASE_URL: https://dev-dispatch-service.liive.app
@@ -209,6 +217,9 @@ jobs:
           flutter-version: '3.38.5'
           channel: 'stable'
           cache: true
+
+      - name: Trust Flutter SDK directory
+        run: git config --global --add safe.directory "$FLUTTER_ROOT"
 
       - name: Build web apps
         run: |
