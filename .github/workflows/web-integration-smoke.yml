@@ -11,6 +11,7 @@ concurrency:
 
 jobs:
   api-tests:
+    needs: ui-tests
     runs-on: [self-hosted, linux, x64, liive-dev]
     permissions:
       id-token: write
@@ -19,10 +20,10 @@ jobs:
       FIREBASE_PROJECT_ID: liive-dev
       FIRESTORE_SUFFIX: ci
       CHANNEL_GATEWAY_BASE_URL: ${{ secrets.CHANNEL_GATEWAY_BASE_URL_LIIVE_DEV }}
-      CONSUMER_APP_URL: https://liive-dev-consumer.web.app
-      BUSINESS_APP_URL: https://liive-dev-business.web.app
-      DRIVER_APP_URL: https://liive-dev-driver.web.app
-      ADMIN_APP_URL: https://liive-dev-admin.web.app
+      CONSUMER_APP_URL: ${{ needs.ui-tests.outputs.consumer_url }}
+      BUSINESS_APP_URL: ${{ needs.ui-tests.outputs.business_url }}
+      DRIVER_APP_URL: ${{ needs.ui-tests.outputs.driver_url }}
+      ADMIN_APP_URL: ${{ needs.ui-tests.outputs.admin_url }}
       MENU_INGESTION_BASE_URL: https://dev-menu-ingestion.liive.app
       ONBOARDING_BASE_URL: https://dev-onboarding-service.liive.app
       ORDER_SERVICE_BASE_URL: https://dev-order-service.liive.app
@@ -155,15 +156,16 @@ jobs:
     permissions:
       id-token: write
       contents: read
+    outputs:
+      consumer_url: ${{ steps.deploy_channels.outputs.consumer_url }}
+      business_url: ${{ steps.deploy_channels.outputs.business_url }}
+      driver_url: ${{ steps.deploy_channels.outputs.driver_url }}
+      admin_url: ${{ steps.deploy_channels.outputs.admin_url }}
     env:
       HOME: /home/actions-runner
       FIREBASE_PROJECT_ID: liive-dev
       FIRESTORE_SUFFIX: ci
       CHANNEL_GATEWAY_BASE_URL: ${{ secrets.CHANNEL_GATEWAY_BASE_URL_LIIVE_DEV }}
-      CONSUMER_APP_URL: https://liive-dev-consumer.web.app
-      BUSINESS_APP_URL: https://liive-dev-business.web.app
-      DRIVER_APP_URL: https://liive-dev-driver.web.app
-      ADMIN_APP_URL: https://liive-dev-admin.web.app
       ONBOARDING_BASE_URL: https://dev-onboarding-service.liive.app
       ORDER_SERVICE_BASE_URL: https://dev-order-service.liive.app
       DISPATCH_SERVICE_BASE_URL: https://dev-dispatch-service.liive.app
@@ -239,6 +241,7 @@ jobs:
           done
 
       - name: Deploy preview channels
+        id: deploy_channels
         run: |
           set -euo pipefail
           CHANNEL="ci-${GITHUB_SHA::7}"
@@ -264,10 +267,20 @@ jobs:
           deploy_site "driver" "apps/driver" "/tmp/driver.json"
           deploy_site "consumer" "apps/consumer" "/tmp/consumer.json"
 
-          echo "ADMIN_APP_URL=$(jq -r '.result.urls[0]' /tmp/admin.json)" >> "$GITHUB_ENV"
-          echo "BUSINESS_APP_URL=$(jq -r '.result.urls[0]' /tmp/business.json)" >> "$GITHUB_ENV"
-          echo "DRIVER_APP_URL=$(jq -r '.result.urls[0]' /tmp/driver.json)" >> "$GITHUB_ENV"
-          echo "CONSUMER_APP_URL=$(jq -r '.result.urls[0]' /tmp/consumer.json)" >> "$GITHUB_ENV"
+          ADMIN_URL=$(jq -r '.result.urls[0]' /tmp/admin.json)
+          BUSINESS_URL=$(jq -r '.result.urls[0]' /tmp/business.json)
+          DRIVER_URL=$(jq -r '.result.urls[0]' /tmp/driver.json)
+          CONSUMER_URL=$(jq -r '.result.urls[0]' /tmp/consumer.json)
+
+          echo "ADMIN_APP_URL=$ADMIN_URL" >> "$GITHUB_ENV"
+          echo "BUSINESS_APP_URL=$BUSINESS_URL" >> "$GITHUB_ENV"
+          echo "DRIVER_APP_URL=$DRIVER_URL" >> "$GITHUB_ENV"
+          echo "CONSUMER_APP_URL=$CONSUMER_URL" >> "$GITHUB_ENV"
+
+          echo "admin_url=$ADMIN_URL" >> "$GITHUB_OUTPUT"
+          echo "business_url=$BUSINESS_URL" >> "$GITHUB_OUTPUT"
+          echo "driver_url=$DRIVER_URL" >> "$GITHUB_OUTPUT"
+          echo "consumer_url=$CONSUMER_URL" >> "$GITHUB_OUTPUT"
 
       - name: Run UI flow tests
         run: node tests/integration/ui_flow.mjs
