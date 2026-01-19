@@ -152,6 +152,7 @@ jobs:
       id-token: write
       contents: read
     env:
+      HOME: /home/actions-runner
       FIREBASE_PROJECT_ID: liive-dev
       FIRESTORE_SUFFIX: ci
       CHANNEL_GATEWAY_BASE_URL: ${{ secrets.CHANNEL_GATEWAY_BASE_URL_LIIVE_DEV }}
