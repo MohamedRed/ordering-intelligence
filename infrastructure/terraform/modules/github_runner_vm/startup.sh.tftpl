@@ -42,5 +42,6 @@ REG_TOKEN=$(curl -s -X POST \
 chown -R actions-runner:actions-runner "$RUNNER_HOME"
 
 su - actions-runner -c "cd \"$RUNNER_HOME\" && ./config.sh --url https://github.com/$REPO_NAME --token $REG_TOKEN --name $RUNNER_NAME --labels $RUNNER_LABELS --unattended --replace"
-su - actions-runner -c "cd \"$RUNNER_HOME\" && ./svc.sh install" || true
-su - actions-runner -c "cd \"$RUNNER_HOME\" && ./svc.sh start" || su - actions-runner -c "cd \"$RUNNER_HOME\" && ./svc.sh restart"
+cd "$RUNNER_HOME"
+./svc.sh install || true
+./svc.sh start || ./svc.sh restart
