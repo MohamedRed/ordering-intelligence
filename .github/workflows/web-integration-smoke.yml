@@ -5,8 +5,12 @@ on:
   pull_request:
   workflow_dispatch:
 
+concurrency:
+  group: web-integration-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
-  web-integration-smoke:
+  api-tests:
     runs-on: ubuntu-latest
     permissions:
       id-token: write
@@ -52,75 +56,20 @@ jobs:
           echo "::add-mask::$SECRET"
           echo "STRIPE_PAYMENTS_WEBHOOK_SECRET=$SECRET" >> "$GITHUB_ENV"
 
-      - name: Install firebase-tools
-        run: npm install -g firebase-tools@13
+      - name: Cache npm
+        uses: actions/cache@v4
+        with:
+          path: ~/.npm
+          key: ${{ runner.os }}-npm-${{ hashFiles('tests/integration/package.json') }}
 
-      - name: Install UI test deps
-        run: |
-          npm install --prefix tests/integration
-          npx --yes playwright@1.49.0 install --with-deps chromium
+      - name: Install test deps
+        run: npm install --prefix tests/integration
 
       - name: Seed Firestore test tenant
         run: python3 scripts/seed_test_firestore.py --project "$FIREBASE_PROJECT_ID" --suffix "$FIRESTORE_SUFFIX"
 
-      - uses: subosito/flutter-action@v2
-        with:
-          flutter-version: '3.38.5'
-          channel: 'stable'
-
-      - name: Build web apps
-        run: |
-          set -euo pipefail
-          for app in admin business driver consumer; do
-            pushd "apps/$app" >/dev/null
-            flutter pub get
-            flutter build web
-            popd >/dev/null
-          done
-
-      - name: Ensure Firebase Hosting sites exist
-        run: |
-          set -euo pipefail
-          for site in liive-dev-admin liive-dev-business liive-dev-driver liive-dev-consumer; do
-            firebase hosting:sites:create "$site" --project "$FIREBASE_PROJECT_ID" || true
-          done
-
-      - name: Deploy preview channels
-        run: |
-          set -euo pipefail
-          CHANNEL="ci-${GITHUB_SHA::7}"
-          echo "CHANNEL=$CHANNEL" >> "$GITHUB_ENV"
-
-          deploy_site () {
-            local label=$1
-            local dir=$2
-            local out=$3
-            pushd "$dir" >/dev/null
-            if ! firebase hosting:channel:deploy "$CHANNEL" --project "$FIREBASE_PROJECT_ID" --only hosting --json > "$out"; then
-              echo "Failed to deploy $label"
-              if [ -f "$out" ]; then
-                cat "$out"
-              fi
-              exit 1
-            fi
-            popd >/dev/null
-          }
-
-          deploy_site "admin" "apps/admin" "/tmp/admin.json"
-          deploy_site "business" "apps/business" "/tmp/business.json"
-          deploy_site "driver" "apps/driver" "/tmp/driver.json"
-          deploy_site "consumer" "apps/consumer" "/tmp/consumer.json"
-
-          echo "ADMIN_APP_URL=$(jq -r '.result.urls[0]' /tmp/admin.json)" >> "$GITHUB_ENV"
-          echo "BUSINESS_APP_URL=$(jq -r '.result.urls[0]' /tmp/business.json)" >> "$GITHUB_ENV"
-          echo "DRIVER_APP_URL=$(jq -r '.result.urls[0]' /tmp/driver.json)" >> "$GITHUB_ENV"
-          echo "CONSUMER_APP_URL=$(jq -r '.result.urls[0]' /tmp/consumer.json)" >> "$GITHUB_ENV"
-
       - name: Run smoke tests
         run: node tests/integration/smoke.mjs
-
-      - name: Run UI flow tests
-        run: node tests/integration/ui_flow.mjs
 
       - name: Run driver onboarding flow test
         run: node tests/integration/driver_onboarding.mjs
@@ -196,6 +145,127 @@ jobs:
 
       - name: Run voice conversation init test
         run: node tests/integration/voice_conversation_init.mjs
+
+  ui-tests:
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: read
+    env:
+      FIREBASE_PROJECT_ID: liive-dev
+      FIRESTORE_SUFFIX: ci
+      CHANNEL_GATEWAY_BASE_URL: ${{ secrets.CHANNEL_GATEWAY_BASE_URL_LIIVE_DEV }}
+      ONBOARDING_BASE_URL: https://dev-onboarding-service.liive.app
+      ORDER_SERVICE_BASE_URL: https://dev-order-service.liive.app
+      DISPATCH_SERVICE_BASE_URL: https://dev-dispatch-service.liive.app
+      DELIVERY_SERVICE_BASE_URL: https://dev-delivery-service.liive.app
+      PAYMENTS_SERVICE_BASE_URL: https://dev-payments-service.liive.app
+      NOTIFICATION_SERVICE_BASE_URL: https://dev-notification-service.liive.app
+      INTERNAL_DELIVERER_ID: ${{ secrets.GCP_SERVICE_ACCOUNT_LIIVE_DEV }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER_LIIVE_DEV }}
+          service_account: ${{ secrets.GCP_SERVICE_ACCOUNT_LIIVE_DEV }}
+          export_environment_variables: true
+
+      - uses: google-github-actions/setup-gcloud@v2
+        with:
+          project_id: ${{ env.FIREBASE_PROJECT_ID }}
+
+      - name: Cache npm
+        uses: actions/cache@v4
+        with:
+          path: ~/.npm
+          key: ${{ runner.os }}-npm-${{ hashFiles('tests/integration/package.json') }}
+
+      - name: Cache Playwright
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: ${{ runner.os }}-playwright-${{ hashFiles('tests/integration/package.json') }}
+
+      - name: Install firebase-tools
+        run: npm install -g firebase-tools@13
+
+      - name: Install UI test deps
+        run: |
+          npm install --prefix tests/integration
+          npx --yes playwright@1.49.0 install --with-deps chromium
+
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.38.5'
+          channel: 'stable'
+          cache: true
+
+      - name: Build web apps
+        run: |
+          set -euo pipefail
+          for app in admin business driver consumer; do
+            pushd "apps/$app" >/dev/null
+            flutter pub get
+            flutter build web
+            popd >/dev/null
+          done
+
+      - name: Ensure Firebase Hosting sites exist
+        run: |
+          set -euo pipefail
+          for site in liive-dev-admin liive-dev-business liive-dev-driver liive-dev-consumer; do
+            firebase hosting:sites:create "$site" --project "$FIREBASE_PROJECT_ID" || true
+          done
+
+      - name: Deploy preview channels
+        run: |
+          set -euo pipefail
+          CHANNEL="ci-${GITHUB_SHA::7}"
+          echo "CHANNEL=$CHANNEL" >> "$GITHUB_ENV"
+
+          deploy_site () {
+            local label=$1
+            local dir=$2
+            local out=$3
+            pushd "$dir" >/dev/null
+            if ! firebase hosting:channel:deploy "$CHANNEL" --project "$FIREBASE_PROJECT_ID" --only hosting --json > "$out"; then
+              echo "Failed to deploy $label"
+              if [ -f "$out" ]; then
+                cat "$out"
+              fi
+              exit 1
+            fi
+            popd >/dev/null
+          }
+
+          deploy_site "admin" "apps/admin" "/tmp/admin.json"
+          deploy_site "business" "apps/business" "/tmp/business.json"
+          deploy_site "driver" "apps/driver" "/tmp/driver.json"
+          deploy_site "consumer" "apps/consumer" "/tmp/consumer.json"
+
+          echo "ADMIN_APP_URL=$(jq -r '.result.urls[0]' /tmp/admin.json)" >> "$GITHUB_ENV"
+          echo "BUSINESS_APP_URL=$(jq -r '.result.urls[0]' /tmp/business.json)" >> "$GITHUB_ENV"
+          echo "DRIVER_APP_URL=$(jq -r '.result.urls[0]' /tmp/driver.json)" >> "$GITHUB_ENV"
+          echo "CONSUMER_APP_URL=$(jq -r '.result.urls[0]' /tmp/consumer.json)" >> "$GITHUB_ENV"
+
+      - name: Run UI flow tests
+        run: node tests/integration/ui_flow.mjs
+
+      - name: Upload UI artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: web-ui-artifacts-${{ github.sha }}
+          path: tests/integration/artifacts
 
       - name: Upload UI artifacts
         if: always()
