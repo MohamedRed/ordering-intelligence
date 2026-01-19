@@ -11,7 +11,7 @@ concurrency:
 
 jobs:
   api-tests:
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, linux, x64, liive-dev]
     permissions:
       id-token: write
       contents: read
@@ -147,7 +147,7 @@ jobs:
         run: node tests/integration/voice_conversation_init.mjs
 
   ui-tests:
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, linux, x64, liive-dev]
     permissions:
       id-token: write
       contents: read

@@ -128,15 +128,15 @@ locals {
   dns_domain = var.cloud_dns_domain != "" ? var.cloud_dns_domain : var.custom_domain_base
   dns_extra_records = local.skip_onboarding_domain_mapping ? [] : (
     local.custom_service_domains.onboarding_service != ""
-      ? [
-        {
-          name    = local.custom_service_domains.onboarding_service
-          type    = "CNAME"
-          ttl     = 300
-          rrdatas = ["ghs.googlehosted.com."]
-        }
-      ]
-      : []
+    ? [
+      {
+        name    = local.custom_service_domains.onboarding_service
+        type    = "CNAME"
+        ttl     = 300
+        rrdatas = ["ghs.googlehosted.com."]
+      }
+    ]
+    : []
   )
   expected_record_types = {
     for key, domain in local.domain_mappings :
@@ -204,17 +204,17 @@ locals {
         VERTEX_LOCATION    = var.region
         VERTEX_MODEL       = "gemini-2.5-flash"
         # Gemini 3 image/text models for menu compositing & analysis.
-        COMPOSITE_MODEL      = "gemini-3-pro-image-preview"
-        ANALYSIS_MODEL       = "gemini-3-pro-preview"
-        RENDER_MODEL         = "gemini-3-pro-image-preview"
-        IMAGE_REGION         = "global"
-        TEXT_REGION          = "global"
-        GEN_TIMEOUT_MS       = "120000"
-        PURE_GEMINI_IMAGE    = "true"
-        GOOGLE_CLOUD_PROJECT = var.project_id
-        USE_GENAI_IMAGE      = "true"
-        AGENT_COMPOSITE_URL  = "https://genai-app-fastfoodmenuextraction-1-1764171394659-230152279015.us-central1.run.app"
-        AGENT_ANALYSIS_URL   = "https://genai-app-countingcardsincomposite-1-176417409497-230152279015.us-central1.run.app"
+        COMPOSITE_MODEL        = "gemini-3-pro-image-preview"
+        ANALYSIS_MODEL         = "gemini-3-pro-preview"
+        RENDER_MODEL           = "gemini-3-pro-image-preview"
+        IMAGE_REGION           = "global"
+        TEXT_REGION            = "global"
+        GEN_TIMEOUT_MS         = "120000"
+        PURE_GEMINI_IMAGE      = "true"
+        GOOGLE_CLOUD_PROJECT   = var.project_id
+        USE_GENAI_IMAGE        = "true"
+        AGENT_COMPOSITE_URL    = "https://genai-app-fastfoodmenuextraction-1-1764171394659-230152279015.us-central1.run.app"
+        AGENT_ANALYSIS_URL     = "https://genai-app-countingcardsincomposite-1-176417409497-230152279015.us-central1.run.app"
         ALLOW_GOOGLE_ID_TOKENS = "true"
         GOOGLE_ID_TOKEN_ALLOWED_EMAILS = join(",", [
           module.agent_tools_sa.email,
@@ -416,11 +416,11 @@ locals {
       memory                = "512Mi"
       startup_cpu_boost     = true
       env_overrides = {
-        ENVIRONMENT                 = var.environment_name
-        FIRESTORE_PROJECT_ID        = var.project_id
-        REQUIRE_AUTH                = "true"
-        INTERNAL_AUTH_AUDIENCE      = local.service_urls.delivery_service
-        INTERNAL_ALLOWED_EMAILS     = join(",", [
+        ENVIRONMENT            = var.environment_name
+        FIRESTORE_PROJECT_ID   = var.project_id
+        REQUIRE_AUTH           = "true"
+        INTERNAL_AUTH_AUDIENCE = local.service_urls.delivery_service
+        INTERNAL_ALLOWED_EMAILS = join(",", [
           module.agent_tools_sa.email,
           module.github_ci_sa.email,
         ])
@@ -1005,11 +1005,11 @@ resource "google_secret_manager_secret" "agent_tools_jwt_signing_secret" {
 
 resource "google_secret_manager_secret_iam_member" "onboarding_secret_access" {
   for_each = {
-    stripe_secret_key     = google_secret_manager_secret.stripe_secret_key.secret_id
-    stripe_webhook_secret = google_secret_manager_secret.stripe_webhook_secret.secret_id
+    stripe_secret_key      = google_secret_manager_secret.stripe_secret_key.secret_id
+    stripe_webhook_secret  = google_secret_manager_secret.stripe_webhook_secret.secret_id
     stripe_publishable_key = google_secret_manager_secret.stripe_publishable_key.secret_id
-    twilio_account_sid    = google_secret_manager_secret.twilio_account_sid.secret_id
-    google_maps_api_key   = google_secret_manager_secret.google_maps_api_key.secret_id
+    twilio_account_sid     = google_secret_manager_secret.twilio_account_sid.secret_id
+    google_maps_api_key    = google_secret_manager_secret.google_maps_api_key.secret_id
   }
   project   = var.project_id
   secret_id = each.value
@@ -1546,7 +1546,7 @@ module "payments_service" {
     ORDER_SERVICE_URL        = local.service_urls.order_service
     NOTIFICATION_SERVICE_URL = local.service_urls.notification_service
     INTERNAL_AUTH_AUDIENCE   = local.service_urls.payments_service
-    INTERNAL_ALLOWED_EMAILS  = join(",", [
+    INTERNAL_ALLOWED_EMAILS = join(",", [
       module.agent_tools_sa.email,
       module.github_ci_sa.email,
     ])
@@ -1585,13 +1585,13 @@ module "onboarding_service" {
     ELEVENLABS_TEMPLATE_AUTO_PARTS_AGENT_ID = "agent_9201kbnjy570f0ysjk9mssmwewm3"
   }, lookup(local.cloud_run_config.onboarding_service, "env_overrides", {}))
   secret_env_vars = merge({
-    STRIPE_SECRET_KEY     = google_secret_manager_secret.stripe_secret_key.secret_id,
-    STRIPE_WEBHOOK_SECRET = google_secret_manager_secret.stripe_webhook_secret.secret_id,
+    STRIPE_SECRET_KEY      = google_secret_manager_secret.stripe_secret_key.secret_id,
+    STRIPE_WEBHOOK_SECRET  = google_secret_manager_secret.stripe_webhook_secret.secret_id,
     STRIPE_PUBLISHABLE_KEY = google_secret_manager_secret.stripe_publishable_key.secret_id,
-    TWILIO_ACCOUNT_SID    = google_secret_manager_secret.twilio_account_sid.secret_id,
-    TWILIO_AUTH_TOKEN     = "twilio-auth-token",
-    GOOGLE_MAPS_API_KEY   = google_secret_manager_secret.google_maps_api_key.secret_id,
-    ELEVENLABS_API_KEY    = google_secret_manager_secret.elevenlabs_api_key.secret_id,
+    TWILIO_ACCOUNT_SID     = google_secret_manager_secret.twilio_account_sid.secret_id,
+    TWILIO_AUTH_TOKEN      = "twilio-auth-token",
+    GOOGLE_MAPS_API_KEY    = google_secret_manager_secret.google_maps_api_key.secret_id,
+    ELEVENLABS_API_KEY     = google_secret_manager_secret.elevenlabs_api_key.secret_id,
   }, lookup(local.cloud_run_config.onboarding_service, "secret_env_overrides", {}))
 
   depends_on = [
@@ -1624,7 +1624,7 @@ module "agent_webhooks" {
     WAIT_TIME_SERVICE_URL            = local.service_urls.wait_time_service
     CUSTOMER_PERSONALIZATION_VERSION = "v1"
     INTERNAL_AUTH_AUDIENCE           = local.service_urls.agent_webhooks
-    INTERNAL_ALLOWED_EMAILS          = join(",", [
+    INTERNAL_ALLOWED_EMAILS = join(",", [
       module.agent_tools_sa.email,
       module.github_ci_sa.email,
     ])
@@ -1674,7 +1674,7 @@ module "channel_gateway" {
     TYPESENSE_COLLECTION         = "stores"
     CORS_ORIGINS                 = "*"
     INTERNAL_AUTH_AUDIENCE       = local.service_urls.channel_gateway
-    INTERNAL_ALLOWED_EMAILS      = join(",", [
+    INTERNAL_ALLOWED_EMAILS = join(",", [
       module.agent_tools_sa.email,
       module.github_ci_sa.email,
     ])
