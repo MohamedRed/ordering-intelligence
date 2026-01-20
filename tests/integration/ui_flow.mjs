@@ -3,6 +3,8 @@ import { mkdir, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 
 const DEFAULT_TIMEOUT_MS = 60000;
+const HOSTING_READY_TIMEOUT_MS = 180000;
+const HOSTING_READY_INTERVAL_MS = 10000;
 const ARTIFACT_DIR = path.join('tests', 'integration', 'artifacts');
 
 const apps = [
@@ -60,6 +62,28 @@ const flushLogs = async (logs, appName) => {
   );
 };
 
+const waitForHostingReady = async (url, appName) => {
+  const deadline = Date.now() + HOSTING_READY_TIMEOUT_MS;
+  let lastStatus = 'no-response';
+  while (Date.now() < deadline) {
+    try {
+      const response = await fetch(url, { redirect: 'follow' });
+      const body = await response.text();
+      const hasFlutterBootstrap = body.includes('flutter_bootstrap.js');
+      const isPlaceholder = body.includes('Site Not Found') || body.includes('hosting documentation');
+      if (response.ok && hasFlutterBootstrap && !isPlaceholder) {
+        return;
+      }
+      lastStatus = `status=${response.status} placeholder=${isPlaceholder} bootstrap=${hasFlutterBootstrap}`;
+    } catch (err) {
+      lastStatus = err?.message || String(err);
+    }
+    console.log(`[${appName}] Waiting for hosting (${lastStatus}).`);
+    await new Promise((resolve) => setTimeout(resolve, HOSTING_READY_INTERVAL_MS));
+  }
+  throw new Error(`[${appName}] Hosting not ready after ${HOSTING_READY_TIMEOUT_MS / 1000}s.`);
+};
+
 const enableSemantics = async (page) => {
   const placeholder = page.locator('flt-semantics-placeholder');
   if (await placeholder.count()) {
@@ -103,6 +127,7 @@ const run = async () => {
   try {
     for (const app of apps) {
       const url = process.env[app.env];
+      await waitForHostingReady(url, app.name);
       const page = await browser.newPage({ viewport: { width: 1280, height: 720 } });
       const logs = attachPageLogging(page);
       await page.addInitScript(() => {
