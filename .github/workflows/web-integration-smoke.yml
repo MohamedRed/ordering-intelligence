@@ -163,6 +163,7 @@ jobs:
       admin_url: ${{ steps.deploy_channels.outputs.admin_url }}
     env:
       HOME: /home/actions-runner
+      PARALLEL_BUILDS: 2
       FIREBASE_PROJECT_ID: liive-dev
       FIRESTORE_SUFFIX: ci
       CHANNEL_GATEWAY_BASE_URL: ${{ secrets.CHANNEL_GATEWAY_BASE_URL_LIIVE_DEV }}
@@ -231,6 +232,7 @@ jobs:
           flutter-version: '3.38.5'
           channel: 'stable'
           cache: true
+          cache-dependency-path: apps/**/pubspec.lock
 
       - name: Trust Flutter SDK directory
         run: git config --global --add safe.directory "$FLUTTER_ROOT"
@@ -239,12 +241,8 @@ jobs:
         if: env.APPS_TO_BUILD != ''
         run: |
           set -euo pipefail
-          for app in $APPS_TO_BUILD; do
-            pushd "apps/$app" >/dev/null
-            flutter pub get
-            flutter build web
-            popd >/dev/null
-          done
+          echo "Running up to ${PARALLEL_BUILDS} Flutter builds in parallel."
+          printf "%s\n" $APPS_TO_BUILD | xargs -n1 -P "${PARALLEL_BUILDS}" -I{} bash -lc 'cd "apps/{}" && flutter pub get && flutter build web'
 
       - name: Ensure Firebase Hosting sites exist
         if: env.APPS_TO_BUILD != ''
