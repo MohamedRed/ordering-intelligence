@@ -60,6 +60,14 @@ const flushLogs = async (logs, appName) => {
   );
 };
 
+const enableSemantics = async (page) => {
+  const placeholder = page.locator('flt-semantics-placeholder');
+  if (await placeholder.count()) {
+    await placeholder.click({ force: true });
+    await page.waitForSelector('flt-semantics', { timeout: DEFAULT_TIMEOUT_MS });
+  }
+};
+
 const assertText = async (page, text) => {
   const textMatcher = toTextMatcher(text);
   const ariaSelector = `[aria-label*="${toAttributeSelector(text)}" i]`;
@@ -115,6 +123,7 @@ const run = async () => {
         await page.waitForFunction(() => window.__flutterFirstFrame === true, {
           timeout: DEFAULT_TIMEOUT_MS,
         });
+        await enableSemantics(page);
         for (const text of app.expected) {
           await assertText(page, text);
         }
