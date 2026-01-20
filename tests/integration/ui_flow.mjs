@@ -87,7 +87,12 @@ const waitForHostingReady = async (url, appName) => {
 const enableSemantics = async (page) => {
   const placeholder = page.locator('flt-semantics-placeholder');
   if (await placeholder.count()) {
-    await placeholder.click({ force: true });
+    await page.evaluate(() => {
+      const node = document.querySelector('flt-semantics-placeholder');
+      node?.dispatchEvent(
+        new MouseEvent('click', { bubbles: true, cancelable: true, view: window }),
+      );
+    });
     await page.waitForSelector('flt-semantics', { timeout: DEFAULT_TIMEOUT_MS });
   }
 };
