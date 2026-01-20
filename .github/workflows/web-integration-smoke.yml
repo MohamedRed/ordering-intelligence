@@ -214,6 +214,43 @@ jobs:
           npm install --prefix tests/integration
           npx --yes playwright@1.49.0 install --with-deps chromium
 
+      - name: Determine apps to build
+        id: app_changes
+        run: |
+          set -euo pipefail
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            BASE_SHA="${{ github.event.pull_request.base.sha }}"
+          elif [ -n "${{ github.event.before }}" ] && [ "${{ github.event.before }}" != "0000000000000000000000000000000000000000" ]; then
+            BASE_SHA="${{ github.event.before }}"
+          else
+            BASE_SHA="$(git rev-parse HEAD~1)"
+          fi
+          HEAD_SHA="${GITHUB_SHA}"
+
+          CHANGED_FILES="$(git diff --name-only "$BASE_SHA" "$HEAD_SHA")"
+          echo "$CHANGED_FILES" > /tmp/changed_files.txt
+
+          APPS_TO_BUILD=""
+          if echo "$CHANGED_FILES" | rg -q "^apps/shared/"; then
+            APPS_TO_BUILD="admin business driver consumer"
+          else
+            for app in admin business driver consumer; do
+              if echo "$CHANGED_FILES" | rg -q "^apps/$app/"; then
+                APPS_TO_BUILD="$APPS_TO_BUILD $app"
+              fi
+            done
+          fi
+
+          APPS_TO_BUILD="$(echo "$APPS_TO_BUILD" | xargs)"
+          if [ -z "$APPS_TO_BUILD" ]; then
+            echo "No app changes detected; skipping UI build/deploy."
+          else
+            echo "Apps to build: $APPS_TO_BUILD"
+          fi
+
+          echo "apps=$APPS_TO_BUILD" >> "$GITHUB_OUTPUT"
+          echo "APPS_TO_BUILD=$APPS_TO_BUILD" >> "$GITHUB_ENV"
+
       - uses: subosito/flutter-action@v2
         with:
           flutter-version: '3.38.5'
@@ -224,9 +261,10 @@ jobs:
         run: git config --global --add safe.directory "$FLUTTER_ROOT"
 
       - name: Build web apps
+        if: env.APPS_TO_BUILD != ''
         run: |
           set -euo pipefail
-          for app in admin business driver consumer; do
+          for app in $APPS_TO_BUILD; do
             pushd "apps/$app" >/dev/null
             flutter pub get
             flutter build web
@@ -234,6 +272,7 @@ jobs:
           done
 
       - name: Ensure Firebase Hosting sites exist
+        if: env.APPS_TO_BUILD != ''
         run: |
           set -euo pipefail
           for site in liive-dev-admin liive-dev-business liive-dev-driver liive-dev-consumer; do
@@ -244,6 +283,15 @@ jobs:
         id: deploy_channels
         run: |
           set -euo pipefail
+          if [ -z "${APPS_TO_BUILD:-}" ]; then
+            echo "No apps to deploy; using existing web.app URLs."
+            echo "admin_url=https://liive-dev-admin.web.app" >> "$GITHUB_OUTPUT"
+            echo "business_url=https://liive-dev-business.web.app" >> "$GITHUB_OUTPUT"
+            echo "driver_url=https://liive-dev-driver.web.app" >> "$GITHUB_OUTPUT"
+            echo "consumer_url=https://liive-dev-consumer.web.app" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
           CHANNEL="ci-${GITHUB_SHA::7}"
           echo "CHANNEL=$CHANNEL" >> "$GITHUB_ENV"
 
@@ -263,15 +311,38 @@ jobs:
             popd >/dev/null
           }
 
-          deploy_site "admin" "apps/admin" "liive-dev-admin" "/tmp/admin.json"
-          deploy_site "business" "apps/business" "liive-dev-business" "/tmp/business.json"
-          deploy_site "driver" "apps/driver" "liive-dev-driver" "/tmp/driver.json"
-          deploy_site "consumer" "apps/consumer" "liive-dev-consumer" "/tmp/consumer.json"
+          ADMIN_URL=""
+          BUSINESS_URL=""
+          DRIVER_URL=""
+          CONSUMER_URL=""
 
-          ADMIN_URL=$(jq -r '.result.urls[0]' /tmp/admin.json)
-          BUSINESS_URL=$(jq -r '.result.urls[0]' /tmp/business.json)
-          DRIVER_URL=$(jq -r '.result.urls[0]' /tmp/driver.json)
-          CONSUMER_URL=$(jq -r '.result.urls[0]' /tmp/consumer.json)
+          if echo "$APPS_TO_BUILD" | rg -q '(^| )admin( |$)'; then
+            deploy_site "admin" "apps/admin" "liive-dev-admin" "/tmp/admin.json"
+            ADMIN_URL=$(jq -r '.result.urls[0]' /tmp/admin.json)
+          else
+            ADMIN_URL="https://liive-dev-admin.web.app"
+          fi
+
+          if echo "$APPS_TO_BUILD" | rg -q '(^| )business( |$)'; then
+            deploy_site "business" "apps/business" "liive-dev-business" "/tmp/business.json"
+            BUSINESS_URL=$(jq -r '.result.urls[0]' /tmp/business.json)
+          else
+            BUSINESS_URL="https://liive-dev-business.web.app"
+          fi
+
+          if echo "$APPS_TO_BUILD" | rg -q '(^| )driver( |$)'; then
+            deploy_site "driver" "apps/driver" "liive-dev-driver" "/tmp/driver.json"
+            DRIVER_URL=$(jq -r '.result.urls[0]' /tmp/driver.json)
+          else
+            DRIVER_URL="https://liive-dev-driver.web.app"
+          fi
+
+          if echo "$APPS_TO_BUILD" | rg -q '(^| )consumer( |$)'; then
+            deploy_site "consumer" "apps/consumer" "liive-dev-consumer" "/tmp/consumer.json"
+            CONSUMER_URL=$(jq -r '.result.urls[0]' /tmp/consumer.json)
+          else
+            CONSUMER_URL="https://liive-dev-consumer.web.app"
+          fi
 
           echo "ADMIN_APP_URL=$ADMIN_URL" >> "$GITHUB_ENV"
           echo "BUSINESS_APP_URL=$BUSINESS_URL" >> "$GITHUB_ENV"
@@ -284,6 +355,7 @@ jobs:
           echo "consumer_url=$CONSUMER_URL" >> "$GITHUB_OUTPUT"
 
       - name: Run UI flow tests
+        if: env.APPS_TO_BUILD != ''
         run: node tests/integration/ui_flow.mjs
 
       - name: Upload UI artifacts
