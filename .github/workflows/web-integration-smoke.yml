@@ -250,9 +250,10 @@ jobs:
           deploy_site () {
             local label=$1
             local dir=$2
-            local out=$3
+            local site=$3
+            local out=$4
             pushd "$dir" >/dev/null
-            if ! firebase hosting:channel:deploy "$CHANNEL" --project "$FIREBASE_PROJECT_ID" --only hosting --json > "$out"; then
+            if ! firebase --config firebase.json hosting:channel:deploy "$CHANNEL" --project "$FIREBASE_PROJECT_ID" --only "hosting:$site" --json > "$out"; then
               echo "Failed to deploy $label"
               if [ -f "$out" ]; then
                 cat "$out"
@@ -262,10 +263,10 @@ jobs:
             popd >/dev/null
           }
 
-          deploy_site "admin" "apps/admin" "/tmp/admin.json"
-          deploy_site "business" "apps/business" "/tmp/business.json"
-          deploy_site "driver" "apps/driver" "/tmp/driver.json"
-          deploy_site "consumer" "apps/consumer" "/tmp/consumer.json"
+          deploy_site "admin" "apps/admin" "liive-dev-admin" "/tmp/admin.json"
+          deploy_site "business" "apps/business" "liive-dev-business" "/tmp/business.json"
+          deploy_site "driver" "apps/driver" "liive-dev-driver" "/tmp/driver.json"
+          deploy_site "consumer" "apps/consumer" "liive-dev-consumer" "/tmp/consumer.json"
 
           ADMIN_URL=$(jq -r '.result.urls[0]' /tmp/admin.json)
           BUSINESS_URL=$(jq -r '.result.urls[0]' /tmp/business.json)
