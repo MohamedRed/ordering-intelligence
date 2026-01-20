@@ -1,8 +1,8 @@
 import { chromium } from 'playwright';
-import { mkdir } from 'node:fs/promises';
+import { mkdir, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 
-const DEFAULT_TIMEOUT_MS = 45000;
+const DEFAULT_TIMEOUT_MS = 60000;
 const ARTIFACT_DIR = path.join('tests', 'integration', 'artifacts');
 
 const apps = [
@@ -35,12 +35,37 @@ if (missing.length > 0) {
 }
 
 const toAttributeSelector = (text) => text.replace(/"/g, '\\"');
+const escapeRegExp = (value) => value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+const toTextMatcher = (text) => new RegExp(escapeRegExp(text), 'i');
+
+const attachPageLogging = (page) => {
+  const logs = [];
+  page.on('console', (msg) => {
+    const type = msg.type();
+    if (type === 'warning' || type === 'error') {
+      logs.push(`[console:${type}] ${msg.text()}`);
+    }
+  });
+  page.on('pageerror', (err) => {
+    logs.push(`[pageerror] ${err.message || err}`);
+  });
+  return logs;
+};
+
+const flushLogs = async (logs, appName) => {
+  if (logs.length === 0) return;
+  await writeFile(
+    path.join(ARTIFACT_DIR, `${appName}-console.txt`),
+    `${logs.join('\n')}\n`,
+  );
+};
 
 const assertText = async (page, text) => {
+  const textMatcher = toTextMatcher(text);
   const ariaSelector = `[aria-label*="${toAttributeSelector(text)}" i]`;
   try {
     await Promise.any([
-      page.getByText(text, { exact: false }).first().waitFor({
+      page.getByText(textMatcher).first().waitFor({
         state: 'visible',
         timeout: DEFAULT_TIMEOUT_MS,
       }),
@@ -71,9 +96,23 @@ const run = async () => {
     for (const app of apps) {
       const url = process.env[app.env];
       const page = await browser.newPage({ viewport: { width: 1280, height: 720 } });
+      const logs = attachPageLogging(page);
+      await page.addInitScript(() => {
+        window.__flutterFirstFrame = false;
+        window.addEventListener(
+          'flutter-first-frame',
+          () => {
+            window.__flutterFirstFrame = true;
+          },
+          { once: true },
+        );
+      });
       try {
-        await page.goto(url, { waitUntil: 'domcontentloaded' });
+        await page.goto(url, { waitUntil: 'load' });
         await page.waitForSelector('flt-glass-pane, flutter-view', {
+          timeout: DEFAULT_TIMEOUT_MS,
+        });
+        await page.waitForFunction(() => window.__flutterFirstFrame === true, {
           timeout: DEFAULT_TIMEOUT_MS,
         });
         for (const text of app.expected) {
@@ -86,8 +125,10 @@ const run = async () => {
         console.log(`✓ ${app.name} UI flow ok`);
       } catch (err) {
         await captureFailure(page, app.name);
+        await flushLogs(logs, app.name);
         throw err;
       } finally {
+        await flushLogs(logs, app.name);
         await page.close();
       }
     }
