@@ -242,14 +242,25 @@ jobs:
           fi
 
           APPS_TO_BUILD="$(echo "$APPS_TO_BUILD" | xargs)"
+          RUN_UI_TESTS="true"
           if [ -z "$APPS_TO_BUILD" ]; then
-            echo "No app changes detected; skipping UI build/deploy."
+            echo "No app changes detected; building consumer for API smoke."
+            APPS_TO_BUILD="consumer"
+            RUN_UI_TESTS="false"
           else
             echo "Apps to build: $APPS_TO_BUILD"
+            if ! echo "$APPS_TO_BUILD" | rg -q '(^| )admin( |$)' \
+              || ! echo "$APPS_TO_BUILD" | rg -q '(^| )business( |$)' \
+              || ! echo "$APPS_TO_BUILD" | rg -q '(^| )driver( |$)' \
+              || ! echo "$APPS_TO_BUILD" | rg -q '(^| )consumer( |$)'; then
+              RUN_UI_TESTS="false"
+              echo "Partial app set detected; skipping UI flow tests."
+            fi
           fi
 
           echo "apps=$APPS_TO_BUILD" >> "$GITHUB_OUTPUT"
           echo "APPS_TO_BUILD=$APPS_TO_BUILD" >> "$GITHUB_ENV"
+          echo "RUN_UI_TESTS=$RUN_UI_TESTS" >> "$GITHUB_ENV"
 
       - uses: subosito/flutter-action@v2
         with:
@@ -360,7 +371,7 @@ jobs:
           echo "consumer_url=$CONSUMER_URL" >> "$GITHUB_OUTPUT"
 
       - name: Run UI flow tests
-        if: env.APPS_TO_BUILD != ''
+        if: env.RUN_UI_TESTS == 'true'
         run: node tests/integration/ui_flow.mjs
 
       - name: Upload UI artifacts
