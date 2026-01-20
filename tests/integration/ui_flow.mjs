@@ -85,19 +85,25 @@ const waitForHostingReady = async (url, appName) => {
 };
 
 const enableSemantics = async (page) => {
-  const placeholder = page.locator('flt-semantics-placeholder');
-  if (await placeholder.count()) {
-    await page.evaluate(() => {
-      const node = document.querySelector('flt-semantics-placeholder');
-      node?.dispatchEvent(
-        new MouseEvent('click', { bubbles: true, cancelable: true, view: window }),
-      );
-    });
+  try {
     await page.waitForSelector('flt-semantics', {
       timeout: DEFAULT_TIMEOUT_MS,
       state: 'attached',
     });
+    return;
+  } catch (_) {
+    // Fall through to trigger the semantics placeholder.
   }
+  const placeholder = page.locator('flt-semantics-placeholder');
+  if (await placeholder.count()) {
+    await placeholder.first().click({ force: true, timeout: DEFAULT_TIMEOUT_MS });
+    await page.waitForSelector('flt-semantics', {
+      timeout: DEFAULT_TIMEOUT_MS,
+      state: 'attached',
+    });
+    return;
+  }
+  throw new Error('Flutter semantics not available for UI assertions.');
 };
 
 const assertText = async (page, text) => {
