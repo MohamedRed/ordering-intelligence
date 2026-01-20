@@ -231,11 +231,11 @@ jobs:
           echo "$CHANGED_FILES" > /tmp/changed_files.txt
 
           APPS_TO_BUILD=""
-          if echo "$CHANGED_FILES" | rg -q "^apps/shared/"; then
+          if echo "$CHANGED_FILES" | grep -Eq "^apps/shared/"; then
             APPS_TO_BUILD="admin business driver consumer"
           else
             for app in admin business driver consumer; do
-              if echo "$CHANGED_FILES" | rg -q "^apps/$app/"; then
+              if echo "$CHANGED_FILES" | grep -Eq "^apps/$app/"; then
                 APPS_TO_BUILD="$APPS_TO_BUILD $app"
               fi
             done
@@ -249,10 +249,10 @@ jobs:
             RUN_UI_TESTS="false"
           else
             echo "Apps to build: $APPS_TO_BUILD"
-            if ! echo "$APPS_TO_BUILD" | rg -q '(^| )admin( |$)' \
-              || ! echo "$APPS_TO_BUILD" | rg -q '(^| )business( |$)' \
-              || ! echo "$APPS_TO_BUILD" | rg -q '(^| )driver( |$)' \
-              || ! echo "$APPS_TO_BUILD" | rg -q '(^| )consumer( |$)'; then
+            if ! echo "$APPS_TO_BUILD" | grep -Eq '(^| )admin( |$)' \
+              || ! echo "$APPS_TO_BUILD" | grep -Eq '(^| )business( |$)' \
+              || ! echo "$APPS_TO_BUILD" | grep -Eq '(^| )driver( |$)' \
+              || ! echo "$APPS_TO_BUILD" | grep -Eq '(^| )consumer( |$)'; then
               RUN_UI_TESTS="false"
               echo "Partial app set detected; skipping UI flow tests."
             fi
@@ -288,11 +288,18 @@ jobs:
           set -euo pipefail
           existing_sites="$(firebase hosting:sites:list --project "$FIREBASE_PROJECT_ID" --json | jq -r '.result.sites[].name' | xargs -n1 basename || true)"
           for site in liive-dev-admin liive-dev-business liive-dev-driver liive-dev-consumer; do
-            if echo "$existing_sites" | rg -q "^${site}$"; then
+            if echo "$existing_sites" | grep -Eq "^${site}$"; then
               echo "Hosting site $site already exists."
               continue
             fi
-            firebase hosting:sites:create "$site" --project "$FIREBASE_PROJECT_ID"
+            if ! firebase hosting:sites:create "$site" --project "$FIREBASE_PROJECT_ID" 2> /tmp/firebase_site_err.log; then
+              if grep -q "already exists" /tmp/firebase_site_err.log; then
+                echo "Hosting site $site already exists."
+              else
+                cat /tmp/firebase_site_err.log
+                exit 1
+              fi
+            fi
           done
 
       - name: Deploy preview channels
@@ -332,28 +339,28 @@ jobs:
           DRIVER_URL=""
           CONSUMER_URL=""
 
-          if echo "$APPS_TO_BUILD" | rg -q '(^| )admin( |$)'; then
+          if echo "$APPS_TO_BUILD" | grep -Eq '(^| )admin( |$)'; then
             deploy_site "admin" "apps/admin" "liive-dev-admin" "/tmp/admin.json"
             ADMIN_URL=$(jq -r '.result.urls[0]' /tmp/admin.json)
           else
             ADMIN_URL="https://liive-dev-admin.web.app"
           fi
 
-          if echo "$APPS_TO_BUILD" | rg -q '(^| )business( |$)'; then
+          if echo "$APPS_TO_BUILD" | grep -Eq '(^| )business( |$)'; then
             deploy_site "business" "apps/business" "liive-dev-business" "/tmp/business.json"
             BUSINESS_URL=$(jq -r '.result.urls[0]' /tmp/business.json)
           else
             BUSINESS_URL="https://liive-dev-business.web.app"
           fi
 
-          if echo "$APPS_TO_BUILD" | rg -q '(^| )driver( |$)'; then
+          if echo "$APPS_TO_BUILD" | grep -Eq '(^| )driver( |$)'; then
             deploy_site "driver" "apps/driver" "liive-dev-driver" "/tmp/driver.json"
             DRIVER_URL=$(jq -r '.result.urls[0]' /tmp/driver.json)
           else
             DRIVER_URL="https://liive-dev-driver.web.app"
           fi
 
-          if echo "$APPS_TO_BUILD" | rg -q '(^| )consumer( |$)'; then
+          if echo "$APPS_TO_BUILD" | grep -Eq '(^| )consumer( |$)'; then
             deploy_site "consumer" "apps/consumer" "liive-dev-consumer" "/tmp/consumer.json"
             CONSUMER_URL=$(jq -r '.result.urls[0]' /tmp/consumer.json)
           else
