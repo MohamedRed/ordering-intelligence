@@ -96,7 +96,15 @@ const enableSemantics = async (page) => {
   }
   const placeholder = page.locator('flt-semantics-placeholder');
   if (await placeholder.count()) {
-    await placeholder.first().click({ force: true, timeout: DEFAULT_TIMEOUT_MS });
+    await page.evaluate(() => {
+      const node = document.querySelector('flt-semantics-placeholder');
+      if (!node) return;
+      node.scrollIntoView({ block: 'center', inline: 'center' });
+      node.click();
+      node.dispatchEvent(
+        new MouseEvent('click', { bubbles: true, cancelable: true, view: window }),
+      );
+    });
     await page.waitForSelector('flt-semantics', {
       timeout: DEFAULT_TIMEOUT_MS,
       state: 'attached',
