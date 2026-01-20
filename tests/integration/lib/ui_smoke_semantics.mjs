@@ -2,7 +2,10 @@ import { DEFAULT_TIMEOUT_MS } from './ui_smoke_constants.mjs';
 
 const revealSemanticsPlaceholder = async (page) => {
   await page.evaluate(() => {
-    const node = document.querySelector('flt-semantics-placeholder');
+    const findNode = (selector) =>
+      document.querySelector(selector)
+      || document.querySelector('flutter-view')?.shadowRoot?.querySelector(selector);
+    const node = findNode('flt-semantics-placeholder');
     if (!node) return;
     Object.assign(node.style, {
       position: 'fixed',
@@ -21,7 +24,10 @@ const revealSemanticsPlaceholder = async (page) => {
 
 const dispatchPlaceholderClick = async (page) => {
   await page.evaluate(() => {
-    const node = document.querySelector('flt-semantics-placeholder');
+    const findNode = (selector) =>
+      document.querySelector(selector)
+      || document.querySelector('flutter-view')?.shadowRoot?.querySelector(selector);
+    const node = findNode('flt-semantics-placeholder');
     if (!node) return;
     node.focus();
     node.click();
@@ -32,33 +38,39 @@ const dispatchPlaceholderClick = async (page) => {
 };
 
 export const enableSemantics = async (page) => {
+  const waitForSemanticsRoot = () =>
+    page.waitForFunction(() => {
+      const findNode = (selector) =>
+        document.querySelector(selector)
+        || document.querySelector('flutter-view')?.shadowRoot?.querySelector(selector);
+      return Boolean(findNode('flt-semantics'));
+    }, { timeout: DEFAULT_TIMEOUT_MS });
+
   try {
-    await page.waitForSelector('flt-semantics', {
-      timeout: DEFAULT_TIMEOUT_MS,
-      state: 'attached',
-    });
+    await waitForSemanticsRoot();
     return;
   } catch (_) {
     // Fall through to trigger the semantics placeholder.
   }
 
-  const placeholder = page.locator('flt-semantics-placeholder').first();
   try {
-    await placeholder.waitFor({ state: 'attached', timeout: DEFAULT_TIMEOUT_MS });
+    await page.waitForFunction(() => {
+      const findNode = (selector) =>
+        document.querySelector(selector)
+        || document.querySelector('flutter-view')?.shadowRoot?.querySelector(selector);
+      return Boolean(findNode('flt-semantics-placeholder'));
+    }, { timeout: DEFAULT_TIMEOUT_MS });
   } catch (err) {
     throw new Error('Flutter semantics placeholder did not appear.');
   }
 
   await revealSemanticsPlaceholder(page);
   try {
-    await placeholder.click({ timeout: DEFAULT_TIMEOUT_MS });
+    await page.click('flt-semantics-placeholder', { timeout: DEFAULT_TIMEOUT_MS });
   } catch (_) {
     // If Playwright actionability fails, fall back to JS click.
   }
   await dispatchPlaceholderClick(page);
 
-  await page.waitForSelector('flt-semantics', {
-    timeout: DEFAULT_TIMEOUT_MS,
-    state: 'attached',
-  });
+  await waitForSemanticsRoot();
 };
