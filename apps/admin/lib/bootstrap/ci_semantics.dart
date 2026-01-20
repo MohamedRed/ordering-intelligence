@@ -6,5 +6,7 @@ SemanticsHandle? _ciSemanticsHandle;
 void enableCiSemantics() {
   const enabled = bool.fromEnvironment('CI_FORCE_SEMANTICS');
   if (!enabled) return;
-  _ciSemanticsHandle ??= WidgetsBinding.instance.ensureSemantics();
+  WidgetsBinding.instance.addPostFrameCallback((_) {
+    _ciSemanticsHandle ??= WidgetsBinding.instance.ensureSemantics();
+  });
 }
