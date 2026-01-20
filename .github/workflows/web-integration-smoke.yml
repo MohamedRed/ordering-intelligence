@@ -335,7 +335,7 @@ jobs:
 
           extract_url () {
             local file=$1
-            jq -r '.result.urls[0] // .result.url // .result.preview?.urls[0] // empty' "$file"
+            jq -r '(.result.urls[0] // .result.url // .result.preview?.urls[0] // .result[]?.url // empty)' "$file"
           }
 
           ADMIN_URL=""
