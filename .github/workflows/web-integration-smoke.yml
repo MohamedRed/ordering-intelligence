@@ -245,7 +245,7 @@ jobs:
         run: |
           set -euo pipefail
           echo "Running up to ${PARALLEL_BUILDS} Flutter builds in parallel."
-          printf "%s\n" $APPS_TO_BUILD | xargs -n1 -P "${PARALLEL_BUILDS}" -I{} bash -lc 'cd "apps/{}" && flutter pub get && flutter build web'
+          printf "%s\n" $APPS_TO_BUILD | xargs -n1 -P "${PARALLEL_BUILDS}" -I{} bash -lc 'cd "apps/{}" && flutter pub get && flutter build web --dart-define=FLUTTER_WEB_ENABLE_SEMANTICS=true'
 
       - name: Ensure Firebase Hosting sites exist
         if: env.APPS_TO_BUILD != ''

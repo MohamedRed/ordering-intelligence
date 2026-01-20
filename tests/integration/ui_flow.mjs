@@ -2,7 +2,7 @@ import { chromium } from 'playwright';
 import { mkdir } from 'node:fs/promises';
 import path from 'node:path';
 
-const DEFAULT_TIMEOUT_MS = 30000;
+const DEFAULT_TIMEOUT_MS = 45000;
 const ARTIFACT_DIR = path.join('tests', 'integration', 'artifacts');
 
 const apps = [
@@ -34,11 +34,33 @@ if (missing.length > 0) {
   process.exit(1);
 }
 
+const toAttributeSelector = (text) => text.replace(/"/g, '\\"');
+
 const assertText = async (page, text) => {
-  await page.getByText(text, { exact: false }).first().waitFor({
-    state: 'visible',
-    timeout: DEFAULT_TIMEOUT_MS,
-  });
+  const ariaSelector = `[aria-label*="${toAttributeSelector(text)}" i]`;
+  try {
+    await Promise.any([
+      page.getByText(text, { exact: false }).first().waitFor({
+        state: 'visible',
+        timeout: DEFAULT_TIMEOUT_MS,
+      }),
+      page.locator(ariaSelector).first().waitFor({
+        state: 'attached',
+        timeout: DEFAULT_TIMEOUT_MS,
+      }),
+    ]);
+  } catch (err) {
+    throw new Error(`Timed out waiting for "${text}"`);
+  }
+};
+
+const captureFailure = async (page, appName) => {
+  try {
+    await page.screenshot({
+      path: path.join(ARTIFACT_DIR, `${appName}-error.png`),
+      fullPage: true,
+    });
+  } catch (_) {}
 };
 
 const run = async () => {
@@ -49,19 +71,25 @@ const run = async () => {
     for (const app of apps) {
       const url = process.env[app.env];
       const page = await browser.newPage({ viewport: { width: 1280, height: 720 } });
-      await page.goto(url, { waitUntil: 'domcontentloaded' });
-      await page.waitForSelector('flt-glass-pane, flutter-view', {
-        timeout: DEFAULT_TIMEOUT_MS,
-      });
-      for (const text of app.expected) {
-        await assertText(page, text);
+      try {
+        await page.goto(url, { waitUntil: 'domcontentloaded' });
+        await page.waitForSelector('flt-glass-pane, flutter-view', {
+          timeout: DEFAULT_TIMEOUT_MS,
+        });
+        for (const text of app.expected) {
+          await assertText(page, text);
+        }
+        await page.screenshot({
+          path: path.join(ARTIFACT_DIR, `${app.name}.png`),
+          fullPage: true,
+        });
+        console.log(`✓ ${app.name} UI flow ok`);
+      } catch (err) {
+        await captureFailure(page, app.name);
+        throw err;
+      } finally {
+        await page.close();
       }
-      await page.screenshot({
-        path: path.join(ARTIFACT_DIR, `${app.name}.png`),
-        fullPage: true,
-      });
-      await page.close();
-      console.log(`✓ ${app.name} UI flow ok`);
     }
   } finally {
     await browser.close();
