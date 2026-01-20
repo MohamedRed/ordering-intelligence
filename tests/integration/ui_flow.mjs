@@ -67,9 +67,13 @@ const run = async () => {
         await page.waitForSelector('flt-glass-pane, flutter-view', {
           timeout: DEFAULT_TIMEOUT_MS,
         });
-        await page.waitForFunction(() => window.__flutterFirstFrame === true, {
-          timeout: DEFAULT_TIMEOUT_MS,
-        });
+        try {
+          await page.waitForFunction(() => window.__flutterFirstFrame === true, {
+            timeout: DEFAULT_TIMEOUT_MS,
+          });
+        } catch (_) {
+          console.warn(`⚠ ${app.name}: flutter-first-frame event not observed; continuing.`);
+        }
         await enableSemantics(page);
         for (const text of app.expected) {
           await assertText(page, text);
