@@ -333,6 +333,11 @@ jobs:
             popd >/dev/null
           }
 
+          extract_url () {
+            local file=$1
+            jq -r '.result.urls[0] // .result.url // .result.preview?.urls[0] // empty' "$file"
+          }
+
           ADMIN_URL=""
           BUSINESS_URL=""
           DRIVER_URL=""
@@ -340,28 +345,48 @@ jobs:
 
           if echo "$APPS_TO_BUILD" | grep -Eq '(^| )admin( |$)'; then
             deploy_site "admin" "apps/admin" "/tmp/admin.json"
-            ADMIN_URL=$(jq -r '.result.urls[0]' /tmp/admin.json)
+            ADMIN_URL=$(extract_url /tmp/admin.json)
+            if [ -z "$ADMIN_URL" ]; then
+              echo "Failed to read admin preview URL."
+              cat /tmp/admin.json
+              exit 1
+            fi
           else
             ADMIN_URL="https://liive-dev-admin.web.app"
           fi
 
           if echo "$APPS_TO_BUILD" | grep -Eq '(^| )business( |$)'; then
             deploy_site "business" "apps/business" "/tmp/business.json"
-            BUSINESS_URL=$(jq -r '.result.urls[0]' /tmp/business.json)
+            BUSINESS_URL=$(extract_url /tmp/business.json)
+            if [ -z "$BUSINESS_URL" ]; then
+              echo "Failed to read business preview URL."
+              cat /tmp/business.json
+              exit 1
+            fi
           else
             BUSINESS_URL="https://liive-dev-business.web.app"
           fi
 
           if echo "$APPS_TO_BUILD" | grep -Eq '(^| )driver( |$)'; then
             deploy_site "driver" "apps/driver" "/tmp/driver.json"
-            DRIVER_URL=$(jq -r '.result.urls[0]' /tmp/driver.json)
+            DRIVER_URL=$(extract_url /tmp/driver.json)
+            if [ -z "$DRIVER_URL" ]; then
+              echo "Failed to read driver preview URL."
+              cat /tmp/driver.json
+              exit 1
+            fi
           else
             DRIVER_URL="https://liive-dev-driver.web.app"
           fi
 
           if echo "$APPS_TO_BUILD" | grep -Eq '(^| )consumer( |$)'; then
             deploy_site "consumer" "apps/consumer" "/tmp/consumer.json"
-            CONSUMER_URL=$(jq -r '.result.urls[0]' /tmp/consumer.json)
+            CONSUMER_URL=$(extract_url /tmp/consumer.json)
+            if [ -z "$CONSUMER_URL" ]; then
+              echo "Failed to read consumer preview URL."
+              cat /tmp/consumer.json
+              exit 1
+            fi
           else
             CONSUMER_URL="https://liive-dev-consumer.web.app"
           fi
