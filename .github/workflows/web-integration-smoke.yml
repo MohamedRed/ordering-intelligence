@@ -218,45 +218,9 @@ jobs:
         id: app_changes
         run: |
           set -euo pipefail
-          if [ "${{ github.event_name }}" = "pull_request" ]; then
-            BASE_SHA="${{ github.event.pull_request.base.sha }}"
-          elif [ -n "${{ github.event.before }}" ] && [ "${{ github.event.before }}" != "0000000000000000000000000000000000000000" ]; then
-            BASE_SHA="${{ github.event.before }}"
-          else
-            BASE_SHA="$(git rev-parse HEAD~1)"
-          fi
-          HEAD_SHA="${GITHUB_SHA}"
-
-          CHANGED_FILES="$(git diff --name-only "$BASE_SHA" "$HEAD_SHA")"
-          echo "$CHANGED_FILES" > /tmp/changed_files.txt
-
-          APPS_TO_BUILD=""
-          if echo "$CHANGED_FILES" | grep -Eq "^apps/shared/"; then
-            APPS_TO_BUILD="admin business driver consumer"
-          else
-            for app in admin business driver consumer; do
-              if echo "$CHANGED_FILES" | grep -Eq "^apps/$app/"; then
-                APPS_TO_BUILD="$APPS_TO_BUILD $app"
-              fi
-            done
-          fi
-
-          APPS_TO_BUILD="$(echo "$APPS_TO_BUILD" | xargs)"
+          APPS_TO_BUILD="admin business driver consumer"
           RUN_UI_TESTS="true"
-          if [ -z "$APPS_TO_BUILD" ]; then
-            echo "No app changes detected; building consumer for API smoke."
-            APPS_TO_BUILD="consumer"
-            RUN_UI_TESTS="false"
-          else
-            echo "Apps to build: $APPS_TO_BUILD"
-            if ! echo "$APPS_TO_BUILD" | grep -Eq '(^| )admin( |$)' \
-              || ! echo "$APPS_TO_BUILD" | grep -Eq '(^| )business( |$)' \
-              || ! echo "$APPS_TO_BUILD" | grep -Eq '(^| )driver( |$)' \
-              || ! echo "$APPS_TO_BUILD" | grep -Eq '(^| )consumer( |$)'; then
-              RUN_UI_TESTS="false"
-              echo "Partial app set detected; skipping UI flow tests."
-            fi
-          fi
+          echo "Building all web apps for smoke coverage."
 
           echo "apps=$APPS_TO_BUILD" >> "$GITHUB_OUTPUT"
           echo "APPS_TO_BUILD=$APPS_TO_BUILD" >> "$GITHUB_ENV"
