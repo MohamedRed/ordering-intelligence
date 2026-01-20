@@ -301,7 +301,7 @@ jobs:
             local site=$3
             local out=$4
             pushd "$dir" >/dev/null
-            if ! firebase --config firebase.json hosting:channel:deploy "$CHANNEL" --project "$FIREBASE_PROJECT_ID" --only "hosting:$site" --json > "$out"; then
+            if ! firebase --config firebase.json hosting:channel:deploy "$CHANNEL" --project "$FIREBASE_PROJECT_ID" --site "$site" --json > "$out"; then
               echo "Failed to deploy $label"
               if [ -f "$out" ]; then
                 cat "$out"
