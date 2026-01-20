@@ -93,7 +93,10 @@ const enableSemantics = async (page) => {
         new MouseEvent('click', { bubbles: true, cancelable: true, view: window }),
       );
     });
-    await page.waitForSelector('flt-semantics', { timeout: DEFAULT_TIMEOUT_MS });
+    await page.waitForSelector('flt-semantics', {
+      timeout: DEFAULT_TIMEOUT_MS,
+      state: 'attached',
+    });
   }
 };
 
