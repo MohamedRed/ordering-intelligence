@@ -275,8 +275,13 @@ jobs:
         if: env.APPS_TO_BUILD != ''
         run: |
           set -euo pipefail
+          existing_sites="$(firebase hosting:sites:list --project "$FIREBASE_PROJECT_ID" --json | jq -r '.result.sites[].name' | xargs -n1 basename || true)"
           for site in liive-dev-admin liive-dev-business liive-dev-driver liive-dev-consumer; do
-            firebase hosting:sites:create "$site" --project "$FIREBASE_PROJECT_ID" || true
+            if echo "$existing_sites" | rg -q "^${site}$"; then
+              echo "Hosting site $site already exists."
+              continue
+            fi
+            firebase hosting:sites:create "$site" --project "$FIREBASE_PROJECT_ID"
           done
 
       - name: Deploy preview channels
