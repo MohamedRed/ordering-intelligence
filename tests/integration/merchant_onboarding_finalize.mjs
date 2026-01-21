@@ -62,6 +62,16 @@ const run = async () => {
   const now = new Date();
   await patchFirestoreDoc({
     projectId,
+    documentPath: `tenants/${tenantId}`,
+    fields: {
+      featureFlags: {
+        demo_skip_stripe: true
+      },
+      updated_at: now
+    }
+  });
+  await patchFirestoreDoc({
+    projectId,
     documentPath: `onboarding_sessions/${sessionId}`,
     fields: {
       business: {
