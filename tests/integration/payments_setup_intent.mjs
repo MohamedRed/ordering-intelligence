@@ -10,6 +10,7 @@ if (!baseUrl) {
 }
 
 const apiBase = baseUrl.replace(/\/$/, '');
+const RETRYABLE_STATUSES = new Set([502, 503, 504]);
 
 const fetchJson = async (url, options = {}) => {
   const controller = new AbortController();
@@ -24,29 +25,53 @@ const fetchJson = async (url, options = {}) => {
       }
     });
     const text = await res.text();
-    const data = text ? JSON.parse(text) : null;
-    return { res, data };
+    let data = null;
+    if (text) {
+      try {
+        data = JSON.parse(text);
+      } catch (_) {
+        data = null;
+      }
+    }
+    return { res, data, text };
   } finally {
     clearTimeout(timeout);
   }
 };
 
-const assertOk = (label, res, data) => {
+const assertOk = (label, res, data, text) => {
   if (!res.ok) {
-    const payload = data ? JSON.stringify(data) : 'no body';
+    const payload = data ? JSON.stringify(data) : text || 'no body';
     throw new Error(`${label} failed: ${res.status} ${payload}`);
   }
 };
 
-const run = async () => {
-  const { res, data } = await fetchJson(
-    `${apiBase}/customers/${encodeURIComponent(customerId)}/setup-intent`,
-    {
-      method: 'POST',
-      body: JSON.stringify({ tenantId, customerName: 'CI Customer' })
+const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+
+const requestWithRetry = async (label, handler, attempts = 3) => {
+  let lastResult = null;
+  for (let attempt = 1; attempt <= attempts; attempt += 1) {
+    lastResult = await handler();
+    if (lastResult.res.ok) return lastResult;
+    if (!RETRYABLE_STATUSES.has(lastResult.res.status)) break;
+    if (attempt < attempts) {
+      await sleep(500 * attempt);
     }
+  }
+  assertOk(label, lastResult.res, lastResult.data, lastResult.text);
+  return lastResult;
+};
+
+const run = async () => {
+  const { data } = await requestWithRetry('setup intent', () =>
+    fetchJson(
+      `${apiBase}/customers/${encodeURIComponent(customerId)}/setup-intent`,
+      {
+        method: 'POST',
+        body: JSON.stringify({ tenantId, customerName: 'CI Customer' })
+      },
+    ),
   );
-  assertOk('setup intent', res, data);
   if (!data?.clientSecret) {
     throw new Error('setup intent missing clientSecret');
   }
