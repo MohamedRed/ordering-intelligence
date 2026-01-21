@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:consumer_core/consumer_core.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
+import 'package:flutter/foundation.dart';
 
 class MobileNotificationsAdapter implements NotificationsAdapter {
   MobileNotificationsAdapter({required this.api});
@@ -16,11 +17,13 @@ class MobileNotificationsAdapter implements NotificationsAdapter {
     await messaging.requestPermission();
     final token = await messaging.getToken();
     if (token == null || token.isEmpty) return;
-    final platform = Platform.isIOS
-        ? 'ios'
-        : Platform.isAndroid
-            ? 'android'
-            : 'mobile';
+    final platform = kIsWeb
+        ? 'web'
+        : Platform.isIOS
+            ? 'ios'
+            : Platform.isAndroid
+                ? 'android'
+                : 'mobile';
     await api.registerMobileDeviceToken(
       sessionId: sessionId,
       deviceToken: token,

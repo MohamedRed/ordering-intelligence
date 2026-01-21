@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 
 import '../../services/tv_pairing_service.dart';
@@ -94,12 +95,14 @@ class _TvPairingScreenState extends State<TvPairingScreen> {
   }
 
   String _deviceType() {
+    if (kIsWeb) return 'tv';
     if (Platform.isAndroid) return 'android_tv';
     if (Platform.isIOS) return 'tvos';
     return 'tv';
   }
 
   String _devicePlatform() {
+    if (kIsWeb) return 'web';
     if (Platform.isAndroid) return 'android';
     if (Platform.isIOS) return 'ios';
     return 'tv';

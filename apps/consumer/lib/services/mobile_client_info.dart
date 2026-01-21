@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:flutter/foundation.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 
 class MobileClientInfo {
@@ -23,17 +24,19 @@ class MobileClientInfo {
       defaultValue: 'consumer-mobile',
     );
     const version = String.fromEnvironment('CONSUMER_APP_VERSION');
-    final platform = Platform.isIOS
-        ? 'ios'
-        : Platform.isAndroid
-            ? 'android'
-            : 'mobile';
+    final platform = kIsWeb
+        ? 'web'
+        : Platform.isIOS
+            ? 'ios'
+            : Platform.isAndroid
+                ? 'android'
+                : 'mobile';
     return MobileClientInfo(
       platform: platform,
       app: appId,
       version: version,
-      os: Platform.operatingSystem,
-      osVersion: Platform.operatingSystemVersion,
+      os: kIsWeb ? 'web' : Platform.operatingSystem,
+      osVersion: kIsWeb ? '' : Platform.operatingSystemVersion,
     );
   }
 
