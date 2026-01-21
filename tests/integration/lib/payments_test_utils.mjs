@@ -39,7 +39,7 @@ export const assertOk = (label, res, data, text) => {
 export const requestWithRetry = async (
   label,
   handler,
-  { attempts = 4, retryStatuses = RETRYABLE_STATUSES, skipStatuses = RETRYABLE_STATUSES } = {},
+  { attempts = 4, retryStatuses = RETRYABLE_STATUSES } = {},
 ) => {
   let lastResult = null;
   for (let attempt = 1; attempt <= attempts; attempt += 1) {
@@ -49,10 +49,6 @@ export const requestWithRetry = async (
     if (attempt < attempts) {
       await sleep(500 * attempt);
     }
-  }
-  if (lastResult && skipStatuses.has(lastResult.res.status)) {
-    console.warn(`Skipping ${label}: payments service unavailable (${lastResult.res.status}).`);
-    process.exit(0);
   }
   assertOk(label, lastResult.res, lastResult.data, lastResult.text);
   return lastResult;
