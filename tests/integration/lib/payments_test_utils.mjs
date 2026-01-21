@@ -40,10 +40,10 @@ export const requestWithRetry = async (
   label,
   handler,
   {
-    attempts = 6,
+    attempts = 8,
     retryStatuses = RETRYABLE_STATUSES,
-    baseDelayMs = 1000,
-    maxDelayMs = 30000,
+    baseDelayMs = 5000,
+    maxDelayMs = 60000,
   } = {},
 ) => {
   let lastResult = null;
