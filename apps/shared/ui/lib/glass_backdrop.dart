@@ -18,37 +18,41 @@ class GlassBackdrop extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Stack(
-      children: [
-        // Base gradient background.
-        Positioned.fill(
-          child: DecoratedBox(
-            decoration: const BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: [
-                  Color(0xFFF2F0EC), // soft warm white
-                  Color(0xFFE6E0D6), // light sand
-                  Color(0xFFD9D0C5), // muted taupe
-                ],
-                stops: [0.05, 0.55, 1.0],
+    final textDirection = Directionality.maybeOf(context) ?? TextDirection.ltr;
+    return Directionality(
+      textDirection: textDirection,
+      child: Stack(
+        children: [
+          // Base gradient background.
+          Positioned.fill(
+            child: DecoratedBox(
+              decoration: const BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [
+                    Color(0xFFF2F0EC), // soft warm white
+                    Color(0xFFE6E0D6), // light sand
+                    Color(0xFFD9D0C5), // muted taupe
+                  ],
+                  stops: [0.05, 0.55, 1.0],
+                ),
               ),
             ),
           ),
-        ),
-        // Glassy overlay for a slight sheen.
-        Positioned.fill(
-          child: BackdropFilter(
-            filter: ImageFilter.blur(sigmaX: blurSigma, sigmaY: blurSigma),
-            child: Container(
-              color: Colors.white.withOpacity(0.06),
+          // Glassy overlay for a slight sheen.
+          Positioned.fill(
+            child: BackdropFilter(
+              filter: ImageFilter.blur(sigmaX: blurSigma, sigmaY: blurSigma),
+              child: Container(
+                color: Colors.white.withOpacity(0.06),
+              ),
             ),
           ),
-        ),
-        // Foreground content.
-        Positioned.fill(child: child),
-      ],
+          // Foreground content.
+          Positioned.fill(child: child),
+        ],
+      ),
     );
   }
 }
