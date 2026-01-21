@@ -39,17 +39,46 @@ const assertFlutterIndex = async (name, url) => {
   console.log(`✓ ${name} app responded with Flutter index`);
 };
 
+const buildHealthUrls = (baseUrl) => {
+  const candidates = [];
+  const trimmed = baseUrl.replace(/\/$/, '');
+  candidates.push(`${trimmed}/healthz`);
+  try {
+    const parsed = new URL(baseUrl);
+    const originHealth = `${parsed.origin}/healthz`;
+    if (!candidates.includes(originHealth)) {
+      candidates.push(originHealth);
+    }
+    const originHealthSlash = `${parsed.origin}/healthz/`;
+    if (!candidates.includes(originHealthSlash)) {
+      candidates.push(originHealthSlash);
+    }
+  } catch (err) {
+    throw new Error(`CHANNEL_GATEWAY_BASE_URL is invalid: ${baseUrl}`);
+  }
+  return candidates;
+};
+
 const assertChannelGateway = async () => {
   if (!channelGatewayBase) {
     console.log('CHANNEL_GATEWAY_BASE_URL not set; skipping API health check.');
     return;
   }
-  const url = `${channelGatewayBase.replace(/\/$/, '')}/healthz`;
-  const res = await fetchWithTimeout(url);
-  if (!res.ok) {
-    throw new Error(`channel-gateway healthz returned ${res.status} at ${url}`);
+  const healthUrls = buildHealthUrls(channelGatewayBase);
+  let lastFailure = null;
+  for (const url of healthUrls) {
+    try {
+      const res = await fetchWithTimeout(url);
+      if (res.ok) {
+        console.log(`✓ channel-gateway healthz responded at ${url}`);
+        return;
+      }
+      lastFailure = `${res.status} at ${url}`;
+    } catch (err) {
+      lastFailure = err?.message ?? String(err);
+    }
   }
-  console.log('✓ channel-gateway healthz responded');
+  throw new Error(`channel-gateway healthz failed (${lastFailure})`);
 };
 
 const run = async () => {
