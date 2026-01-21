@@ -50,7 +50,7 @@ const run = async () => {
         country: 'FR',
         business_type: 'individual',
         phone: '+33123450001',
-        capabilities: ['transfers'],
+        capabilities: ['card_payments', 'transfers'],
       }),
     },
   );
