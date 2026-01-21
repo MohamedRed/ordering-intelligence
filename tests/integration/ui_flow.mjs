@@ -74,7 +74,7 @@ const run = async () => {
         } catch (_) {
           console.warn(`⚠ ${app.name}: flutter-first-frame event not observed; continuing.`);
         }
-        await enableSemantics(page);
+        await enableSemantics(page, app.name);
         for (const text of app.expected) {
           await assertText(page, text);
         }
