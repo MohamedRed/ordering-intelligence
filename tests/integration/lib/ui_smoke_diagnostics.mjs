@@ -64,12 +64,32 @@ export const captureDomDiagnostics = async (page, appName) => {
     const probeCanvas = document.createElement('canvas');
     const webglSupport = Boolean(probeCanvas.getContext('webgl'));
     const webgl2Support = Boolean(probeCanvas.getContext('webgl2'));
+    const resourceEntries = performance
+      .getEntriesByType('resource')
+      .filter((entry) =>
+        /flutter_bootstrap\\.js|main\\.dart\\.js|canvaskit|skwasm|flutter_service_worker/.test(
+          entry.name,
+        ),
+      )
+      .slice(-25)
+      .map((entry) => ({
+        name: entry.name,
+        duration: Math.round(entry.duration),
+        initiatorType: entry.initiatorType,
+      }));
+    const scripts = Array.from(document.scripts || [])
+      .map((script) => script.src)
+      .filter(Boolean)
+      .slice(-25);
 
     return {
       url: window.location.href,
       readyState: document.readyState,
       hasFlutterView: Boolean(flutterView),
       hasShadowRoot: Boolean(shadowRoot),
+      userAgent: navigator.userAgent,
+      flutterConfig: window._flutter?.buildConfig ?? null,
+      flutterLoaderPresent: Boolean(window._flutter?.loader),
       webglSupport,
       webgl2Support,
       placeholder: describe(placeholder),
@@ -78,6 +98,8 @@ export const captureDomDiagnostics = async (page, appName) => {
       glassPane: describe(glassPane),
       flutterCanvas: describe(flutterCanvas),
       flutterView: describe(flutterView),
+      scripts,
+      resourceEntries,
     };
   });
 

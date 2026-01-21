@@ -5,14 +5,32 @@ import { ARTIFACT_DIR } from './ui_smoke_constants.mjs';
 
 export const attachPageLogging = (page) => {
   const logs = [];
+  const pushLog = (entry) => {
+    logs.push(`[${new Date().toISOString()}] ${entry}`);
+  };
   page.on('console', (msg) => {
     const type = msg.type();
-    if (type === 'warning' || type === 'error') {
-      logs.push(`[console:${type}] ${msg.text()}`);
-    }
+    pushLog(`[console:${type}] ${msg.text()}`);
   });
   page.on('pageerror', (err) => {
-    logs.push(`[pageerror] ${err.message || err}`);
+    pushLog(`[pageerror] ${err.message || err}`);
+  });
+  page.on('requestfailed', (request) => {
+    const failure = request.failure();
+    pushLog(
+      `[requestfailed] ${request.method()} ${request.url()} ${failure?.errorText ?? ''}`.trim(),
+    );
+  });
+  page.on('response', (response) => {
+    const status = response.status();
+    const url = response.url();
+    if (status >= 400) {
+      pushLog(`[response:${status}] ${response.request().method()} ${url}`);
+      return;
+    }
+    if (/flutter_bootstrap\\.js|main\\.dart\\.js|canvaskit|skwasm|flutter_service_worker/.test(url)) {
+      pushLog(`[response:${status}] ${url}`);
+    }
   });
   return logs;
 };
