@@ -39,7 +39,12 @@ export const assertOk = (label, res, data, text) => {
 export const requestWithRetry = async (
   label,
   handler,
-  { attempts = 4, retryStatuses = RETRYABLE_STATUSES } = {},
+  {
+    attempts = 6,
+    retryStatuses = RETRYABLE_STATUSES,
+    baseDelayMs = 1000,
+    maxDelayMs = 30000,
+  } = {},
 ) => {
   let lastResult = null;
   for (let attempt = 1; attempt <= attempts; attempt += 1) {
@@ -47,7 +52,11 @@ export const requestWithRetry = async (
     if (lastResult.res.ok) return lastResult;
     if (!retryStatuses.has(lastResult.res.status)) break;
     if (attempt < attempts) {
-      await sleep(500 * attempt);
+      let delay = Math.min(baseDelayMs * attempt, maxDelayMs);
+      if (lastResult.text && lastResult.text.includes('Please try again in 30 seconds')) {
+        delay = Math.max(delay, 30000);
+      }
+      await sleep(delay);
     }
   }
   assertOk(label, lastResult.res, lastResult.data, lastResult.text);
