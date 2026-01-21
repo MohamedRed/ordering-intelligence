@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:app_links/app_links.dart';
 import 'package:consumer_core/consumer_core.dart';
+import 'package:flutter/foundation.dart';
 
 import '../models/gas_order_handoff.dart';
 import '../models/handoff_payload.dart';
@@ -12,12 +13,16 @@ import 'session_bridge.dart';
 
 class HandoffLinkService {
   HandoffLinkService({AppLinks? appLinks})
-      : _appLinks = appLinks ?? AppLinks();
+      : _appLinks = kIsWeb ? null : (appLinks ?? AppLinks());
 
-  final AppLinks _appLinks;
+  final AppLinks? _appLinks;
 
   Stream<HandoffPayload> handoffStream() async* {
-    await for (final uri in _appLinks.uriLinkStream) {
+    final appLinks = _appLinks;
+    if (appLinks == null) {
+      return;
+    }
+    await for (final uri in appLinks.uriLinkStream) {
       final handoff = HandoffLinkParser.parse(uri);
       if (handoff != null) {
         yield handoff;
@@ -26,6 +31,7 @@ class HandoffLinkService {
   }
 
   Future<HandoffPayload?> consumePendingBridgeLink() async {
+    if (kIsWeb) return null;
     final raw = await SessionBridge.loadHandoffLink();
     if (raw == null || raw.isEmpty) return null;
     final uri = Uri.tryParse(raw);
