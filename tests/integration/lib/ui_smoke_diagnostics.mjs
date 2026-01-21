@@ -61,12 +61,17 @@ export const captureDomDiagnostics = async (page, appName) => {
     const semantics = findNode('flt-semantics');
     const semanticsHost = findNode('flt-semantics-host');
     const flutterCanvas = findNode('flt-canvas');
+    const probeCanvas = document.createElement('canvas');
+    const webglSupport = Boolean(probeCanvas.getContext('webgl'));
+    const webgl2Support = Boolean(probeCanvas.getContext('webgl2'));
 
     return {
       url: window.location.href,
       readyState: document.readyState,
       hasFlutterView: Boolean(flutterView),
       hasShadowRoot: Boolean(shadowRoot),
+      webglSupport,
+      webgl2Support,
       placeholder: describe(placeholder),
       semantics: describe(semantics),
       semanticsHost: describe(semanticsHost),

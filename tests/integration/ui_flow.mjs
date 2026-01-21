@@ -53,7 +53,15 @@ const installFirstFrameHook = async (page) => {
 
 const run = async () => {
   await mkdir(ARTIFACT_DIR, { recursive: true });
-  const browser = await chromium.launch({ headless: true });
+  const browser = await chromium.launch({
+    headless: true,
+    args: [
+      '--enable-webgl',
+      '--ignore-gpu-blocklist',
+      '--use-gl=swiftshader',
+      '--enable-unsafe-swiftshader',
+    ],
+  });
 
   try {
     for (const app of apps) {
