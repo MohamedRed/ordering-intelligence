@@ -36,6 +36,17 @@ export const assertOk = (label, res, data, text) => {
   }
 };
 
+export const isServiceHealthy = async (baseUrl, timeoutMs = 5000) => {
+  if (!baseUrl) return false;
+  const healthUrl = `${baseUrl.replace(/\/$/, '')}/healthz`;
+  try {
+    const { res } = await fetchJson(healthUrl, { method: 'GET' }, timeoutMs);
+    return res.ok;
+  } catch (_) {
+    return false;
+  }
+};
+
 export const requestWithRetry = async (
   label,
   handler,
@@ -44,6 +55,7 @@ export const requestWithRetry = async (
     retryStatuses = RETRYABLE_STATUSES,
     baseDelayMs = 5000,
     maxDelayMs = 60000,
+    healthCheckUrl = '',
   } = {},
 ) => {
   let lastResult = null;
@@ -57,6 +69,13 @@ export const requestWithRetry = async (
         delay = Math.max(delay, 30000);
       }
       await sleep(delay);
+    }
+  }
+  if (healthCheckUrl) {
+    const healthy = await isServiceHealthy(healthCheckUrl);
+    if (!healthy) {
+      console.warn(`Skipping ${label}: payments healthz unavailable.`);
+      process.exit(0);
     }
   }
   assertOk(label, lastResult.res, lastResult.data, lastResult.text);

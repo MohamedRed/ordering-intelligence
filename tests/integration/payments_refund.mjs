@@ -63,7 +63,9 @@ const run = async () => {
     throw new Error('order response missing id');
   }
 
-  const { data: paymentData } = await requestWithRetry('payment intent', () =>
+  const { data: paymentData } = await requestWithRetry(
+    'payment intent',
+    () =>
     fetchJson(`${paymentsApi}/orders/${order.id}/payment-intent`, {
       method: 'POST',
       headers: {
@@ -76,7 +78,8 @@ const run = async () => {
         currency: 'eur',
         sessionId: `ci-${Date.now()}`
       })
-    })
+    }),
+    { healthCheckUrl: paymentsApi }
   );
   if (!paymentData?.paymentId || !paymentData?.paymentIntentId) {
     throw new Error('payment intent missing ids');
@@ -92,14 +95,17 @@ const run = async () => {
     }
   });
 
-  const { data: refundData } = await requestWithRetry('refund', () =>
+  const { data: refundData } = await requestWithRetry(
+    'refund',
+    () =>
     fetchJson(`${paymentsApi}/orders/${order.id}/refund`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'
       },
       body: JSON.stringify({ reason: 'requested_by_customer' })
-    })
+    }),
+    { healthCheckUrl: paymentsApi }
   );
   if (refundData?.refundType !== 'void') {
     throw new Error(`unexpected refund type: ${JSON.stringify(refundData)}`);

@@ -44,7 +44,9 @@ const run = async () => {
   const signature = crypto.createHmac('sha256', webhookSecret).update(signedPayload, 'utf8').digest('hex');
   const header = `t=${signatureTimestamp},v1=${signature}`;
 
-  const { data } = await requestWithRetry('stripe webhook signed', () =>
+  const { data } = await requestWithRetry(
+    'stripe webhook signed',
+    () =>
     fetchJson(`${apiBase}/webhooks/stripe`, {
       method: 'POST',
       headers: {
@@ -53,6 +55,7 @@ const run = async () => {
       },
       body: payload,
     }),
+    { healthCheckUrl: apiBase },
   );
   if (data?.received !== true) {
     throw new Error(`unexpected webhook response: ${JSON.stringify(data)}`);

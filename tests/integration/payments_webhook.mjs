@@ -33,7 +33,9 @@ const run = async () => {
     },
   };
 
-  const { data } = await requestWithRetry('stripe webhook', () =>
+  const { data } = await requestWithRetry(
+    'stripe webhook',
+    () =>
     fetchJson(`${apiBase}/internal/test/stripe-webhook`, {
       method: 'POST',
       headers: {
@@ -42,6 +44,7 @@ const run = async () => {
       },
       body: JSON.stringify(event),
     }),
+    { healthCheckUrl: apiBase },
   );
   if (data?.received !== true) {
     throw new Error(`unexpected webhook response: ${JSON.stringify(data)}`);

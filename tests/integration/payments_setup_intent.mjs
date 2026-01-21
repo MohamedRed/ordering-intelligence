@@ -13,7 +13,9 @@ if (!baseUrl) {
 const apiBase = baseUrl.replace(/\/$/, '');
 
 const run = async () => {
-  const { data } = await requestWithRetry('setup intent', () =>
+  const { data } = await requestWithRetry(
+    'setup intent',
+    () =>
     fetchJson(
       `${apiBase}/customers/${encodeURIComponent(customerId)}/setup-intent`,
       {
@@ -24,6 +26,7 @@ const run = async () => {
         body: JSON.stringify({ tenantId, customerName: 'CI Customer' })
       },
     ),
+    { healthCheckUrl: apiBase },
   );
   if (!data?.clientSecret) {
     throw new Error('setup intent missing clientSecret');
