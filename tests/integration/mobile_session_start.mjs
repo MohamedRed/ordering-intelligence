@@ -57,8 +57,12 @@ const run = async () => {
   if (!sessionId) {
     throw new Error(`missing sessionId from mobile session start: ${JSON.stringify(startData)}`);
   }
-  if (!startData?.customerId) {
-    throw new Error(`missing customerId from mobile session start: ${JSON.stringify(startData)}`);
+  const startUserId = startData?.customerId || startData?.userId;
+  if (!startUserId) {
+    throw new Error(`missing user identity from mobile session start: ${JSON.stringify(startData)}`);
+  }
+  if (startData?.storeId && startData.storeId !== storeId) {
+    throw new Error(`unexpected storeId from mobile session start: ${JSON.stringify(startData)}`);
   }
 
   const { res: getRes, data: getData } = await fetchJson(
@@ -66,8 +70,12 @@ const run = async () => {
     { method: 'GET' },
   );
   assertOk('mobile session get', getRes, getData);
-  if (!getData?.customerId) {
-    throw new Error(`missing customerId from mobile session get: ${JSON.stringify(getData)}`);
+  const getUserId = getData?.customerId || getData?.userId;
+  if (!getUserId) {
+    throw new Error(`missing user identity from mobile session get: ${JSON.stringify(getData)}`);
+  }
+  if (getData?.storeId && getData.storeId !== storeId) {
+    throw new Error(`unexpected storeId from mobile session get: ${JSON.stringify(getData)}`);
   }
   console.log('✓ mobile session start/get ok');
 };
