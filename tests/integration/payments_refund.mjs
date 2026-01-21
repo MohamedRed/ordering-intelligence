@@ -1,7 +1,7 @@
 import { getIdentityToken } from './lib/gcloud_tokens.mjs';
 import { patchFirestoreDoc } from './lib/firestore_admin.mjs';
+import { assertOk, fetchJson, requestWithRetry } from './lib/payments_test_utils.mjs';
 
-const DEFAULT_TIMEOUT_MS = 20000;
 const paymentsBaseUrl = process.env.PAYMENTS_SERVICE_BASE_URL;
 const orderBaseUrl = process.env.ORDER_SERVICE_BASE_URL;
 const projectId = process.env.FIREBASE_PROJECT_ID || process.env.GOOGLE_CLOUD_PROJECT || '';
@@ -26,39 +26,15 @@ if (!projectId) {
 const paymentsApi = paymentsBaseUrl.replace(/\/$/, '');
 const orderApi = orderBaseUrl.replace(/\/$/, '');
 
-const fetchJson = async (url, options = {}) => {
-  const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), DEFAULT_TIMEOUT_MS);
-  try {
-    const res = await fetch(url, {
-      ...options,
-      signal: controller.signal,
-      headers: {
-        'Content-Type': 'application/json',
-        ...(options.headers || {})
-      }
-    });
-    const text = await res.text();
-    const data = text ? JSON.parse(text) : null;
-    return { res, data };
-  } finally {
-    clearTimeout(timeout);
-  }
-};
-
-const assertOk = (label, res, data) => {
-  if (!res.ok) {
-    const payload = data ? JSON.stringify(data) : 'no body';
-    throw new Error(`${label} failed: ${res.status} ${payload}`);
-  }
-};
-
 const run = async () => {
   const orderToken = getIdentityToken(orderApi);
 
   const { res: orderRes, data: order } = await fetchJson(`${orderApi}/orders`, {
     method: 'POST',
-    headers: { Authorization: `Bearer ${orderToken}` },
+    headers: {
+      Authorization: `Bearer ${orderToken}`,
+      'Content-Type': 'application/json',
+    },
     body: JSON.stringify({
       storeId,
       tenantId,
@@ -87,10 +63,12 @@ const run = async () => {
     throw new Error('order response missing id');
   }
 
-  const { res: paymentRes, data: paymentData } = await fetchJson(
-    `${paymentsApi}/orders/${order.id}/payment-intent`,
-    {
+  const { data: paymentData } = await requestWithRetry('payment intent', () =>
+    fetchJson(`${paymentsApi}/orders/${order.id}/payment-intent`, {
       method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
       body: JSON.stringify({
         customerId,
         customerName: 'CI Refund',
@@ -98,9 +76,8 @@ const run = async () => {
         currency: 'eur',
         sessionId: `ci-${Date.now()}`
       })
-    }
+    })
   );
-  assertOk('payment intent', paymentRes, paymentData);
   if (!paymentData?.paymentId || !paymentData?.paymentIntentId) {
     throw new Error('payment intent missing ids');
   }
@@ -115,14 +92,15 @@ const run = async () => {
     }
   });
 
-  const { res: refundRes, data: refundData } = await fetchJson(
-    `${paymentsApi}/orders/${order.id}/refund`,
-    {
+  const { data: refundData } = await requestWithRetry('refund', () =>
+    fetchJson(`${paymentsApi}/orders/${order.id}/refund`, {
       method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
       body: JSON.stringify({ reason: 'requested_by_customer' })
-    }
+    })
   );
-  assertOk('refund', refundRes, refundData);
   if (refundData?.refundType !== 'void') {
     throw new Error(`unexpected refund type: ${JSON.stringify(refundData)}`);
   }

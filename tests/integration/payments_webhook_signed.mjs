@@ -1,6 +1,7 @@
 import crypto from 'node:crypto';
 
-const DEFAULT_TIMEOUT_MS = 20000;
+import { fetchJson, requestWithRetry } from './lib/payments_test_utils.mjs';
+
 const baseUrl = process.env.PAYMENTS_SERVICE_BASE_URL;
 const webhookSecret = process.env.STRIPE_PAYMENTS_WEBHOOK_SECRET;
 const suffix = (process.env.FIRESTORE_SUFFIX || 'ci').trim();
@@ -15,34 +16,6 @@ if (!webhookSecret) {
 }
 
 const apiBase = baseUrl.replace(/\/$/, '');
-
-const fetchJson = async (url, payload, signature) => {
-  const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), DEFAULT_TIMEOUT_MS);
-  try {
-    const res = await fetch(url, {
-      method: 'POST',
-      signal: controller.signal,
-      headers: {
-        'Content-Type': 'application/json',
-        'Stripe-Signature': signature
-      },
-      body: payload
-    });
-    const text = await res.text();
-    const data = text ? JSON.parse(text) : null;
-    return { res, data };
-  } finally {
-    clearTimeout(timeout);
-  }
-};
-
-const assertOk = (label, res, data) => {
-  if (!res.ok) {
-    const payload = data ? JSON.stringify(data) : 'no body';
-    throw new Error(`${label} failed: ${res.status} ${payload}`);
-  }
-};
 
 const run = async () => {
   const now = Math.floor(Date.now() / 1000);
@@ -71,8 +44,16 @@ const run = async () => {
   const signature = crypto.createHmac('sha256', webhookSecret).update(signedPayload, 'utf8').digest('hex');
   const header = `t=${signatureTimestamp},v1=${signature}`;
 
-  const { res, data } = await fetchJson(`${apiBase}/webhooks/stripe`, payload, header);
-  assertOk('stripe webhook signed', res, data);
+  const { data } = await requestWithRetry('stripe webhook signed', () =>
+    fetchJson(`${apiBase}/webhooks/stripe`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Stripe-Signature': header,
+      },
+      body: payload,
+    }),
+  );
   if (data?.received !== true) {
     throw new Error(`unexpected webhook response: ${JSON.stringify(data)}`);
   }

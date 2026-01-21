@@ -1,6 +1,6 @@
 import { getIdentityToken } from './lib/gcloud_tokens.mjs';
+import { fetchJson, requestWithRetry } from './lib/payments_test_utils.mjs';
 
-const DEFAULT_TIMEOUT_MS = 20000;
 const baseUrl = process.env.PAYMENTS_SERVICE_BASE_URL;
 const suffix = (process.env.FIRESTORE_SUFFIX || 'ci').trim();
 
@@ -11,34 +11,6 @@ if (!baseUrl) {
 
 const apiBase = baseUrl.replace(/\/$/, '');
 const token = getIdentityToken(apiBase);
-
-const fetchJson = async (url, payload) => {
-  const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), DEFAULT_TIMEOUT_MS);
-  try {
-    const res = await fetch(url, {
-      method: 'POST',
-      signal: controller.signal,
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${token}`,
-      },
-      body: JSON.stringify(payload),
-    });
-    const text = await res.text();
-    const data = text ? JSON.parse(text) : null;
-    return { res, data };
-  } finally {
-    clearTimeout(timeout);
-  }
-};
-
-const assertOk = (label, res, data) => {
-  if (!res.ok) {
-    const payload = data ? JSON.stringify(data) : 'no body';
-    throw new Error(`${label} failed: ${res.status} ${payload}`);
-  }
-};
 
 const run = async () => {
   const now = Math.floor(Date.now() / 1000);
@@ -61,8 +33,16 @@ const run = async () => {
     },
   };
 
-  const { res, data } = await fetchJson(`${apiBase}/internal/test/stripe-webhook`, event);
-  assertOk('stripe webhook', res, data);
+  const { data } = await requestWithRetry('stripe webhook', () =>
+    fetchJson(`${apiBase}/internal/test/stripe-webhook`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify(event),
+    }),
+  );
   if (data?.received !== true) {
     throw new Error(`unexpected webhook response: ${JSON.stringify(data)}`);
   }
