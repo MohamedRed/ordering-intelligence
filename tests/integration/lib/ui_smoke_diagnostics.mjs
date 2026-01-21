@@ -5,9 +5,24 @@ import { ARTIFACT_DIR } from './ui_smoke_constants.mjs';
 
 export const captureDomDiagnostics = async (page, appName) => {
   const snapshot = await page.evaluate(() => {
-    const findNode = (selector) =>
-      document.querySelector(selector)
-      || document.querySelector('flutter-view')?.shadowRoot?.querySelector(selector);
+    const resolveRoots = () => {
+      const roots = [document];
+      const flutterView = document.querySelector('flutter-view');
+      if (flutterView) roots.push(flutterView);
+      const glassPane = document.querySelector('flt-glass-pane');
+      if (glassPane?.shadowRoot) roots.push(glassPane.shadowRoot);
+      const semanticsHost = document.querySelector('flt-semantics-host');
+      if (semanticsHost) roots.push(semanticsHost);
+      return roots;
+    };
+    const findNode = (selector) => {
+      const roots = resolveRoots();
+      for (const root of roots) {
+        const node = root.querySelector(selector);
+        if (node) return node;
+      }
+      return null;
+    };
     const describe = (node) => {
       if (!node) return null;
       const rect = node.getBoundingClientRect();
@@ -39,11 +54,13 @@ export const captureDomDiagnostics = async (page, appName) => {
     };
 
     const flutterView = document.querySelector('flutter-view');
-    const shadowRoot = flutterView?.shadowRoot ?? null;
+    const glassPane = document.querySelector('flt-glass-pane');
+    const shadowRoot = glassPane?.shadowRoot ?? null;
 
     const placeholder = findNode('flt-semantics-placeholder');
     const semantics = findNode('flt-semantics');
-    const glassPane = findNode('flt-glass-pane');
+    const semanticsHost = findNode('flt-semantics-host');
+    const flutterCanvas = findNode('flt-canvas');
 
     return {
       url: window.location.href,
@@ -52,7 +69,9 @@ export const captureDomDiagnostics = async (page, appName) => {
       hasShadowRoot: Boolean(shadowRoot),
       placeholder: describe(placeholder),
       semantics: describe(semantics),
+      semanticsHost: describe(semanticsHost),
       glassPane: describe(glassPane),
+      flutterCanvas: describe(flutterCanvas),
       flutterView: describe(flutterView),
     };
   });

@@ -7,13 +7,26 @@ const SEMANTICS_ENABLE_TIMEOUT_MS = DEFAULT_TIMEOUT_MS;
 
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
-const hasNode = (selector, root) => Boolean(root?.querySelector(selector));
-
 const revealSemanticsPlaceholder = async (page) => {
   await page.evaluate(() => {
-    const findNode = (selector) =>
-      document.querySelector(selector)
-      || document.querySelector('flutter-view')?.shadowRoot?.querySelector(selector);
+    const resolveRoots = () => {
+      const roots = [document];
+      const flutterView = document.querySelector('flutter-view');
+      if (flutterView) roots.push(flutterView);
+      const glassPane = document.querySelector('flt-glass-pane');
+      if (glassPane?.shadowRoot) roots.push(glassPane.shadowRoot);
+      const semanticsHost = document.querySelector('flt-semantics-host');
+      if (semanticsHost) roots.push(semanticsHost);
+      return roots;
+    };
+    const findNode = (selector) => {
+      const roots = resolveRoots();
+      for (const root of roots) {
+        const node = root.querySelector(selector);
+        if (node) return node;
+      }
+      return null;
+    };
     const node = findNode('flt-semantics-placeholder');
     if (!node) return;
     Object.assign(node.style, {
@@ -33,16 +46,42 @@ const revealSemanticsPlaceholder = async (page) => {
 
 const dispatchPlaceholderClick = async (page) => {
   await page.evaluate(() => {
-    const findNode = (selector) =>
-      document.querySelector(selector)
-      || document.querySelector('flutter-view')?.shadowRoot?.querySelector(selector);
+    const resolveRoots = () => {
+      const roots = [document];
+      const flutterView = document.querySelector('flutter-view');
+      if (flutterView) roots.push(flutterView);
+      const glassPane = document.querySelector('flt-glass-pane');
+      if (glassPane?.shadowRoot) roots.push(glassPane.shadowRoot);
+      const semanticsHost = document.querySelector('flt-semantics-host');
+      if (semanticsHost) roots.push(semanticsHost);
+      return roots;
+    };
+    const findNode = (selector) => {
+      const roots = resolveRoots();
+      for (const root of roots) {
+        const node = root.querySelector(selector);
+        if (node) return node;
+      }
+      return null;
+    };
     const node = findNode('flt-semantics-placeholder');
     if (!node) return;
     node.focus();
-    node.click();
-    node.dispatchEvent(
-      new MouseEvent('click', { bubbles: true, cancelable: true, view: window }),
-    );
+    const rect = node.getBoundingClientRect();
+    const eventInit = {
+      bubbles: true,
+      cancelable: true,
+      view: window,
+      clientX: rect.left + 4,
+      clientY: rect.top + 4,
+    };
+    node.dispatchEvent(new PointerEvent('pointerdown', eventInit));
+    node.dispatchEvent(new PointerEvent('pointerup', eventInit));
+    node.dispatchEvent(new MouseEvent('mousedown', eventInit));
+    node.dispatchEvent(new MouseEvent('mouseup', eventInit));
+    node.dispatchEvent(new MouseEvent('click', eventInit));
+    node.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }));
+    node.dispatchEvent(new KeyboardEvent('keyup', { key: 'Enter', bubbles: true }));
   });
 };
 
@@ -50,9 +89,24 @@ const pollForSemantics = async (page, timeoutMs) => {
   const deadline = Date.now() + timeoutMs;
   while (Date.now() < deadline) {
     const found = await page.evaluate(() => {
-      const findNode = (selector) =>
-        document.querySelector(selector)
-        || document.querySelector('flutter-view')?.shadowRoot?.querySelector(selector);
+      const resolveRoots = () => {
+        const roots = [document];
+        const flutterView = document.querySelector('flutter-view');
+        if (flutterView) roots.push(flutterView);
+        const glassPane = document.querySelector('flt-glass-pane');
+        if (glassPane?.shadowRoot) roots.push(glassPane.shadowRoot);
+        const semanticsHost = document.querySelector('flt-semantics-host');
+        if (semanticsHost) roots.push(semanticsHost);
+        return roots;
+      };
+      const findNode = (selector) => {
+        const roots = resolveRoots();
+        for (const root of roots) {
+          const node = root.querySelector(selector);
+          if (node) return node;
+        }
+        return null;
+      };
       return Boolean(findNode('flt-semantics'));
     });
     if (found) return true;
@@ -65,9 +119,24 @@ const waitForPlaceholder = async (page, timeoutMs) => {
   const deadline = Date.now() + timeoutMs;
   while (Date.now() < deadline) {
     const found = await page.evaluate(() => {
-      const findNode = (selector) =>
-        document.querySelector(selector)
-        || document.querySelector('flutter-view')?.shadowRoot?.querySelector(selector);
+      const resolveRoots = () => {
+        const roots = [document];
+        const flutterView = document.querySelector('flutter-view');
+        if (flutterView) roots.push(flutterView);
+        const glassPane = document.querySelector('flt-glass-pane');
+        if (glassPane?.shadowRoot) roots.push(glassPane.shadowRoot);
+        const semanticsHost = document.querySelector('flt-semantics-host');
+        if (semanticsHost) roots.push(semanticsHost);
+        return roots;
+      };
+      const findNode = (selector) => {
+        const roots = resolveRoots();
+        for (const root of roots) {
+          const node = root.querySelector(selector);
+          if (node) return node;
+        }
+        return null;
+      };
       return Boolean(findNode('flt-semantics-placeholder'));
     });
     if (found) return true;
@@ -96,6 +165,15 @@ export const enableSemantics = async (page, appName) => {
     });
   } catch (_) {
     // If Playwright actionability fails, fall back to JS click.
+  }
+
+  try {
+    const box = await page.locator('flt-semantics-placeholder').first().boundingBox();
+    if (box) {
+      await page.mouse.click(box.x + 6, box.y + 6);
+    }
+  } catch (_) {
+    // Ignore locator failures and rely on JS dispatches below.
   }
 
   const deadline = Date.now() + SEMANTICS_ENABLE_TIMEOUT_MS;
