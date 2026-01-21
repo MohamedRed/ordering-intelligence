@@ -1198,11 +1198,14 @@ app.post('/onboarding-sessions/:id/finalize', async (req, res) => {
     }
 
     await SESSIONS.doc(id).update({ status: 'ready', tenant: { tenant_id: tenantId, store_id: storeId }, updated_at: ts });
-    await audit(id, 'finalized', {
+    const auditPayload: Record<string, any> = {
       tenant_id: tenantId,
       store_id: storeId,
-      demo_skip_stripe: demoSkipStripe ? true : undefined,
-    });
+    };
+    if (demoSkipStripe) {
+      auditPayload.demo_skip_stripe = true;
+    }
+    await audit(id, 'finalized', auditPayload);
     // Mark tenant onboarding session as completed (so a new one can be created later).
     if (tenantId) {
       await TENANTS.doc(tenantId).set(
