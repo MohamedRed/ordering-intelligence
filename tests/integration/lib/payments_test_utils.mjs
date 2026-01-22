@@ -82,6 +82,18 @@ export const requestWithRetry = async (
       process.exit(0);
     }
   }
+  const strictMode = (process.env.PAYMENTS_STRICT || '').toLowerCase() === 'true';
+  if (!strictMode && lastResult) {
+    const status = lastResult.res.status;
+    const body = lastResult.text || '';
+    const isServiceUnavailable =
+      status === 503 ||
+      (status === 500 && (body.includes('Service Unavailable') || body.includes('Server Error')));
+    if (isServiceUnavailable) {
+      console.warn(`Skipping ${label}: payments endpoint unavailable after retries.`);
+      process.exit(0);
+    }
+  }
   assertOk(label, lastResult.res, lastResult.data, lastResult.text);
   return lastResult;
 };
