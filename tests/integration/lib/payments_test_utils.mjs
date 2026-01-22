@@ -55,9 +55,9 @@ export const requestWithRetry = async (
   label,
   handler,
   {
-    attempts = 8,
+    attempts = 15,
     retryStatuses = RETRYABLE_STATUSES,
-    baseDelayMs = 5000,
+    baseDelayMs = 15000,
     maxDelayMs = 60000,
     healthCheckUrl = '',
   } = {},
