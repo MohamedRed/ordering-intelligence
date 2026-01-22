@@ -38,13 +38,17 @@ export const assertOk = (label, res, data, text) => {
 
 export const isServiceHealthy = async (baseUrl, timeoutMs = 5000) => {
   if (!baseUrl) return false;
-  const healthUrl = `${baseUrl.replace(/\/$/, '')}/healthz`;
-  try {
-    const { res } = await fetchJson(healthUrl, { method: 'GET' }, timeoutMs);
-    return res.ok;
-  } catch (_) {
-    return false;
+  const trimmed = baseUrl.replace(/\/$/, '');
+  const healthUrls = [`${trimmed}/healthz`, `${trimmed}/healthz/`];
+  for (const healthUrl of healthUrls) {
+    try {
+      const { res } = await fetchJson(healthUrl, { method: 'GET' }, timeoutMs);
+      if (res.ok) return true;
+    } catch (_) {
+      // keep trying fallbacks
+    }
   }
+  return false;
 };
 
 export const requestWithRetry = async (
