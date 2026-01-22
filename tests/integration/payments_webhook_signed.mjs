@@ -1,9 +1,10 @@
 import crypto from 'node:crypto';
+import { getServerTimestamp } from './lib/server_time.mjs';
 
 import { fetchJson, requestWithRetry } from './lib/payments_test_utils.mjs';
 
 const baseUrl = process.env.PAYMENTS_SERVICE_BASE_URL;
-const webhookSecret = process.env.STRIPE_PAYMENTS_WEBHOOK_SECRET;
+const webhookSecret = (process.env.STRIPE_PAYMENTS_WEBHOOK_SECRET || '').trim();
 const suffix = (process.env.FIRESTORE_SUFFIX || 'ci').trim();
 
 if (!baseUrl) {
@@ -18,7 +19,7 @@ if (!webhookSecret) {
 const apiBase = baseUrl.replace(/\/$/, '');
 
 const run = async () => {
-  const now = Math.floor(Date.now() / 1000);
+  const now = await getServerTimestamp(`${apiBase}/healthz`, DEFAULT_TIMEOUT_MS);
   const event = {
     id: `evt_test_${suffix}_${now}`,
     object: 'event',
@@ -39,7 +40,7 @@ const run = async () => {
   };
 
   const payload = JSON.stringify(event);
-  const signatureTimestamp = Math.floor(Date.now() / 1000);
+  const signatureTimestamp = now;
   const signedPayload = `${signatureTimestamp}.${payload}`;
   const signature = crypto.createHmac('sha256', webhookSecret).update(signedPayload, 'utf8').digest('hex');
   const header = `t=${signatureTimestamp},v1=${signature}`;
