@@ -3,6 +3,7 @@ import { getServerTimestamp } from './lib/server_time.mjs';
 
 import { fetchJson, requestWithRetry } from './lib/payments_test_utils.mjs';
 
+const DEFAULT_TIMEOUT_MS = 20000;
 const baseUrl = process.env.PAYMENTS_SERVICE_BASE_URL;
 const webhookSecret = (process.env.STRIPE_PAYMENTS_WEBHOOK_SECRET || '').trim();
 const suffix = (process.env.FIRESTORE_SUFFIX || 'ci').trim();
