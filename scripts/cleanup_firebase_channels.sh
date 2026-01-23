@@ -102,15 +102,19 @@ def request_json(url):
 def delete_channel(site, channel_id):
     url = (
         f"https://firebasehosting.googleapis.com/v1beta1/projects/{project}"
-        f"/sites/{site}/channels/{urllib.parse.quote(channel_id)}?force=true"
+        f"/sites/{site}/channels/{urllib.parse.quote(channel_id)}"
     )
     req = urllib.request.Request(
         url,
         method="DELETE",
         headers={"Authorization": f"Bearer {token}"},
     )
-    with urllib.request.urlopen(req) as resp:
-        resp.read()
+    try:
+        with urllib.request.urlopen(req) as resp:
+            resp.read()
+    except urllib.error.HTTPError as exc:
+        body = exc.read().decode("utf-8")
+        raise RuntimeError(f"Failed to delete {channel_id} on {site}: {exc.code} {exc.reason} {body}") from exc
 
 def parse_time(channel):
     for key in ("updateTime", "expireTime", "createTime"):
