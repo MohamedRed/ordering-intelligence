@@ -32,7 +32,7 @@ jobs:
       PAYMENTS_SERVICE_BASE_URL: https://dev-payments-service.liive.app
       NOTIFICATION_SERVICE_BASE_URL: https://dev-notification-service.liive.app
       AGENT_WEBHOOKS_BASE_URL: https://dev-agent-webhooks.liive.app
-      GCLOUD_IMPERSONATE_SERVICE_ACCOUNT: ${{ secrets.GCP_SERVICE_ACCOUNT_LIIVE_DEV }}
+      GCLOUD_IMPERSONATE_SERVICE_ACCOUNT: github-ci-dev@liive-dev.iam.gserviceaccount.com
       INTERNAL_DELIVERER_ID: ${{ secrets.GCP_SERVICE_ACCOUNT_LIIVE_DEV }}
     steps:
       - uses: actions/checkout@v4
@@ -48,7 +48,7 @@ jobs:
       - uses: google-github-actions/auth@v2
         with:
           workload_identity_provider: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER_LIIVE_DEV }}
-          service_account: ${{ secrets.GCP_SERVICE_ACCOUNT_LIIVE_DEV }}
+          service_account: github-ci-dev@liive-dev.iam.gserviceaccount.com
           export_environment_variables: true
 
       - uses: google-github-actions/setup-gcloud@v2
@@ -189,7 +189,7 @@ jobs:
       - uses: google-github-actions/auth@v2
         with:
           workload_identity_provider: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER_LIIVE_DEV }}
-          service_account: ${{ secrets.GCP_SERVICE_ACCOUNT_LIIVE_DEV }}
+          service_account: github-ci-dev@liive-dev.iam.gserviceaccount.com
           export_environment_variables: true
 
       - uses: google-github-actions/setup-gcloud@v2
