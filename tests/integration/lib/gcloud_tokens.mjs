@@ -42,10 +42,9 @@ export const getIdentityToken = (audience) => {
       combined.includes('Invalid account type for `--audiences`') ||
       combined.includes('Requires valid service account')
     ) {
-      console.warn(
-        `Skipping identity-token protected test: no service account available for ${audience}.`,
+      throw new Error(
+        `Identity token unavailable for ${audience}. Ensure CI uses a service account or sets INTERNAL_AUTH_ID_TOKEN.`,
       );
-      process.exit(0);
     }
     throw err;
   }

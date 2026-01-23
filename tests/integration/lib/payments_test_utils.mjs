@@ -78,20 +78,7 @@ export const requestWithRetry = async (
   if (healthCheckUrl) {
     const healthy = await isServiceHealthy(healthCheckUrl);
     if (!healthy) {
-      console.warn(`Skipping ${label}: payments healthz unavailable.`);
-      process.exit(0);
-    }
-  }
-  const strictMode = (process.env.PAYMENTS_STRICT || '').toLowerCase() === 'true';
-  if (!strictMode && lastResult) {
-    const status = lastResult.res.status;
-    const body = lastResult.text || '';
-    const isServiceUnavailable =
-      status === 503 ||
-      (status === 500 && (body.includes('Service Unavailable') || body.includes('Server Error')));
-    if (isServiceUnavailable) {
-      console.warn(`Skipping ${label}: payments endpoint unavailable after retries.`);
-      process.exit(0);
+      throw new Error(`payments healthz unavailable for ${label}`);
     }
   }
   assertOk(label, lastResult.res, lastResult.data, lastResult.text);
