@@ -41,22 +41,28 @@ const run = async () => {
   };
 
   const payload = JSON.stringify(event);
-  const signatureTimestamp = now;
-  const signedPayload = `${signatureTimestamp}.${payload}`;
-  const signature = crypto.createHmac('sha256', webhookSecret).update(signedPayload, 'utf8').digest('hex');
-  const header = `t=${signatureTimestamp},v1=${signature}`;
-
   const { data } = await requestWithRetry(
     'stripe webhook signed',
-    () =>
-    fetchJson(`${apiBase}/webhooks/stripe`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Stripe-Signature': header,
-      },
-      body: payload,
-    }),
+    async () => {
+      const signatureTimestamp = await getServerTimestamp(
+        `${apiBase}/healthz`,
+        DEFAULT_TIMEOUT_MS,
+      );
+      const signedPayload = `${signatureTimestamp}.${payload}`;
+      const signature = crypto
+        .createHmac('sha256', webhookSecret)
+        .update(signedPayload, 'utf8')
+        .digest('hex');
+      const header = `t=${signatureTimestamp},v1=${signature}`;
+      return fetchJson(`${apiBase}/webhooks/stripe`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Stripe-Signature': header,
+        },
+        body: payload,
+      });
+    },
     { healthCheckUrl: apiBase },
   );
   if (data?.received !== true) {
