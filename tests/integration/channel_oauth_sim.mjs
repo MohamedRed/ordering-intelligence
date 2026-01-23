@@ -25,16 +25,23 @@ const fetchJson = async (url, options = {}) => {
       }
     });
     const text = await res.text();
-    const data = text ? JSON.parse(text) : null;
-    return { res, data };
+    let data = null;
+    if (text) {
+      try {
+        data = JSON.parse(text);
+      } catch (_) {
+        data = null;
+      }
+    }
+    return { res, data, text };
   } finally {
     clearTimeout(timeout);
   }
 };
 
-const assertOk = (label, res, data) => {
+const assertOk = (label, res, data, text) => {
   if (!res.ok) {
-    const payload = data ? JSON.stringify(data) : 'no body';
+    const payload = data ? JSON.stringify(data) : text || 'no body';
     throw new Error(`${label} failed: ${res.status} ${payload}`);
   }
 };
@@ -57,7 +64,7 @@ const createSession = async (channel) => {
     displayName: `CI ${channel}`,
     storeId
   };
-  const { res, data } = await fetchJson(`${apiBase}/internal/test/webapp/session`, {
+  const { res, data, text } = await fetchJson(`${apiBase}/internal/test/webapp/session`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -65,7 +72,7 @@ const createSession = async (channel) => {
     },
     body: JSON.stringify(payload)
   });
-  assertOk(`create session ${channel}`, res, data);
+  assertOk(`create session ${channel}`, res, data, text);
   return data?.sessionId;
 };
 
@@ -77,10 +84,10 @@ const run = async () => {
       throw new Error(`missing sessionId for ${channel}`);
     }
     const path = identityPathFor(channel);
-    const { res, data } = await fetchJson(`${apiBase}${path}?sessionId=${encodeURIComponent(sessionId)}`, {
+    const { res, data, text } = await fetchJson(`${apiBase}${path}?sessionId=${encodeURIComponent(sessionId)}`, {
       method: 'GET'
     });
-    assertOk(`identity ${channel}`, res, data);
+    assertOk(`identity ${channel}`, res, data, text);
   }
   console.log('✓ channel webapp oauth sim ok');
 };
