@@ -175,6 +175,7 @@ jobs:
       PAYMENTS_SERVICE_BASE_URL: https://dev-payments-service.liive.app
       NOTIFICATION_SERVICE_BASE_URL: https://dev-notification-service.liive.app
       HOSTING_READY_TIMEOUT_MS: 420000
+      HOSTING_CHANNEL_TTL: 7d
       INTERNAL_DELIVERER_ID: ${{ secrets.GCP_SERVICE_ACCOUNT_LIIVE_DEV }}
     steps:
       - uses: actions/checkout@v4
@@ -269,6 +270,18 @@ jobs:
             fi
           done
 
+      - name: Prune Firebase Hosting channels
+        if: env.APPS_TO_BUILD != ''
+        run: |
+          set -euo pipefail
+          scripts/cleanup_firebase_channels.sh \
+            --project "$FIREBASE_PROJECT_ID" \
+            --keep 10 \
+            liive-dev-admin \
+            liive-dev-business \
+            liive-dev-driver \
+            liive-dev-consumer
+
       - name: Deploy preview channels
         id: deploy_channels
         run: |
@@ -290,7 +303,7 @@ jobs:
             local dir=$2
             local out=$3
             pushd "$dir" >/dev/null
-            if ! firebase --config firebase.json hosting:channel:deploy "$CHANNEL" --project "$FIREBASE_PROJECT_ID" --json > "$out"; then
+            if ! firebase --config firebase.json hosting:channel:deploy "$CHANNEL" --project "$FIREBASE_PROJECT_ID" --expires "$HOSTING_CHANNEL_TTL" --json > "$out"; then
               echo "Failed to deploy $label"
               if [ -f "$out" ]; then
                 cat "$out"
