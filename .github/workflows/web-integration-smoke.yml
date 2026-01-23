@@ -32,7 +32,6 @@ jobs:
       PAYMENTS_SERVICE_BASE_URL: https://dev-payments-service.liive.app
       NOTIFICATION_SERVICE_BASE_URL: https://dev-notification-service.liive.app
       AGENT_WEBHOOKS_BASE_URL: https://dev-agent-webhooks.liive.app
-      GCLOUD_IMPERSONATE_SERVICE_ACCOUNT: github-ci-dev@liive-dev.iam.gserviceaccount.com
       INTERNAL_DELIVERER_ID: ${{ secrets.GCP_SERVICE_ACCOUNT_LIIVE_DEV }}
     steps:
       - uses: actions/checkout@v4
