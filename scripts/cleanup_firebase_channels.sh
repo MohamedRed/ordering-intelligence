@@ -3,13 +3,14 @@ set -euo pipefail
 
 usage() {
   cat <<'USAGE'
-Usage: cleanup_firebase_channels.sh --project <project-id> [--keep <count>] [--prefix <prefix>] <site...>
+Usage: cleanup_firebase_channels.sh --project <project-id> [--keep <count>] [--prefix <prefix>] [--retain <channel-id>] <site...>
 USAGE
 }
 
 PROJECT=""
 KEEP=10
 PREFIX="ci-"
+RETAIN=()
 SITES=()
 
 while [[ $# -gt 0 ]]; do
@@ -24,6 +25,10 @@ while [[ $# -gt 0 ]]; do
       ;;
     --prefix)
       PREFIX="$2"
+      shift 2
+      ;;
+    --retain)
+      RETAIN+=("$2")
       shift 2
       ;;
     -h|--help)
@@ -45,13 +50,14 @@ fi
 for site in "${SITES[@]}"; do
   mapfile -t delete_channels < <(
     firebase hosting:channel:list --project "$PROJECT" --site "$site" --json | \
-      python3 - "$PREFIX" "$KEEP" <<'PY'
+      python3 - "$PREFIX" "$KEEP" "${RETAIN[@]}" <<'PY'
 import sys
 import json
 from datetime import datetime, timezone
 
 prefix = sys.argv[1]
 keep = int(sys.argv[2])
+retain = {arg for arg in sys.argv[3:] if arg}
 raw = sys.stdin.read().strip()
 if not raw:
     sys.exit(0)
@@ -88,7 +94,11 @@ for channel in channels:
         name = channel.get("name") if isinstance(channel.get("name"), str) else ""
         if "/channels/" in name:
             channel_id = name.split("/channels/")[-1]
-    if not channel_id or not channel_id.startswith(prefix):
+    if not channel_id:
+        continue
+    if prefix and not channel_id.startswith(prefix):
+        continue
+    if channel_id in retain:
         continue
     time_value = channel.get("updateTime") or channel.get("expireTime") or channel.get("createTime")
     try:
