@@ -57,3 +57,9 @@ resource "google_service_account_iam_member" "github_ci_token_creator" {
   role               = "roles/iam.serviceAccountTokenCreator"
   member             = "principalSet://iam.googleapis.com/projects/${local.project_number}/locations/global/workloadIdentityPools/${google_iam_workload_identity_pool.github_actions.workload_identity_pool_id}/attribute.repository/${local.github_actions_repository}"
 }
+
+resource "google_service_account_iam_member" "github_ci_self_token_creator" {
+  service_account_id = "projects/${var.project_id}/serviceAccounts/${module.github_ci_sa.email}"
+  role               = "roles/iam.serviceAccountTokenCreator"
+  member             = "serviceAccount:${module.github_ci_sa.email}"
+}
