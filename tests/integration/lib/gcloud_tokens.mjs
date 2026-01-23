@@ -1,5 +1,15 @@
 import { execFileSync } from 'node:child_process';
 
+const getImpersonateServiceAccount = () => {
+  const account =
+    process.env.GCLOUD_IMPERSONATE_SERVICE_ACCOUNT ||
+    process.env.GOOGLE_IMPERSONATE_SERVICE_ACCOUNT ||
+    process.env.GCP_SERVICE_ACCOUNT_EMAIL ||
+    process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL ||
+    '';
+  return account.trim();
+};
+
 export const getIdentityToken = (audience) => {
   if (!audience) {
     throw new Error('Missing audience for identity token');
@@ -13,9 +23,14 @@ export const getIdentityToken = (audience) => {
     return envToken.trim();
   }
   try {
+    const impersonate = getImpersonateServiceAccount();
+    const args = ['auth', 'print-identity-token', `--audiences=${audience}`];
+    if (impersonate) {
+      args.push(`--impersonate-service-account=${impersonate}`);
+    }
     const out = execFileSync(
       'gcloud',
-      ['auth', 'print-identity-token', `--audiences=${audience}`],
+      args,
       { encoding: 'utf8' },
     );
     return out.trim();
