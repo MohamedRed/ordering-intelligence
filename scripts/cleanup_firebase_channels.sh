@@ -57,12 +57,11 @@ if [[ -z "$TOKEN" ]]; then
   exit 1
 fi
 
-export TOKEN PROJECT KEEP PREFIX
-export SITES
-export RETAIN_LIST
-SITES="$(printf '%s\n' "${SITES[@]}")"
+SITES_LIST="$(printf '%s\n' "${SITES[@]}")"
 RETAIN_LIST="$(printf '%s\n' "${RETAIN[@]}")"
 
+TOKEN="$TOKEN" PROJECT="$PROJECT" KEEP="$KEEP" PREFIX="$PREFIX" \
+SITES_LIST="$SITES_LIST" RETAIN_LIST="$RETAIN_LIST" \
 python3 - <<'PY'
 import json
 import os
@@ -76,7 +75,7 @@ project = os.environ.get("PROJECT", "")
 prefix = os.environ.get("PREFIX", "")
 keep = int(os.environ.get("KEEP", "0"))
 retain = {line for line in os.environ.get("RETAIN_LIST", "").splitlines() if line}
-sites = [line for line in os.environ.get("SITES", "").splitlines() if line]
+sites = [line for line in os.environ.get("SITES_LIST", "").splitlines() if line]
 
 if not token or not project or not sites:
     sys.stderr.write("Missing token, project, or sites for Firebase channel cleanup.\n")
