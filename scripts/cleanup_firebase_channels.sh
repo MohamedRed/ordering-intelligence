@@ -61,11 +61,16 @@ try:
 except json.JSONDecodeError:
     sys.exit(0)
 
+if isinstance(data, dict) and data.get("status") == "error":
+    sys.stderr.write(str(data.get("error", "firebase channel list failed")) + "\n")
+    sys.exit(1)
+
 channels = []
 
 def collect(obj):
     if isinstance(obj, dict):
-        if "channelId" in obj:
+        name = obj.get("name") if isinstance(obj.get("name"), str) else ""
+        if "channelId" in obj or "/channels/" in name:
             channels.append(obj)
             return
         for value in obj.values():
@@ -79,6 +84,10 @@ collect(data)
 entries = []
 for channel in channels:
     channel_id = channel.get("channelId")
+    if not channel_id:
+        name = channel.get("name") if isinstance(channel.get("name"), str) else ""
+        if "/channels/" in name:
+            channel_id = name.split("/channels/")[-1]
     if not channel_id or not channel_id.startswith(prefix):
         continue
     time_value = channel.get("updateTime") or channel.get("expireTime") or channel.get("createTime")
