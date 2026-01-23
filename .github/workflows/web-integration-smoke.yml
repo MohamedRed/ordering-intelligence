@@ -47,7 +47,7 @@ jobs:
 
       - uses: google-github-actions/auth@v2
         with:
-          workload_identity_provider: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER_LIIVE_DEV }}
+          workload_identity_provider: projects/878404493774/locations/global/workloadIdentityPools/github-actions-pool/providers/github-actions-provider
           service_account: github-ci-dev@liive-dev.iam.gserviceaccount.com
           export_environment_variables: true
 
@@ -189,7 +189,7 @@ jobs:
 
       - uses: google-github-actions/auth@v2
         with:
-          workload_identity_provider: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER_LIIVE_DEV }}
+          workload_identity_provider: projects/878404493774/locations/global/workloadIdentityPools/github-actions-pool/providers/github-actions-provider
           service_account: github-ci-dev@liive-dev.iam.gserviceaccount.com
           export_environment_variables: true
 
