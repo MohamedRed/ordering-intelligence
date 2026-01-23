@@ -3,14 +3,15 @@ set -euo pipefail
 
 usage() {
   cat <<'USAGE'
-Usage: cleanup_firebase_channels.sh --project <project-id> [--keep <count>] [--prefix <prefix>] [--retain <channel-id>] <site...>
+Usage: cleanup_firebase_channels.sh --project <project-id> [--keep <count>] [--prefix <prefix>] [--retain <channel-id>] [--dry-run] <site...>
 USAGE
 }
 
 PROJECT=""
 KEEP=10
 PREFIX="ci-"
-RETAIN=()
+RETAIN=("live")
+DRY_RUN=false
 SITES=()
 
 while [[ $# -gt 0 ]]; do
@@ -30,6 +31,10 @@ while [[ $# -gt 0 ]]; do
     --retain)
       RETAIN+=("$2")
       shift 2
+      ;;
+    --dry-run)
+      DRY_RUN=true
+      shift
       ;;
     -h|--help)
       usage
@@ -61,7 +66,7 @@ SITES_LIST="$(printf '%s\n' "${SITES[@]}")"
 RETAIN_LIST="$(printf '%s\n' "${RETAIN[@]}")"
 
 TOKEN="$TOKEN" PROJECT="$PROJECT" KEEP="$KEEP" PREFIX="$PREFIX" \
-SITES_LIST="$SITES_LIST" RETAIN_LIST="$RETAIN_LIST" \
+SITES_LIST="$SITES_LIST" RETAIN_LIST="$RETAIN_LIST" DRY_RUN="$DRY_RUN" \
 python3 - <<'PY'
 import json
 import os
@@ -74,6 +79,7 @@ token = os.environ.get("TOKEN", "")
 project = os.environ.get("PROJECT", "")
 prefix = os.environ.get("PREFIX", "")
 keep = int(os.environ.get("KEEP", "0"))
+dry_run = os.environ.get("DRY_RUN", "false").lower() == "true"
 retain = {line for line in os.environ.get("RETAIN_LIST", "").splitlines() if line}
 sites = [line for line in os.environ.get("SITES_LIST", "").splitlines() if line]
 
@@ -153,6 +159,12 @@ for site in sites:
 
     if not delete_ids:
         print(f"No channels to prune for {site}.")
+        continue
+
+    if dry_run:
+        print(f"Dry run: would prune {len(delete_ids)} channels for {site}.")
+        for channel_id in delete_ids:
+            print(f"  - {channel_id}")
         continue
 
     print(f"Pruning {len(delete_ids)} channels for {site}.")
