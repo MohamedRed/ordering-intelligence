@@ -1,0 +1,1214 @@
+schema: "paperclip/v1"
+company:
+  brandColor: "#0891b2"
+  requireBoardApprovalForNewAgents: true
+  feedbackDataSharingEnabled: false
+  metadata:
+    specializes: "generic-ai-native-company"
+    specializationKind: "domain_overlay"
+    genericAiCompany:
+      runtimePolicy: "hermes_only"
+      approvalMode: "board_required_for_sensitive_actions"
+      requiredAdapterType: "hermes_local"
+      gstackUse: "composed_engineering_core"
+      engineeringCoreModule: "generic-ai-engineering-core"
+      growthOperatingModel: "vendor_neutral_lead_outreach"
+    projectSpecialization:
+      domain: "ordering-intelligence"
+      repository: "MohamedRed/ordering-intelligence"
+      outputType: "reviewable_operating_plan_and_product_workflows"
+agents:
+  ceo-hermes:
+    role: "ceo"
+    adapter:
+      type: "hermes_local"
+      config:
+        hermesCommand: "/opt/lexprive/paperclip-hermes/scripts/hermes-ops-worker"
+        cwd: "/opt/lexprive/ops/ai-company"
+        timeoutSec: 7200
+        extraArgs:
+          - "--yolo"
+          - "--max-turns"
+          - "60"
+        persistSession: false
+        env:
+          HERMES_MODEL: "gpt-5.5"
+          HERMES_REASONING_EFFORT: "xhigh"
+          PAPERCLIP_API_URL: "http://127.0.0.1:3100/api"
+          AI_COMPANY_OPS_TOOL: "/opt/lexprive/paperclip-hermes/scripts/lexprive-ops-tool.mjs"
+          LEXPRIVE_OPS_TOOL: "/opt/lexprive/paperclip-hermes/scripts/lexprive-ops-tool.mjs"
+          AI_COMPANY_WORKER_SSH_KEY: "/var/lib/lexprive-ai-company/ssh/paperclip_worker_ed25519"
+          LEXPRIVE_WORKER_SSH_KEY: "/var/lib/lexprive-ai-company/ssh/paperclip_worker_ed25519"
+          AI_COMPANY_ARTIFACT_BASE_DIR: "/opt/lexprive/ops/ai-company"
+          LEXPRIVE_LOCAL_ARTIFACT_BASE_DIR: "/opt/lexprive/ops/ai-company"
+          AI_COMPANY_ARTIFACTS_DIR: "/opt/lexprive/ops/ai-company/artifacts"
+          LEXPRIVE_LOCAL_ARTIFACTS_DIR: "/opt/lexprive/ops/ai-company/artifacts"
+          AI_COMPANY_REMOTE_HERMES_COMMAND: "/var/lib/lexprive-ai-company/hermes/bin/hermes-high"
+          LEXPRIVE_REMOTE_HERMES_COMMAND: "/var/lib/lexprive-ai-company/hermes/bin/hermes-high"
+          AI_COMPANY_REMOTE_CWD: "/opt/lexprive/ops/ai-company"
+          LEXPRIVE_REMOTE_CWD: "/opt/lexprive/ops/ai-company"
+          AI_COMPANY_HERMES_OPS_WORKER_HOST: "51.158.119.50"
+          LEXPRIVE_HERMES_OPS_WORKER_HOST: "51.158.119.50"
+    permissions:
+      canAssignTasks: true
+    runtime:
+      heartbeat:
+        enabled: true
+        intervalSec: 604800
+        wakeOnDemand: true
+        maxConcurrentRuns: 1
+  chief-of-staff-hermes:
+    role: "agent"
+    reportsTo: "ceo-hermes"
+    adapter:
+      type: "hermes_local"
+      config:
+        hermesCommand: "/opt/lexprive/paperclip-hermes/scripts/hermes-ops-worker"
+        cwd: "/opt/lexprive/ops/ai-company"
+        timeoutSec: 7200
+        extraArgs:
+          - "--yolo"
+          - "--max-turns"
+          - "60"
+        persistSession: false
+        env:
+          HERMES_MODEL: "gpt-5.5"
+          HERMES_REASONING_EFFORT: "high"
+          PAPERCLIP_API_URL: "http://127.0.0.1:3100/api"
+          AI_COMPANY_OPS_TOOL: "/opt/lexprive/paperclip-hermes/scripts/lexprive-ops-tool.mjs"
+          LEXPRIVE_OPS_TOOL: "/opt/lexprive/paperclip-hermes/scripts/lexprive-ops-tool.mjs"
+          AI_COMPANY_WORKER_SSH_KEY: "/var/lib/lexprive-ai-company/ssh/paperclip_worker_ed25519"
+          LEXPRIVE_WORKER_SSH_KEY: "/var/lib/lexprive-ai-company/ssh/paperclip_worker_ed25519"
+          AI_COMPANY_ARTIFACT_BASE_DIR: "/opt/lexprive/ops/ai-company"
+          LEXPRIVE_LOCAL_ARTIFACT_BASE_DIR: "/opt/lexprive/ops/ai-company"
+          AI_COMPANY_ARTIFACTS_DIR: "/opt/lexprive/ops/ai-company/artifacts"
+          LEXPRIVE_LOCAL_ARTIFACTS_DIR: "/opt/lexprive/ops/ai-company/artifacts"
+          AI_COMPANY_REMOTE_HERMES_COMMAND: "/var/lib/lexprive-ai-company/hermes/bin/hermes-high"
+          LEXPRIVE_REMOTE_HERMES_COMMAND: "/var/lib/lexprive-ai-company/hermes/bin/hermes-high"
+          AI_COMPANY_REMOTE_CWD: "/opt/lexprive/ops/ai-company"
+          LEXPRIVE_REMOTE_CWD: "/opt/lexprive/ops/ai-company"
+          AI_COMPANY_HERMES_OPS_WORKER_HOST: "51.158.119.50"
+          LEXPRIVE_HERMES_OPS_WORKER_HOST: "51.158.119.50"
+    permissions:
+      canAssignTasks: true
+  content-outbound-hermes:
+    role: "agent"
+    reportsTo: "growth-lead-hermes"
+    adapter:
+      type: "hermes_local"
+      config:
+        hermesCommand: "/opt/lexprive/paperclip-hermes/scripts/hermes-ops-worker"
+        cwd: "/opt/lexprive/ops/ai-company"
+        timeoutSec: 7200
+        extraArgs:
+          - "--yolo"
+          - "--max-turns"
+          - "60"
+        persistSession: false
+        env:
+          HERMES_MODEL: "gpt-5.5"
+          HERMES_REASONING_EFFORT: "high"
+          PAPERCLIP_API_URL: "http://127.0.0.1:3100/api"
+          AI_COMPANY_OPS_TOOL: "/opt/lexprive/paperclip-hermes/scripts/lexprive-ops-tool.mjs"
+          LEXPRIVE_OPS_TOOL: "/opt/lexprive/paperclip-hermes/scripts/lexprive-ops-tool.mjs"
+          AI_COMPANY_WORKER_SSH_KEY: "/var/lib/lexprive-ai-company/ssh/paperclip_worker_ed25519"
+          LEXPRIVE_WORKER_SSH_KEY: "/var/lib/lexprive-ai-company/ssh/paperclip_worker_ed25519"
+          AI_COMPANY_ARTIFACT_BASE_DIR: "/opt/lexprive/ops/ai-company"
+          LEXPRIVE_LOCAL_ARTIFACT_BASE_DIR: "/opt/lexprive/ops/ai-company"
+          AI_COMPANY_ARTIFACTS_DIR: "/opt/lexprive/ops/ai-company/artifacts"
+          LEXPRIVE_LOCAL_ARTIFACTS_DIR: "/opt/lexprive/ops/ai-company/artifacts"
+          AI_COMPANY_REMOTE_HERMES_COMMAND: "/var/lib/lexprive-ai-company/hermes/bin/hermes-high"
+          LEXPRIVE_REMOTE_HERMES_COMMAND: "/var/lib/lexprive-ai-company/hermes/bin/hermes-high"
+          AI_COMPANY_REMOTE_CWD: "/opt/lexprive/ops/ai-company"
+          LEXPRIVE_REMOTE_CWD: "/opt/lexprive/ops/ai-company"
+          AI_COMPANY_HERMES_OPS_WORKER_HOST: "51.158.119.50"
+          LEXPRIVE_HERMES_OPS_WORKER_HOST: "51.158.119.50"
+    permissions:
+      canAssignTasks: true
+  cto-hermes:
+    role: "agent"
+    reportsTo: "ceo-hermes"
+    adapter:
+      type: "hermes_local"
+      config:
+        hermesCommand: "/opt/lexprive/paperclip-hermes/scripts/hermes-ops-worker"
+        cwd: "/opt/lexprive/ops/ai-company"
+        timeoutSec: 7200
+        extraArgs:
+          - "--yolo"
+          - "--max-turns"
+          - "60"
+        persistSession: false
+        env:
+          HERMES_MODEL: "gpt-5.5"
+          HERMES_REASONING_EFFORT: "high"
+          PAPERCLIP_API_URL: "http://127.0.0.1:3100/api"
+          AI_COMPANY_OPS_TOOL: "/opt/lexprive/paperclip-hermes/scripts/lexprive-ops-tool.mjs"
+          LEXPRIVE_OPS_TOOL: "/opt/lexprive/paperclip-hermes/scripts/lexprive-ops-tool.mjs"
+          AI_COMPANY_WORKER_SSH_KEY: "/var/lib/lexprive-ai-company/ssh/paperclip_worker_ed25519"
+          LEXPRIVE_WORKER_SSH_KEY: "/var/lib/lexprive-ai-company/ssh/paperclip_worker_ed25519"
+          AI_COMPANY_ARTIFACT_BASE_DIR: "/opt/lexprive/ops/ai-company"
+          LEXPRIVE_LOCAL_ARTIFACT_BASE_DIR: "/opt/lexprive/ops/ai-company"
+          AI_COMPANY_ARTIFACTS_DIR: "/opt/lexprive/ops/ai-company/artifacts"
+          LEXPRIVE_LOCAL_ARTIFACTS_DIR: "/opt/lexprive/ops/ai-company/artifacts"
+          AI_COMPANY_REMOTE_HERMES_COMMAND: "/var/lib/lexprive-ai-company/hermes/bin/hermes-high"
+          LEXPRIVE_REMOTE_HERMES_COMMAND: "/var/lib/lexprive-ai-company/hermes/bin/hermes-high"
+          AI_COMPANY_REMOTE_CWD: "/opt/lexprive/ops/ai-company"
+          LEXPRIVE_REMOTE_CWD: "/opt/lexprive/ops/ai-company"
+          AI_COMPANY_HERMES_OPS_WORKER_HOST: "51.158.119.50"
+          LEXPRIVE_HERMES_OPS_WORKER_HOST: "51.158.119.50"
+    permissions:
+      canAssignTasks: true
+  customer-research-hermes:
+    role: "agent"
+    reportsTo: "product-lead-hermes"
+    adapter:
+      type: "hermes_local"
+      config:
+        hermesCommand: "/opt/lexprive/paperclip-hermes/scripts/hermes-ops-worker"
+        cwd: "/opt/lexprive/ops/ai-company"
+        timeoutSec: 7200
+        extraArgs:
+          - "--yolo"
+          - "--max-turns"
+          - "60"
+        persistSession: false
+        env:
+          HERMES_MODEL: "gpt-5.5"
+          HERMES_REASONING_EFFORT: "high"
+          PAPERCLIP_API_URL: "http://127.0.0.1:3100/api"
+          AI_COMPANY_OPS_TOOL: "/opt/lexprive/paperclip-hermes/scripts/lexprive-ops-tool.mjs"
+          LEXPRIVE_OPS_TOOL: "/opt/lexprive/paperclip-hermes/scripts/lexprive-ops-tool.mjs"
+          AI_COMPANY_WORKER_SSH_KEY: "/var/lib/lexprive-ai-company/ssh/paperclip_worker_ed25519"
+          LEXPRIVE_WORKER_SSH_KEY: "/var/lib/lexprive-ai-company/ssh/paperclip_worker_ed25519"
+          AI_COMPANY_ARTIFACT_BASE_DIR: "/opt/lexprive/ops/ai-company"
+          LEXPRIVE_LOCAL_ARTIFACT_BASE_DIR: "/opt/lexprive/ops/ai-company"
+          AI_COMPANY_ARTIFACTS_DIR: "/opt/lexprive/ops/ai-company/artifacts"
+          LEXPRIVE_LOCAL_ARTIFACTS_DIR: "/opt/lexprive/ops/ai-company/artifacts"
+          AI_COMPANY_REMOTE_HERMES_COMMAND: "/var/lib/lexprive-ai-company/hermes/bin/hermes-high"
+          LEXPRIVE_REMOTE_HERMES_COMMAND: "/var/lib/lexprive-ai-company/hermes/bin/hermes-high"
+          AI_COMPANY_REMOTE_CWD: "/opt/lexprive/ops/ai-company"
+          LEXPRIVE_REMOTE_CWD: "/opt/lexprive/ops/ai-company"
+          AI_COMPANY_HERMES_OPS_WORKER_HOST: "51.158.119.50"
+          LEXPRIVE_HERMES_OPS_WORKER_HOST: "51.158.119.50"
+    permissions:
+      canAssignTasks: true
+  customer-success-hermes:
+    role: "agent"
+    reportsTo: "ceo-hermes"
+    adapter:
+      type: "hermes_local"
+      config:
+        hermesCommand: "/opt/lexprive/paperclip-hermes/scripts/hermes-ops-worker"
+        cwd: "/opt/lexprive/ops/ai-company"
+        timeoutSec: 7200
+        extraArgs:
+          - "--yolo"
+          - "--max-turns"
+          - "60"
+        persistSession: false
+        env:
+          HERMES_MODEL: "gpt-5.5"
+          HERMES_REASONING_EFFORT: "high"
+          PAPERCLIP_API_URL: "http://127.0.0.1:3100/api"
+          AI_COMPANY_OPS_TOOL: "/opt/lexprive/paperclip-hermes/scripts/lexprive-ops-tool.mjs"
+          LEXPRIVE_OPS_TOOL: "/opt/lexprive/paperclip-hermes/scripts/lexprive-ops-tool.mjs"
+          AI_COMPANY_WORKER_SSH_KEY: "/var/lib/lexprive-ai-company/ssh/paperclip_worker_ed25519"
+          LEXPRIVE_WORKER_SSH_KEY: "/var/lib/lexprive-ai-company/ssh/paperclip_worker_ed25519"
+          AI_COMPANY_ARTIFACT_BASE_DIR: "/opt/lexprive/ops/ai-company"
+          LEXPRIVE_LOCAL_ARTIFACT_BASE_DIR: "/opt/lexprive/ops/ai-company"
+          AI_COMPANY_ARTIFACTS_DIR: "/opt/lexprive/ops/ai-company/artifacts"
+          LEXPRIVE_LOCAL_ARTIFACTS_DIR: "/opt/lexprive/ops/ai-company/artifacts"
+          AI_COMPANY_REMOTE_HERMES_COMMAND: "/var/lib/lexprive-ai-company/hermes/bin/hermes-high"
+          LEXPRIVE_REMOTE_HERMES_COMMAND: "/var/lib/lexprive-ai-company/hermes/bin/hermes-high"
+          AI_COMPANY_REMOTE_CWD: "/opt/lexprive/ops/ai-company"
+          LEXPRIVE_REMOTE_CWD: "/opt/lexprive/ops/ai-company"
+          AI_COMPANY_HERMES_OPS_WORKER_HOST: "51.158.119.50"
+          LEXPRIVE_HERMES_OPS_WORKER_HOST: "51.158.119.50"
+    permissions:
+      canAssignTasks: true
+  demand-analytics-hermes:
+    role: "agent"
+    reportsTo: "growth-analytics-hermes"
+    adapter:
+      type: "hermes_local"
+      config:
+        hermesCommand: "/opt/lexprive/paperclip-hermes/scripts/hermes-ops-worker"
+        cwd: "/opt/lexprive/ops/ai-company"
+        timeoutSec: 7200
+        extraArgs:
+          - "--yolo"
+          - "--max-turns"
+          - "60"
+        persistSession: false
+        env:
+          HERMES_MODEL: "gpt-5.5"
+          HERMES_REASONING_EFFORT: "high"
+          PAPERCLIP_API_URL: "http://127.0.0.1:3100/api"
+          AI_COMPANY_OPS_TOOL: "/opt/lexprive/paperclip-hermes/scripts/lexprive-ops-tool.mjs"
+          LEXPRIVE_OPS_TOOL: "/opt/lexprive/paperclip-hermes/scripts/lexprive-ops-tool.mjs"
+          AI_COMPANY_WORKER_SSH_KEY: "/var/lib/lexprive-ai-company/ssh/paperclip_worker_ed25519"
+          LEXPRIVE_WORKER_SSH_KEY: "/var/lib/lexprive-ai-company/ssh/paperclip_worker_ed25519"
+          AI_COMPANY_ARTIFACT_BASE_DIR: "/opt/lexprive/ops/ai-company"
+          LEXPRIVE_LOCAL_ARTIFACT_BASE_DIR: "/opt/lexprive/ops/ai-company"
+          AI_COMPANY_ARTIFACTS_DIR: "/opt/lexprive/ops/ai-company/artifacts"
+          LEXPRIVE_LOCAL_ARTIFACTS_DIR: "/opt/lexprive/ops/ai-company/artifacts"
+          AI_COMPANY_REMOTE_HERMES_COMMAND: "/var/lib/lexprive-ai-company/hermes/bin/hermes-high"
+          LEXPRIVE_REMOTE_HERMES_COMMAND: "/var/lib/lexprive-ai-company/hermes/bin/hermes-high"
+          AI_COMPANY_REMOTE_CWD: "/opt/lexprive/ops/ai-company"
+          LEXPRIVE_REMOTE_CWD: "/opt/lexprive/ops/ai-company"
+          AI_COMPANY_HERMES_OPS_WORKER_HOST: "51.158.119.50"
+          LEXPRIVE_HERMES_OPS_WORKER_HOST: "51.158.119.50"
+    permissions:
+      canAssignTasks: true
+  design-hermes:
+    role: "agent"
+    reportsTo: "product-lead-hermes"
+    adapter:
+      type: "hermes_local"
+      config:
+        hermesCommand: "/opt/lexprive/paperclip-hermes/scripts/hermes-ops-worker"
+        cwd: "/opt/lexprive/ops/ai-company"
+        timeoutSec: 7200
+        extraArgs:
+          - "--yolo"
+          - "--max-turns"
+          - "60"
+        persistSession: false
+        env:
+          HERMES_MODEL: "gpt-5.5"
+          HERMES_REASONING_EFFORT: "high"
+          PAPERCLIP_API_URL: "http://127.0.0.1:3100/api"
+          AI_COMPANY_OPS_TOOL: "/opt/lexprive/paperclip-hermes/scripts/lexprive-ops-tool.mjs"
+          LEXPRIVE_OPS_TOOL: "/opt/lexprive/paperclip-hermes/scripts/lexprive-ops-tool.mjs"
+          AI_COMPANY_WORKER_SSH_KEY: "/var/lib/lexprive-ai-company/ssh/paperclip_worker_ed25519"
+          LEXPRIVE_WORKER_SSH_KEY: "/var/lib/lexprive-ai-company/ssh/paperclip_worker_ed25519"
+          AI_COMPANY_ARTIFACT_BASE_DIR: "/opt/lexprive/ops/ai-company"
+          LEXPRIVE_LOCAL_ARTIFACT_BASE_DIR: "/opt/lexprive/ops/ai-company"
+          AI_COMPANY_ARTIFACTS_DIR: "/opt/lexprive/ops/ai-company/artifacts"
+          LEXPRIVE_LOCAL_ARTIFACTS_DIR: "/opt/lexprive/ops/ai-company/artifacts"
+          AI_COMPANY_REMOTE_HERMES_COMMAND: "/var/lib/lexprive-ai-company/hermes/bin/hermes-high"
+          LEXPRIVE_REMOTE_HERMES_COMMAND: "/var/lib/lexprive-ai-company/hermes/bin/hermes-high"
+          AI_COMPANY_REMOTE_CWD: "/opt/lexprive/ops/ai-company"
+          LEXPRIVE_REMOTE_CWD: "/opt/lexprive/ops/ai-company"
+          AI_COMPANY_HERMES_OPS_WORKER_HOST: "51.158.119.50"
+          LEXPRIVE_HERMES_OPS_WORKER_HOST: "51.158.119.50"
+    permissions:
+      canAssignTasks: true
+  devops-sre-hermes:
+    role: "agent"
+    reportsTo: "engineering-lead-hermes"
+    adapter:
+      type: "hermes_local"
+      config:
+        hermesCommand: "/opt/lexprive/paperclip-hermes/scripts/hermes-dev-worker"
+        cwd: "/opt/lexprive/product/ordering-intelligence"
+        timeoutSec: 7200
+        extraArgs:
+          - "--yolo"
+          - "--max-turns"
+          - "60"
+        persistSession: false
+        env:
+          HERMES_MODEL: "gpt-5.5"
+          HERMES_REASONING_EFFORT: "high"
+          PAPERCLIP_API_URL: "http://127.0.0.1:3100/api"
+          AI_COMPANY_OPS_TOOL: "/opt/lexprive/paperclip-hermes/scripts/lexprive-ops-tool.mjs"
+          LEXPRIVE_OPS_TOOL: "/opt/lexprive/paperclip-hermes/scripts/lexprive-ops-tool.mjs"
+          AI_COMPANY_WORKER_SSH_KEY: "/var/lib/lexprive-ai-company/ssh/paperclip_worker_ed25519"
+          LEXPRIVE_WORKER_SSH_KEY: "/var/lib/lexprive-ai-company/ssh/paperclip_worker_ed25519"
+          AI_COMPANY_ARTIFACT_BASE_DIR: "/opt/lexprive/ops/ai-company"
+          LEXPRIVE_LOCAL_ARTIFACT_BASE_DIR: "/opt/lexprive/ops/ai-company"
+          AI_COMPANY_ARTIFACTS_DIR: "/opt/lexprive/ops/ai-company/artifacts"
+          LEXPRIVE_LOCAL_ARTIFACTS_DIR: "/opt/lexprive/ops/ai-company/artifacts"
+          AI_COMPANY_REMOTE_HERMES_COMMAND: "/var/lib/lexprive-ai-company/hermes/bin/hermes-high"
+          LEXPRIVE_REMOTE_HERMES_COMMAND: "/var/lib/lexprive-ai-company/hermes/bin/hermes-high"
+          AI_COMPANY_REMOTE_CWD: "/opt/lexprive/product/ordering-intelligence"
+          LEXPRIVE_REMOTE_CWD: "/opt/lexprive/product/ordering-intelligence"
+          AI_COMPANY_HERMES_DEV_WORKER_HOST: "163.172.132.197"
+          LEXPRIVE_HERMES_DEV_WORKER_HOST: "163.172.132.197"
+          LEXPRIVE_GITHUB_REPOSITORY: "MohamedRed/ordering-intelligence"
+          LEXPRIVE_PRODUCT_REPO_PATH: "/opt/lexprive/product/ordering-intelligence"
+    permissions:
+      canAssignTasks: true
+  engineering-lead-hermes:
+    role: "agent"
+    reportsTo: "ceo-hermes"
+    adapter:
+      type: "hermes_local"
+      config:
+        hermesCommand: "/opt/lexprive/paperclip-hermes/scripts/hermes-ops-worker"
+        cwd: "/opt/lexprive/ops/ai-company"
+        timeoutSec: 7200
+        extraArgs:
+          - "--yolo"
+          - "--max-turns"
+          - "60"
+        persistSession: false
+        env:
+          HERMES_MODEL: "gpt-5.5"
+          HERMES_REASONING_EFFORT: "high"
+          PAPERCLIP_API_URL: "http://127.0.0.1:3100/api"
+          AI_COMPANY_OPS_TOOL: "/opt/lexprive/paperclip-hermes/scripts/lexprive-ops-tool.mjs"
+          LEXPRIVE_OPS_TOOL: "/opt/lexprive/paperclip-hermes/scripts/lexprive-ops-tool.mjs"
+          AI_COMPANY_WORKER_SSH_KEY: "/var/lib/lexprive-ai-company/ssh/paperclip_worker_ed25519"
+          LEXPRIVE_WORKER_SSH_KEY: "/var/lib/lexprive-ai-company/ssh/paperclip_worker_ed25519"
+          AI_COMPANY_ARTIFACT_BASE_DIR: "/opt/lexprive/ops/ai-company"
+          LEXPRIVE_LOCAL_ARTIFACT_BASE_DIR: "/opt/lexprive/ops/ai-company"
+          AI_COMPANY_ARTIFACTS_DIR: "/opt/lexprive/ops/ai-company/artifacts"
+          LEXPRIVE_LOCAL_ARTIFACTS_DIR: "/opt/lexprive/ops/ai-company/artifacts"
+          AI_COMPANY_REMOTE_HERMES_COMMAND: "/var/lib/lexprive-ai-company/hermes/bin/hermes-high"
+          LEXPRIVE_REMOTE_HERMES_COMMAND: "/var/lib/lexprive-ai-company/hermes/bin/hermes-high"
+          AI_COMPANY_REMOTE_CWD: "/opt/lexprive/ops/ai-company"
+          LEXPRIVE_REMOTE_CWD: "/opt/lexprive/ops/ai-company"
+          AI_COMPANY_HERMES_OPS_WORKER_HOST: "51.158.119.50"
+          LEXPRIVE_HERMES_OPS_WORKER_HOST: "51.158.119.50"
+    permissions:
+      canAssignTasks: true
+  finance-ops-hermes:
+    role: "agent"
+    reportsTo: "ceo-hermes"
+    adapter:
+      type: "hermes_local"
+      config:
+        hermesCommand: "/opt/lexprive/paperclip-hermes/scripts/hermes-ops-worker"
+        cwd: "/opt/lexprive/ops/ai-company"
+        timeoutSec: 7200
+        extraArgs:
+          - "--yolo"
+          - "--max-turns"
+          - "60"
+        persistSession: false
+        env:
+          HERMES_MODEL: "gpt-5.5"
+          HERMES_REASONING_EFFORT: "high"
+          PAPERCLIP_API_URL: "http://127.0.0.1:3100/api"
+          AI_COMPANY_OPS_TOOL: "/opt/lexprive/paperclip-hermes/scripts/lexprive-ops-tool.mjs"
+          LEXPRIVE_OPS_TOOL: "/opt/lexprive/paperclip-hermes/scripts/lexprive-ops-tool.mjs"
+          AI_COMPANY_WORKER_SSH_KEY: "/var/lib/lexprive-ai-company/ssh/paperclip_worker_ed25519"
+          LEXPRIVE_WORKER_SSH_KEY: "/var/lib/lexprive-ai-company/ssh/paperclip_worker_ed25519"
+          AI_COMPANY_ARTIFACT_BASE_DIR: "/opt/lexprive/ops/ai-company"
+          LEXPRIVE_LOCAL_ARTIFACT_BASE_DIR: "/opt/lexprive/ops/ai-company"
+          AI_COMPANY_ARTIFACTS_DIR: "/opt/lexprive/ops/ai-company/artifacts"
+          LEXPRIVE_LOCAL_ARTIFACTS_DIR: "/opt/lexprive/ops/ai-company/artifacts"
+          AI_COMPANY_REMOTE_HERMES_COMMAND: "/var/lib/lexprive-ai-company/hermes/bin/hermes-high"
+          LEXPRIVE_REMOTE_HERMES_COMMAND: "/var/lib/lexprive-ai-company/hermes/bin/hermes-high"
+          AI_COMPANY_REMOTE_CWD: "/opt/lexprive/ops/ai-company"
+          LEXPRIVE_REMOTE_CWD: "/opt/lexprive/ops/ai-company"
+          AI_COMPANY_HERMES_OPS_WORKER_HOST: "51.158.119.50"
+          LEXPRIVE_HERMES_OPS_WORKER_HOST: "51.158.119.50"
+    permissions:
+      canAssignTasks: true
+  growth-analytics-hermes:
+    role: "agent"
+    reportsTo: "growth-lead-hermes"
+    adapter:
+      type: "hermes_local"
+      config:
+        hermesCommand: "/opt/lexprive/paperclip-hermes/scripts/hermes-ops-worker"
+        cwd: "/opt/lexprive/ops/ai-company"
+        timeoutSec: 7200
+        extraArgs:
+          - "--yolo"
+          - "--max-turns"
+          - "60"
+        persistSession: false
+        env:
+          HERMES_MODEL: "gpt-5.5"
+          HERMES_REASONING_EFFORT: "high"
+          PAPERCLIP_API_URL: "http://127.0.0.1:3100/api"
+          AI_COMPANY_OPS_TOOL: "/opt/lexprive/paperclip-hermes/scripts/lexprive-ops-tool.mjs"
+          LEXPRIVE_OPS_TOOL: "/opt/lexprive/paperclip-hermes/scripts/lexprive-ops-tool.mjs"
+          AI_COMPANY_WORKER_SSH_KEY: "/var/lib/lexprive-ai-company/ssh/paperclip_worker_ed25519"
+          LEXPRIVE_WORKER_SSH_KEY: "/var/lib/lexprive-ai-company/ssh/paperclip_worker_ed25519"
+          AI_COMPANY_ARTIFACT_BASE_DIR: "/opt/lexprive/ops/ai-company"
+          LEXPRIVE_LOCAL_ARTIFACT_BASE_DIR: "/opt/lexprive/ops/ai-company"
+          AI_COMPANY_ARTIFACTS_DIR: "/opt/lexprive/ops/ai-company/artifacts"
+          LEXPRIVE_LOCAL_ARTIFACTS_DIR: "/opt/lexprive/ops/ai-company/artifacts"
+          AI_COMPANY_REMOTE_HERMES_COMMAND: "/var/lib/lexprive-ai-company/hermes/bin/hermes-high"
+          LEXPRIVE_REMOTE_HERMES_COMMAND: "/var/lib/lexprive-ai-company/hermes/bin/hermes-high"
+          AI_COMPANY_REMOTE_CWD: "/opt/lexprive/ops/ai-company"
+          LEXPRIVE_REMOTE_CWD: "/opt/lexprive/ops/ai-company"
+          AI_COMPANY_HERMES_OPS_WORKER_HOST: "51.158.119.50"
+          LEXPRIVE_HERMES_OPS_WORKER_HOST: "51.158.119.50"
+    permissions:
+      canAssignTasks: true
+  growth-lead-hermes:
+    role: "agent"
+    reportsTo: "ceo-hermes"
+    adapter:
+      type: "hermes_local"
+      config:
+        hermesCommand: "/opt/lexprive/paperclip-hermes/scripts/hermes-ops-worker"
+        cwd: "/opt/lexprive/ops/ai-company"
+        timeoutSec: 7200
+        extraArgs:
+          - "--yolo"
+          - "--max-turns"
+          - "60"
+        persistSession: false
+        env:
+          HERMES_MODEL: "gpt-5.5"
+          HERMES_REASONING_EFFORT: "high"
+          PAPERCLIP_API_URL: "http://127.0.0.1:3100/api"
+          AI_COMPANY_OPS_TOOL: "/opt/lexprive/paperclip-hermes/scripts/lexprive-ops-tool.mjs"
+          LEXPRIVE_OPS_TOOL: "/opt/lexprive/paperclip-hermes/scripts/lexprive-ops-tool.mjs"
+          AI_COMPANY_WORKER_SSH_KEY: "/var/lib/lexprive-ai-company/ssh/paperclip_worker_ed25519"
+          LEXPRIVE_WORKER_SSH_KEY: "/var/lib/lexprive-ai-company/ssh/paperclip_worker_ed25519"
+          AI_COMPANY_ARTIFACT_BASE_DIR: "/opt/lexprive/ops/ai-company"
+          LEXPRIVE_LOCAL_ARTIFACT_BASE_DIR: "/opt/lexprive/ops/ai-company"
+          AI_COMPANY_ARTIFACTS_DIR: "/opt/lexprive/ops/ai-company/artifacts"
+          LEXPRIVE_LOCAL_ARTIFACTS_DIR: "/opt/lexprive/ops/ai-company/artifacts"
+          AI_COMPANY_REMOTE_HERMES_COMMAND: "/var/lib/lexprive-ai-company/hermes/bin/hermes-high"
+          LEXPRIVE_REMOTE_HERMES_COMMAND: "/var/lib/lexprive-ai-company/hermes/bin/hermes-high"
+          AI_COMPANY_REMOTE_CWD: "/opt/lexprive/ops/ai-company"
+          LEXPRIVE_REMOTE_CWD: "/opt/lexprive/ops/ai-company"
+          AI_COMPANY_HERMES_OPS_WORKER_HOST: "51.158.119.50"
+          LEXPRIVE_HERMES_OPS_WORKER_HOST: "51.158.119.50"
+    permissions:
+      canAssignTasks: true
+  hr-recruiting-hermes:
+    role: "agent"
+    reportsTo: "ceo-hermes"
+    adapter:
+      type: "hermes_local"
+      config:
+        hermesCommand: "/opt/lexprive/paperclip-hermes/scripts/hermes-ops-worker"
+        cwd: "/opt/lexprive/ops/ai-company"
+        timeoutSec: 7200
+        extraArgs:
+          - "--yolo"
+          - "--max-turns"
+          - "60"
+        persistSession: false
+        env:
+          HERMES_MODEL: "gpt-5.5"
+          HERMES_REASONING_EFFORT: "high"
+          PAPERCLIP_API_URL: "http://127.0.0.1:3100/api"
+          AI_COMPANY_OPS_TOOL: "/opt/lexprive/paperclip-hermes/scripts/lexprive-ops-tool.mjs"
+          LEXPRIVE_OPS_TOOL: "/opt/lexprive/paperclip-hermes/scripts/lexprive-ops-tool.mjs"
+          AI_COMPANY_WORKER_SSH_KEY: "/var/lib/lexprive-ai-company/ssh/paperclip_worker_ed25519"
+          LEXPRIVE_WORKER_SSH_KEY: "/var/lib/lexprive-ai-company/ssh/paperclip_worker_ed25519"
+          AI_COMPANY_ARTIFACT_BASE_DIR: "/opt/lexprive/ops/ai-company"
+          LEXPRIVE_LOCAL_ARTIFACT_BASE_DIR: "/opt/lexprive/ops/ai-company"
+          AI_COMPANY_ARTIFACTS_DIR: "/opt/lexprive/ops/ai-company/artifacts"
+          LEXPRIVE_LOCAL_ARTIFACTS_DIR: "/opt/lexprive/ops/ai-company/artifacts"
+          AI_COMPANY_REMOTE_HERMES_COMMAND: "/var/lib/lexprive-ai-company/hermes/bin/hermes-high"
+          LEXPRIVE_REMOTE_HERMES_COMMAND: "/var/lib/lexprive-ai-company/hermes/bin/hermes-high"
+          AI_COMPANY_REMOTE_CWD: "/opt/lexprive/ops/ai-company"
+          LEXPRIVE_REMOTE_CWD: "/opt/lexprive/ops/ai-company"
+          AI_COMPANY_HERMES_OPS_WORKER_HOST: "51.158.119.50"
+          LEXPRIVE_HERMES_OPS_WORKER_HOST: "51.158.119.50"
+    permissions:
+      canAssignTasks: true
+  learning-hermes:
+    role: "agent"
+    reportsTo: "growth-lead-hermes"
+    adapter:
+      type: "hermes_local"
+      config:
+        hermesCommand: "/opt/lexprive/paperclip-hermes/scripts/hermes-ops-worker"
+        cwd: "/opt/lexprive/ops/ai-company"
+        timeoutSec: 7200
+        extraArgs:
+          - "--yolo"
+          - "--max-turns"
+          - "60"
+        persistSession: false
+        env:
+          HERMES_MODEL: "gpt-5.5"
+          HERMES_REASONING_EFFORT: "high"
+          PAPERCLIP_API_URL: "http://127.0.0.1:3100/api"
+          AI_COMPANY_OPS_TOOL: "/opt/lexprive/paperclip-hermes/scripts/lexprive-ops-tool.mjs"
+          LEXPRIVE_OPS_TOOL: "/opt/lexprive/paperclip-hermes/scripts/lexprive-ops-tool.mjs"
+          AI_COMPANY_WORKER_SSH_KEY: "/var/lib/lexprive-ai-company/ssh/paperclip_worker_ed25519"
+          LEXPRIVE_WORKER_SSH_KEY: "/var/lib/lexprive-ai-company/ssh/paperclip_worker_ed25519"
+          AI_COMPANY_ARTIFACT_BASE_DIR: "/opt/lexprive/ops/ai-company"
+          LEXPRIVE_LOCAL_ARTIFACT_BASE_DIR: "/opt/lexprive/ops/ai-company"
+          AI_COMPANY_ARTIFACTS_DIR: "/opt/lexprive/ops/ai-company/artifacts"
+          LEXPRIVE_LOCAL_ARTIFACTS_DIR: "/opt/lexprive/ops/ai-company/artifacts"
+          AI_COMPANY_REMOTE_HERMES_COMMAND: "/var/lib/lexprive-ai-company/hermes/bin/hermes-high"
+          LEXPRIVE_REMOTE_HERMES_COMMAND: "/var/lib/lexprive-ai-company/hermes/bin/hermes-high"
+          AI_COMPANY_REMOTE_CWD: "/opt/lexprive/ops/ai-company"
+          LEXPRIVE_REMOTE_CWD: "/opt/lexprive/ops/ai-company"
+          AI_COMPANY_HERMES_OPS_WORKER_HOST: "51.158.119.50"
+          LEXPRIVE_HERMES_OPS_WORKER_HOST: "51.158.119.50"
+    permissions:
+      canAssignTasks: true
+  learning-strategy-hermes:
+    role: "agent"
+    reportsTo: "growth-lead-hermes"
+    adapter:
+      type: "hermes_local"
+      config:
+        hermesCommand: "/opt/lexprive/paperclip-hermes/scripts/hermes-ops-worker"
+        cwd: "/opt/lexprive/ops/ai-company"
+        timeoutSec: 7200
+        extraArgs:
+          - "--yolo"
+          - "--max-turns"
+          - "60"
+        persistSession: false
+        env:
+          HERMES_MODEL: "gpt-5.5"
+          HERMES_REASONING_EFFORT: "high"
+          PAPERCLIP_API_URL: "http://127.0.0.1:3100/api"
+          AI_COMPANY_OPS_TOOL: "/opt/lexprive/paperclip-hermes/scripts/lexprive-ops-tool.mjs"
+          LEXPRIVE_OPS_TOOL: "/opt/lexprive/paperclip-hermes/scripts/lexprive-ops-tool.mjs"
+          AI_COMPANY_WORKER_SSH_KEY: "/var/lib/lexprive-ai-company/ssh/paperclip_worker_ed25519"
+          LEXPRIVE_WORKER_SSH_KEY: "/var/lib/lexprive-ai-company/ssh/paperclip_worker_ed25519"
+          AI_COMPANY_ARTIFACT_BASE_DIR: "/opt/lexprive/ops/ai-company"
+          LEXPRIVE_LOCAL_ARTIFACT_BASE_DIR: "/opt/lexprive/ops/ai-company"
+          AI_COMPANY_ARTIFACTS_DIR: "/opt/lexprive/ops/ai-company/artifacts"
+          LEXPRIVE_LOCAL_ARTIFACTS_DIR: "/opt/lexprive/ops/ai-company/artifacts"
+          AI_COMPANY_REMOTE_HERMES_COMMAND: "/var/lib/lexprive-ai-company/hermes/bin/hermes-high"
+          LEXPRIVE_REMOTE_HERMES_COMMAND: "/var/lib/lexprive-ai-company/hermes/bin/hermes-high"
+          AI_COMPANY_REMOTE_CWD: "/opt/lexprive/ops/ai-company"
+          LEXPRIVE_REMOTE_CWD: "/opt/lexprive/ops/ai-company"
+          AI_COMPANY_HERMES_OPS_WORKER_HOST: "51.158.119.50"
+          LEXPRIVE_HERMES_OPS_WORKER_HOST: "51.158.119.50"
+    permissions:
+      canAssignTasks: true
+  legal-compliance-hermes:
+    role: "agent"
+    reportsTo: "ceo-hermes"
+    adapter:
+      type: "hermes_local"
+      config:
+        hermesCommand: "/opt/lexprive/paperclip-hermes/scripts/hermes-ops-worker"
+        cwd: "/opt/lexprive/ops/ai-company"
+        timeoutSec: 7200
+        extraArgs:
+          - "--yolo"
+          - "--max-turns"
+          - "60"
+        persistSession: false
+        env:
+          HERMES_MODEL: "gpt-5.5"
+          HERMES_REASONING_EFFORT: "high"
+          PAPERCLIP_API_URL: "http://127.0.0.1:3100/api"
+          AI_COMPANY_OPS_TOOL: "/opt/lexprive/paperclip-hermes/scripts/lexprive-ops-tool.mjs"
+          LEXPRIVE_OPS_TOOL: "/opt/lexprive/paperclip-hermes/scripts/lexprive-ops-tool.mjs"
+          AI_COMPANY_WORKER_SSH_KEY: "/var/lib/lexprive-ai-company/ssh/paperclip_worker_ed25519"
+          LEXPRIVE_WORKER_SSH_KEY: "/var/lib/lexprive-ai-company/ssh/paperclip_worker_ed25519"
+          AI_COMPANY_ARTIFACT_BASE_DIR: "/opt/lexprive/ops/ai-company"
+          LEXPRIVE_LOCAL_ARTIFACT_BASE_DIR: "/opt/lexprive/ops/ai-company"
+          AI_COMPANY_ARTIFACTS_DIR: "/opt/lexprive/ops/ai-company/artifacts"
+          LEXPRIVE_LOCAL_ARTIFACTS_DIR: "/opt/lexprive/ops/ai-company/artifacts"
+          AI_COMPANY_REMOTE_HERMES_COMMAND: "/var/lib/lexprive-ai-company/hermes/bin/hermes-high"
+          LEXPRIVE_REMOTE_HERMES_COMMAND: "/var/lib/lexprive-ai-company/hermes/bin/hermes-high"
+          AI_COMPANY_REMOTE_CWD: "/opt/lexprive/ops/ai-company"
+          LEXPRIVE_REMOTE_CWD: "/opt/lexprive/ops/ai-company"
+          AI_COMPANY_HERMES_OPS_WORKER_HOST: "51.158.119.50"
+          LEXPRIVE_HERMES_OPS_WORKER_HOST: "51.158.119.50"
+    permissions:
+      canAssignTasks: true
+  market-research-hermes:
+    role: "agent"
+    reportsTo: "growth-lead-hermes"
+    adapter:
+      type: "hermes_local"
+      config:
+        hermesCommand: "/opt/lexprive/paperclip-hermes/scripts/hermes-ops-worker"
+        cwd: "/opt/lexprive/ops/ai-company"
+        timeoutSec: 7200
+        extraArgs:
+          - "--yolo"
+          - "--max-turns"
+          - "60"
+        persistSession: false
+        env:
+          HERMES_MODEL: "gpt-5.5"
+          HERMES_REASONING_EFFORT: "high"
+          PAPERCLIP_API_URL: "http://127.0.0.1:3100/api"
+          AI_COMPANY_OPS_TOOL: "/opt/lexprive/paperclip-hermes/scripts/lexprive-ops-tool.mjs"
+          LEXPRIVE_OPS_TOOL: "/opt/lexprive/paperclip-hermes/scripts/lexprive-ops-tool.mjs"
+          AI_COMPANY_WORKER_SSH_KEY: "/var/lib/lexprive-ai-company/ssh/paperclip_worker_ed25519"
+          LEXPRIVE_WORKER_SSH_KEY: "/var/lib/lexprive-ai-company/ssh/paperclip_worker_ed25519"
+          AI_COMPANY_ARTIFACT_BASE_DIR: "/opt/lexprive/ops/ai-company"
+          LEXPRIVE_LOCAL_ARTIFACT_BASE_DIR: "/opt/lexprive/ops/ai-company"
+          AI_COMPANY_ARTIFACTS_DIR: "/opt/lexprive/ops/ai-company/artifacts"
+          LEXPRIVE_LOCAL_ARTIFACTS_DIR: "/opt/lexprive/ops/ai-company/artifacts"
+          AI_COMPANY_REMOTE_HERMES_COMMAND: "/var/lib/lexprive-ai-company/hermes/bin/hermes-high"
+          LEXPRIVE_REMOTE_HERMES_COMMAND: "/var/lib/lexprive-ai-company/hermes/bin/hermes-high"
+          AI_COMPANY_REMOTE_CWD: "/opt/lexprive/ops/ai-company"
+          LEXPRIVE_REMOTE_CWD: "/opt/lexprive/ops/ai-company"
+          AI_COMPANY_HERMES_OPS_WORKER_HOST: "51.158.119.50"
+          LEXPRIVE_HERMES_OPS_WORKER_HOST: "51.158.119.50"
+    permissions:
+      canAssignTasks: true
+  marketing-hermes:
+    role: "agent"
+    reportsTo: "growth-lead-hermes"
+    adapter:
+      type: "hermes_local"
+      config:
+        hermesCommand: "/opt/lexprive/paperclip-hermes/scripts/hermes-ops-worker"
+        cwd: "/opt/lexprive/ops/ai-company"
+        timeoutSec: 7200
+        extraArgs:
+          - "--yolo"
+          - "--max-turns"
+          - "60"
+        persistSession: false
+        env:
+          HERMES_MODEL: "gpt-5.5"
+          HERMES_REASONING_EFFORT: "high"
+          PAPERCLIP_API_URL: "http://127.0.0.1:3100/api"
+          AI_COMPANY_OPS_TOOL: "/opt/lexprive/paperclip-hermes/scripts/lexprive-ops-tool.mjs"
+          LEXPRIVE_OPS_TOOL: "/opt/lexprive/paperclip-hermes/scripts/lexprive-ops-tool.mjs"
+          AI_COMPANY_WORKER_SSH_KEY: "/var/lib/lexprive-ai-company/ssh/paperclip_worker_ed25519"
+          LEXPRIVE_WORKER_SSH_KEY: "/var/lib/lexprive-ai-company/ssh/paperclip_worker_ed25519"
+          AI_COMPANY_ARTIFACT_BASE_DIR: "/opt/lexprive/ops/ai-company"
+          LEXPRIVE_LOCAL_ARTIFACT_BASE_DIR: "/opt/lexprive/ops/ai-company"
+          AI_COMPANY_ARTIFACTS_DIR: "/opt/lexprive/ops/ai-company/artifacts"
+          LEXPRIVE_LOCAL_ARTIFACTS_DIR: "/opt/lexprive/ops/ai-company/artifacts"
+          AI_COMPANY_REMOTE_HERMES_COMMAND: "/var/lib/lexprive-ai-company/hermes/bin/hermes-high"
+          LEXPRIVE_REMOTE_HERMES_COMMAND: "/var/lib/lexprive-ai-company/hermes/bin/hermes-high"
+          AI_COMPANY_REMOTE_CWD: "/opt/lexprive/ops/ai-company"
+          LEXPRIVE_REMOTE_CWD: "/opt/lexprive/ops/ai-company"
+          AI_COMPANY_HERMES_OPS_WORKER_HOST: "51.158.119.50"
+          LEXPRIVE_HERMES_OPS_WORKER_HOST: "51.158.119.50"
+    permissions:
+      canAssignTasks: true
+  menu-data-hermes:
+    role: "agent"
+    reportsTo: "product-lead-hermes"
+    adapter:
+      type: "hermes_local"
+      config:
+        hermesCommand: "/opt/lexprive/paperclip-hermes/scripts/hermes-ops-worker"
+        cwd: "/opt/lexprive/ops/ai-company"
+        timeoutSec: 7200
+        extraArgs:
+          - "--yolo"
+          - "--max-turns"
+          - "60"
+        persistSession: false
+        env:
+          HERMES_MODEL: "gpt-5.5"
+          HERMES_REASONING_EFFORT: "high"
+          PAPERCLIP_API_URL: "http://127.0.0.1:3100/api"
+          AI_COMPANY_OPS_TOOL: "/opt/lexprive/paperclip-hermes/scripts/lexprive-ops-tool.mjs"
+          LEXPRIVE_OPS_TOOL: "/opt/lexprive/paperclip-hermes/scripts/lexprive-ops-tool.mjs"
+          AI_COMPANY_WORKER_SSH_KEY: "/var/lib/lexprive-ai-company/ssh/paperclip_worker_ed25519"
+          LEXPRIVE_WORKER_SSH_KEY: "/var/lib/lexprive-ai-company/ssh/paperclip_worker_ed25519"
+          AI_COMPANY_ARTIFACT_BASE_DIR: "/opt/lexprive/ops/ai-company"
+          LEXPRIVE_LOCAL_ARTIFACT_BASE_DIR: "/opt/lexprive/ops/ai-company"
+          AI_COMPANY_ARTIFACTS_DIR: "/opt/lexprive/ops/ai-company/artifacts"
+          LEXPRIVE_LOCAL_ARTIFACTS_DIR: "/opt/lexprive/ops/ai-company/artifacts"
+          AI_COMPANY_REMOTE_HERMES_COMMAND: "/var/lib/lexprive-ai-company/hermes/bin/hermes-high"
+          LEXPRIVE_REMOTE_HERMES_COMMAND: "/var/lib/lexprive-ai-company/hermes/bin/hermes-high"
+          AI_COMPANY_REMOTE_CWD: "/opt/lexprive/ops/ai-company"
+          LEXPRIVE_REMOTE_CWD: "/opt/lexprive/ops/ai-company"
+          AI_COMPANY_HERMES_OPS_WORKER_HOST: "51.158.119.50"
+          LEXPRIVE_HERMES_OPS_WORKER_HOST: "51.158.119.50"
+    permissions:
+      canAssignTasks: true
+  outbound-hermes:
+    role: "agent"
+    reportsTo: "growth-lead-hermes"
+    adapter:
+      type: "hermes_local"
+      config:
+        hermesCommand: "/opt/lexprive/paperclip-hermes/scripts/hermes-ops-worker"
+        cwd: "/opt/lexprive/ops/ai-company"
+        timeoutSec: 7200
+        extraArgs:
+          - "--yolo"
+          - "--max-turns"
+          - "60"
+        persistSession: false
+        env:
+          HERMES_MODEL: "gpt-5.5"
+          HERMES_REASONING_EFFORT: "high"
+          PAPERCLIP_API_URL: "http://127.0.0.1:3100/api"
+          AI_COMPANY_OPS_TOOL: "/opt/lexprive/paperclip-hermes/scripts/lexprive-ops-tool.mjs"
+          LEXPRIVE_OPS_TOOL: "/opt/lexprive/paperclip-hermes/scripts/lexprive-ops-tool.mjs"
+          AI_COMPANY_WORKER_SSH_KEY: "/var/lib/lexprive-ai-company/ssh/paperclip_worker_ed25519"
+          LEXPRIVE_WORKER_SSH_KEY: "/var/lib/lexprive-ai-company/ssh/paperclip_worker_ed25519"
+          AI_COMPANY_ARTIFACT_BASE_DIR: "/opt/lexprive/ops/ai-company"
+          LEXPRIVE_LOCAL_ARTIFACT_BASE_DIR: "/opt/lexprive/ops/ai-company"
+          AI_COMPANY_ARTIFACTS_DIR: "/opt/lexprive/ops/ai-company/artifacts"
+          LEXPRIVE_LOCAL_ARTIFACTS_DIR: "/opt/lexprive/ops/ai-company/artifacts"
+          AI_COMPANY_REMOTE_HERMES_COMMAND: "/var/lib/lexprive-ai-company/hermes/bin/hermes-high"
+          LEXPRIVE_REMOTE_HERMES_COMMAND: "/var/lib/lexprive-ai-company/hermes/bin/hermes-high"
+          AI_COMPANY_REMOTE_CWD: "/opt/lexprive/ops/ai-company"
+          LEXPRIVE_REMOTE_CWD: "/opt/lexprive/ops/ai-company"
+          AI_COMPANY_HERMES_OPS_WORKER_HOST: "51.158.119.50"
+          LEXPRIVE_HERMES_OPS_WORKER_HOST: "51.158.119.50"
+    permissions:
+      canAssignTasks: true
+  partnerships-hermes:
+    role: "agent"
+    reportsTo: "growth-lead-hermes"
+    adapter:
+      type: "hermes_local"
+      config:
+        hermesCommand: "/opt/lexprive/paperclip-hermes/scripts/hermes-ops-worker"
+        cwd: "/opt/lexprive/ops/ai-company"
+        timeoutSec: 7200
+        extraArgs:
+          - "--yolo"
+          - "--max-turns"
+          - "60"
+        persistSession: false
+        env:
+          HERMES_MODEL: "gpt-5.5"
+          HERMES_REASONING_EFFORT: "high"
+          PAPERCLIP_API_URL: "http://127.0.0.1:3100/api"
+          AI_COMPANY_OPS_TOOL: "/opt/lexprive/paperclip-hermes/scripts/lexprive-ops-tool.mjs"
+          LEXPRIVE_OPS_TOOL: "/opt/lexprive/paperclip-hermes/scripts/lexprive-ops-tool.mjs"
+          AI_COMPANY_WORKER_SSH_KEY: "/var/lib/lexprive-ai-company/ssh/paperclip_worker_ed25519"
+          LEXPRIVE_WORKER_SSH_KEY: "/var/lib/lexprive-ai-company/ssh/paperclip_worker_ed25519"
+          AI_COMPANY_ARTIFACT_BASE_DIR: "/opt/lexprive/ops/ai-company"
+          LEXPRIVE_LOCAL_ARTIFACT_BASE_DIR: "/opt/lexprive/ops/ai-company"
+          AI_COMPANY_ARTIFACTS_DIR: "/opt/lexprive/ops/ai-company/artifacts"
+          LEXPRIVE_LOCAL_ARTIFACTS_DIR: "/opt/lexprive/ops/ai-company/artifacts"
+          AI_COMPANY_REMOTE_HERMES_COMMAND: "/var/lib/lexprive-ai-company/hermes/bin/hermes-high"
+          LEXPRIVE_REMOTE_HERMES_COMMAND: "/var/lib/lexprive-ai-company/hermes/bin/hermes-high"
+          AI_COMPANY_REMOTE_CWD: "/opt/lexprive/ops/ai-company"
+          LEXPRIVE_REMOTE_CWD: "/opt/lexprive/ops/ai-company"
+          AI_COMPANY_HERMES_OPS_WORKER_HOST: "51.158.119.50"
+          LEXPRIVE_HERMES_OPS_WORKER_HOST: "51.158.119.50"
+    permissions:
+      canAssignTasks: true
+  pos-integrations-hermes:
+    role: "agent"
+    reportsTo: "engineering-lead-hermes"
+    adapter:
+      type: "hermes_local"
+      config:
+        hermesCommand: "/opt/lexprive/paperclip-hermes/scripts/hermes-dev-worker"
+        cwd: "/opt/lexprive/product/ordering-intelligence"
+        timeoutSec: 7200
+        extraArgs:
+          - "--yolo"
+          - "--max-turns"
+          - "60"
+        persistSession: false
+        env:
+          HERMES_MODEL: "gpt-5.5"
+          HERMES_REASONING_EFFORT: "high"
+          PAPERCLIP_API_URL: "http://127.0.0.1:3100/api"
+          AI_COMPANY_OPS_TOOL: "/opt/lexprive/paperclip-hermes/scripts/lexprive-ops-tool.mjs"
+          LEXPRIVE_OPS_TOOL: "/opt/lexprive/paperclip-hermes/scripts/lexprive-ops-tool.mjs"
+          AI_COMPANY_WORKER_SSH_KEY: "/var/lib/lexprive-ai-company/ssh/paperclip_worker_ed25519"
+          LEXPRIVE_WORKER_SSH_KEY: "/var/lib/lexprive-ai-company/ssh/paperclip_worker_ed25519"
+          AI_COMPANY_ARTIFACT_BASE_DIR: "/opt/lexprive/ops/ai-company"
+          LEXPRIVE_LOCAL_ARTIFACT_BASE_DIR: "/opt/lexprive/ops/ai-company"
+          AI_COMPANY_ARTIFACTS_DIR: "/opt/lexprive/ops/ai-company/artifacts"
+          LEXPRIVE_LOCAL_ARTIFACTS_DIR: "/opt/lexprive/ops/ai-company/artifacts"
+          AI_COMPANY_REMOTE_HERMES_COMMAND: "/var/lib/lexprive-ai-company/hermes/bin/hermes-high"
+          LEXPRIVE_REMOTE_HERMES_COMMAND: "/var/lib/lexprive-ai-company/hermes/bin/hermes-high"
+          AI_COMPANY_REMOTE_CWD: "/opt/lexprive/product/ordering-intelligence"
+          LEXPRIVE_REMOTE_CWD: "/opt/lexprive/product/ordering-intelligence"
+          AI_COMPANY_HERMES_DEV_WORKER_HOST: "163.172.132.197"
+          LEXPRIVE_HERMES_DEV_WORKER_HOST: "163.172.132.197"
+          LEXPRIVE_GITHUB_REPOSITORY: "MohamedRed/ordering-intelligence"
+          LEXPRIVE_PRODUCT_REPO_PATH: "/opt/lexprive/product/ordering-intelligence"
+    permissions:
+      canAssignTasks: true
+  product-lead-hermes:
+    role: "agent"
+    reportsTo: "ceo-hermes"
+    adapter:
+      type: "hermes_local"
+      config:
+        hermesCommand: "/opt/lexprive/paperclip-hermes/scripts/hermes-ops-worker"
+        cwd: "/opt/lexprive/ops/ai-company"
+        timeoutSec: 7200
+        extraArgs:
+          - "--yolo"
+          - "--max-turns"
+          - "60"
+        persistSession: false
+        env:
+          HERMES_MODEL: "gpt-5.5"
+          HERMES_REASONING_EFFORT: "high"
+          PAPERCLIP_API_URL: "http://127.0.0.1:3100/api"
+          AI_COMPANY_OPS_TOOL: "/opt/lexprive/paperclip-hermes/scripts/lexprive-ops-tool.mjs"
+          LEXPRIVE_OPS_TOOL: "/opt/lexprive/paperclip-hermes/scripts/lexprive-ops-tool.mjs"
+          AI_COMPANY_WORKER_SSH_KEY: "/var/lib/lexprive-ai-company/ssh/paperclip_worker_ed25519"
+          LEXPRIVE_WORKER_SSH_KEY: "/var/lib/lexprive-ai-company/ssh/paperclip_worker_ed25519"
+          AI_COMPANY_ARTIFACT_BASE_DIR: "/opt/lexprive/ops/ai-company"
+          LEXPRIVE_LOCAL_ARTIFACT_BASE_DIR: "/opt/lexprive/ops/ai-company"
+          AI_COMPANY_ARTIFACTS_DIR: "/opt/lexprive/ops/ai-company/artifacts"
+          LEXPRIVE_LOCAL_ARTIFACTS_DIR: "/opt/lexprive/ops/ai-company/artifacts"
+          AI_COMPANY_REMOTE_HERMES_COMMAND: "/var/lib/lexprive-ai-company/hermes/bin/hermes-high"
+          LEXPRIVE_REMOTE_HERMES_COMMAND: "/var/lib/lexprive-ai-company/hermes/bin/hermes-high"
+          AI_COMPANY_REMOTE_CWD: "/opt/lexprive/ops/ai-company"
+          LEXPRIVE_REMOTE_CWD: "/opt/lexprive/ops/ai-company"
+          AI_COMPANY_HERMES_OPS_WORKER_HOST: "51.158.119.50"
+          LEXPRIVE_HERMES_OPS_WORKER_HOST: "51.158.119.50"
+    permissions:
+      canAssignTasks: true
+  qa-engineer-hermes:
+    role: "agent"
+    reportsTo: "cto-hermes"
+    adapter:
+      type: "hermes_local"
+      config:
+        hermesCommand: "/opt/lexprive/paperclip-hermes/scripts/hermes-dev-worker"
+        cwd: "/opt/lexprive/product/ordering-intelligence"
+        timeoutSec: 7200
+        extraArgs:
+          - "--yolo"
+          - "--max-turns"
+          - "60"
+        persistSession: false
+        env:
+          HERMES_MODEL: "gpt-5.5"
+          HERMES_REASONING_EFFORT: "high"
+          PAPERCLIP_API_URL: "http://127.0.0.1:3100/api"
+          AI_COMPANY_OPS_TOOL: "/opt/lexprive/paperclip-hermes/scripts/lexprive-ops-tool.mjs"
+          LEXPRIVE_OPS_TOOL: "/opt/lexprive/paperclip-hermes/scripts/lexprive-ops-tool.mjs"
+          AI_COMPANY_WORKER_SSH_KEY: "/var/lib/lexprive-ai-company/ssh/paperclip_worker_ed25519"
+          LEXPRIVE_WORKER_SSH_KEY: "/var/lib/lexprive-ai-company/ssh/paperclip_worker_ed25519"
+          AI_COMPANY_ARTIFACT_BASE_DIR: "/opt/lexprive/ops/ai-company"
+          LEXPRIVE_LOCAL_ARTIFACT_BASE_DIR: "/opt/lexprive/ops/ai-company"
+          AI_COMPANY_ARTIFACTS_DIR: "/opt/lexprive/ops/ai-company/artifacts"
+          LEXPRIVE_LOCAL_ARTIFACTS_DIR: "/opt/lexprive/ops/ai-company/artifacts"
+          AI_COMPANY_REMOTE_HERMES_COMMAND: "/var/lib/lexprive-ai-company/hermes/bin/hermes-high"
+          LEXPRIVE_REMOTE_HERMES_COMMAND: "/var/lib/lexprive-ai-company/hermes/bin/hermes-high"
+          AI_COMPANY_REMOTE_CWD: "/opt/lexprive/product/ordering-intelligence"
+          LEXPRIVE_REMOTE_CWD: "/opt/lexprive/product/ordering-intelligence"
+          AI_COMPANY_HERMES_DEV_WORKER_HOST: "163.172.132.197"
+          LEXPRIVE_HERMES_DEV_WORKER_HOST: "163.172.132.197"
+          LEXPRIVE_GITHUB_REPOSITORY: "MohamedRed/ordering-intelligence"
+          LEXPRIVE_PRODUCT_REPO_PATH: "/opt/lexprive/product/ordering-intelligence"
+    permissions:
+      canAssignTasks: true
+  qa-release-hermes:
+    role: "agent"
+    reportsTo: "engineering-lead-hermes"
+    adapter:
+      type: "hermes_local"
+      config:
+        hermesCommand: "/opt/lexprive/paperclip-hermes/scripts/hermes-dev-worker"
+        cwd: "/opt/lexprive/product/ordering-intelligence"
+        timeoutSec: 7200
+        extraArgs:
+          - "--yolo"
+          - "--max-turns"
+          - "60"
+        persistSession: false
+        env:
+          HERMES_MODEL: "gpt-5.5"
+          HERMES_REASONING_EFFORT: "high"
+          PAPERCLIP_API_URL: "http://127.0.0.1:3100/api"
+          AI_COMPANY_OPS_TOOL: "/opt/lexprive/paperclip-hermes/scripts/lexprive-ops-tool.mjs"
+          LEXPRIVE_OPS_TOOL: "/opt/lexprive/paperclip-hermes/scripts/lexprive-ops-tool.mjs"
+          AI_COMPANY_WORKER_SSH_KEY: "/var/lib/lexprive-ai-company/ssh/paperclip_worker_ed25519"
+          LEXPRIVE_WORKER_SSH_KEY: "/var/lib/lexprive-ai-company/ssh/paperclip_worker_ed25519"
+          AI_COMPANY_ARTIFACT_BASE_DIR: "/opt/lexprive/ops/ai-company"
+          LEXPRIVE_LOCAL_ARTIFACT_BASE_DIR: "/opt/lexprive/ops/ai-company"
+          AI_COMPANY_ARTIFACTS_DIR: "/opt/lexprive/ops/ai-company/artifacts"
+          LEXPRIVE_LOCAL_ARTIFACTS_DIR: "/opt/lexprive/ops/ai-company/artifacts"
+          AI_COMPANY_REMOTE_HERMES_COMMAND: "/var/lib/lexprive-ai-company/hermes/bin/hermes-high"
+          LEXPRIVE_REMOTE_HERMES_COMMAND: "/var/lib/lexprive-ai-company/hermes/bin/hermes-high"
+          AI_COMPANY_REMOTE_CWD: "/opt/lexprive/product/ordering-intelligence"
+          LEXPRIVE_REMOTE_CWD: "/opt/lexprive/product/ordering-intelligence"
+          AI_COMPANY_HERMES_DEV_WORKER_HOST: "163.172.132.197"
+          LEXPRIVE_HERMES_DEV_WORKER_HOST: "163.172.132.197"
+          LEXPRIVE_GITHUB_REPOSITORY: "MohamedRed/ordering-intelligence"
+          LEXPRIVE_PRODUCT_REPO_PATH: "/opt/lexprive/product/ordering-intelligence"
+    permissions:
+      canAssignTasks: true
+  release-engineer-hermes:
+    role: "agent"
+    reportsTo: "cto-hermes"
+    adapter:
+      type: "hermes_local"
+      config:
+        hermesCommand: "/opt/lexprive/paperclip-hermes/scripts/hermes-dev-worker"
+        cwd: "/opt/lexprive/product/ordering-intelligence"
+        timeoutSec: 7200
+        extraArgs:
+          - "--yolo"
+          - "--max-turns"
+          - "60"
+        persistSession: false
+        env:
+          HERMES_MODEL: "gpt-5.5"
+          HERMES_REASONING_EFFORT: "high"
+          PAPERCLIP_API_URL: "http://127.0.0.1:3100/api"
+          AI_COMPANY_OPS_TOOL: "/opt/lexprive/paperclip-hermes/scripts/lexprive-ops-tool.mjs"
+          LEXPRIVE_OPS_TOOL: "/opt/lexprive/paperclip-hermes/scripts/lexprive-ops-tool.mjs"
+          AI_COMPANY_WORKER_SSH_KEY: "/var/lib/lexprive-ai-company/ssh/paperclip_worker_ed25519"
+          LEXPRIVE_WORKER_SSH_KEY: "/var/lib/lexprive-ai-company/ssh/paperclip_worker_ed25519"
+          AI_COMPANY_ARTIFACT_BASE_DIR: "/opt/lexprive/ops/ai-company"
+          LEXPRIVE_LOCAL_ARTIFACT_BASE_DIR: "/opt/lexprive/ops/ai-company"
+          AI_COMPANY_ARTIFACTS_DIR: "/opt/lexprive/ops/ai-company/artifacts"
+          LEXPRIVE_LOCAL_ARTIFACTS_DIR: "/opt/lexprive/ops/ai-company/artifacts"
+          AI_COMPANY_REMOTE_HERMES_COMMAND: "/var/lib/lexprive-ai-company/hermes/bin/hermes-high"
+          LEXPRIVE_REMOTE_HERMES_COMMAND: "/var/lib/lexprive-ai-company/hermes/bin/hermes-high"
+          AI_COMPANY_REMOTE_CWD: "/opt/lexprive/product/ordering-intelligence"
+          LEXPRIVE_REMOTE_CWD: "/opt/lexprive/product/ordering-intelligence"
+          AI_COMPANY_HERMES_DEV_WORKER_HOST: "163.172.132.197"
+          LEXPRIVE_HERMES_DEV_WORKER_HOST: "163.172.132.197"
+          LEXPRIVE_GITHUB_REPOSITORY: "MohamedRed/ordering-intelligence"
+          LEXPRIVE_PRODUCT_REPO_PATH: "/opt/lexprive/product/ordering-intelligence"
+    permissions:
+      canAssignTasks: true
+  restaurant-ops-hermes:
+    role: "agent"
+    reportsTo: "customer-success-hermes"
+    adapter:
+      type: "hermes_local"
+      config:
+        hermesCommand: "/opt/lexprive/paperclip-hermes/scripts/hermes-ops-worker"
+        cwd: "/opt/lexprive/ops/ai-company"
+        timeoutSec: 7200
+        extraArgs:
+          - "--yolo"
+          - "--max-turns"
+          - "60"
+        persistSession: false
+        env:
+          HERMES_MODEL: "gpt-5.5"
+          HERMES_REASONING_EFFORT: "high"
+          PAPERCLIP_API_URL: "http://127.0.0.1:3100/api"
+          AI_COMPANY_OPS_TOOL: "/opt/lexprive/paperclip-hermes/scripts/lexprive-ops-tool.mjs"
+          LEXPRIVE_OPS_TOOL: "/opt/lexprive/paperclip-hermes/scripts/lexprive-ops-tool.mjs"
+          AI_COMPANY_WORKER_SSH_KEY: "/var/lib/lexprive-ai-company/ssh/paperclip_worker_ed25519"
+          LEXPRIVE_WORKER_SSH_KEY: "/var/lib/lexprive-ai-company/ssh/paperclip_worker_ed25519"
+          AI_COMPANY_ARTIFACT_BASE_DIR: "/opt/lexprive/ops/ai-company"
+          LEXPRIVE_LOCAL_ARTIFACT_BASE_DIR: "/opt/lexprive/ops/ai-company"
+          AI_COMPANY_ARTIFACTS_DIR: "/opt/lexprive/ops/ai-company/artifacts"
+          LEXPRIVE_LOCAL_ARTIFACTS_DIR: "/opt/lexprive/ops/ai-company/artifacts"
+          AI_COMPANY_REMOTE_HERMES_COMMAND: "/var/lib/lexprive-ai-company/hermes/bin/hermes-high"
+          LEXPRIVE_REMOTE_HERMES_COMMAND: "/var/lib/lexprive-ai-company/hermes/bin/hermes-high"
+          AI_COMPANY_REMOTE_CWD: "/opt/lexprive/ops/ai-company"
+          LEXPRIVE_REMOTE_CWD: "/opt/lexprive/ops/ai-company"
+          AI_COMPANY_HERMES_OPS_WORKER_HOST: "51.158.119.50"
+          LEXPRIVE_HERMES_OPS_WORKER_HOST: "51.158.119.50"
+    permissions:
+      canAssignTasks: true
+  sales-hermes:
+    role: "agent"
+    reportsTo: "growth-lead-hermes"
+    adapter:
+      type: "hermes_local"
+      config:
+        hermesCommand: "/opt/lexprive/paperclip-hermes/scripts/hermes-ops-worker"
+        cwd: "/opt/lexprive/ops/ai-company"
+        timeoutSec: 7200
+        extraArgs:
+          - "--yolo"
+          - "--max-turns"
+          - "60"
+        persistSession: false
+        env:
+          HERMES_MODEL: "gpt-5.5"
+          HERMES_REASONING_EFFORT: "high"
+          PAPERCLIP_API_URL: "http://127.0.0.1:3100/api"
+          AI_COMPANY_OPS_TOOL: "/opt/lexprive/paperclip-hermes/scripts/lexprive-ops-tool.mjs"
+          LEXPRIVE_OPS_TOOL: "/opt/lexprive/paperclip-hermes/scripts/lexprive-ops-tool.mjs"
+          AI_COMPANY_WORKER_SSH_KEY: "/var/lib/lexprive-ai-company/ssh/paperclip_worker_ed25519"
+          LEXPRIVE_WORKER_SSH_KEY: "/var/lib/lexprive-ai-company/ssh/paperclip_worker_ed25519"
+          AI_COMPANY_ARTIFACT_BASE_DIR: "/opt/lexprive/ops/ai-company"
+          LEXPRIVE_LOCAL_ARTIFACT_BASE_DIR: "/opt/lexprive/ops/ai-company"
+          AI_COMPANY_ARTIFACTS_DIR: "/opt/lexprive/ops/ai-company/artifacts"
+          LEXPRIVE_LOCAL_ARTIFACTS_DIR: "/opt/lexprive/ops/ai-company/artifacts"
+          AI_COMPANY_REMOTE_HERMES_COMMAND: "/var/lib/lexprive-ai-company/hermes/bin/hermes-high"
+          LEXPRIVE_REMOTE_HERMES_COMMAND: "/var/lib/lexprive-ai-company/hermes/bin/hermes-high"
+          AI_COMPANY_REMOTE_CWD: "/opt/lexprive/ops/ai-company"
+          LEXPRIVE_REMOTE_CWD: "/opt/lexprive/ops/ai-company"
+          AI_COMPANY_HERMES_OPS_WORKER_HOST: "51.158.119.50"
+          LEXPRIVE_HERMES_OPS_WORKER_HOST: "51.158.119.50"
+    permissions:
+      canAssignTasks: true
+  security-compliance-hermes:
+    role: "agent"
+    reportsTo: "ceo-hermes"
+    adapter:
+      type: "hermes_local"
+      config:
+        hermesCommand: "/opt/lexprive/paperclip-hermes/scripts/hermes-ops-worker"
+        cwd: "/opt/lexprive/ops/ai-company"
+        timeoutSec: 7200
+        extraArgs:
+          - "--yolo"
+          - "--max-turns"
+          - "60"
+        persistSession: false
+        env:
+          HERMES_MODEL: "gpt-5.5"
+          HERMES_REASONING_EFFORT: "high"
+          PAPERCLIP_API_URL: "http://127.0.0.1:3100/api"
+          AI_COMPANY_OPS_TOOL: "/opt/lexprive/paperclip-hermes/scripts/lexprive-ops-tool.mjs"
+          LEXPRIVE_OPS_TOOL: "/opt/lexprive/paperclip-hermes/scripts/lexprive-ops-tool.mjs"
+          AI_COMPANY_WORKER_SSH_KEY: "/var/lib/lexprive-ai-company/ssh/paperclip_worker_ed25519"
+          LEXPRIVE_WORKER_SSH_KEY: "/var/lib/lexprive-ai-company/ssh/paperclip_worker_ed25519"
+          AI_COMPANY_ARTIFACT_BASE_DIR: "/opt/lexprive/ops/ai-company"
+          LEXPRIVE_LOCAL_ARTIFACT_BASE_DIR: "/opt/lexprive/ops/ai-company"
+          AI_COMPANY_ARTIFACTS_DIR: "/opt/lexprive/ops/ai-company/artifacts"
+          LEXPRIVE_LOCAL_ARTIFACTS_DIR: "/opt/lexprive/ops/ai-company/artifacts"
+          AI_COMPANY_REMOTE_HERMES_COMMAND: "/var/lib/lexprive-ai-company/hermes/bin/hermes-high"
+          LEXPRIVE_REMOTE_HERMES_COMMAND: "/var/lib/lexprive-ai-company/hermes/bin/hermes-high"
+          AI_COMPANY_REMOTE_CWD: "/opt/lexprive/ops/ai-company"
+          LEXPRIVE_REMOTE_CWD: "/opt/lexprive/ops/ai-company"
+          AI_COMPANY_HERMES_OPS_WORKER_HOST: "51.158.119.50"
+          LEXPRIVE_HERMES_OPS_WORKER_HOST: "51.158.119.50"
+    permissions:
+      canAssignTasks: true
+  software-engineer-hermes:
+    role: "agent"
+    reportsTo: "engineering-lead-hermes"
+    adapter:
+      type: "hermes_local"
+      config:
+        hermesCommand: "/opt/lexprive/paperclip-hermes/scripts/hermes-dev-worker"
+        cwd: "/opt/lexprive/product/ordering-intelligence"
+        timeoutSec: 7200
+        extraArgs:
+          - "--yolo"
+          - "--max-turns"
+          - "60"
+        persistSession: false
+        env:
+          HERMES_MODEL: "gpt-5.5"
+          HERMES_REASONING_EFFORT: "high"
+          PAPERCLIP_API_URL: "http://127.0.0.1:3100/api"
+          AI_COMPANY_OPS_TOOL: "/opt/lexprive/paperclip-hermes/scripts/lexprive-ops-tool.mjs"
+          LEXPRIVE_OPS_TOOL: "/opt/lexprive/paperclip-hermes/scripts/lexprive-ops-tool.mjs"
+          AI_COMPANY_WORKER_SSH_KEY: "/var/lib/lexprive-ai-company/ssh/paperclip_worker_ed25519"
+          LEXPRIVE_WORKER_SSH_KEY: "/var/lib/lexprive-ai-company/ssh/paperclip_worker_ed25519"
+          AI_COMPANY_ARTIFACT_BASE_DIR: "/opt/lexprive/ops/ai-company"
+          LEXPRIVE_LOCAL_ARTIFACT_BASE_DIR: "/opt/lexprive/ops/ai-company"
+          AI_COMPANY_ARTIFACTS_DIR: "/opt/lexprive/ops/ai-company/artifacts"
+          LEXPRIVE_LOCAL_ARTIFACTS_DIR: "/opt/lexprive/ops/ai-company/artifacts"
+          AI_COMPANY_REMOTE_HERMES_COMMAND: "/var/lib/lexprive-ai-company/hermes/bin/hermes-high"
+          LEXPRIVE_REMOTE_HERMES_COMMAND: "/var/lib/lexprive-ai-company/hermes/bin/hermes-high"
+          AI_COMPANY_REMOTE_CWD: "/opt/lexprive/product/ordering-intelligence"
+          LEXPRIVE_REMOTE_CWD: "/opt/lexprive/product/ordering-intelligence"
+          AI_COMPANY_HERMES_DEV_WORKER_HOST: "163.172.132.197"
+          LEXPRIVE_HERMES_DEV_WORKER_HOST: "163.172.132.197"
+          LEXPRIVE_GITHUB_REPOSITORY: "MohamedRed/ordering-intelligence"
+          LEXPRIVE_PRODUCT_REPO_PATH: "/opt/lexprive/product/ordering-intelligence"
+    permissions:
+      canAssignTasks: true
+  staff-engineer-hermes:
+    role: "agent"
+    reportsTo: "cto-hermes"
+    adapter:
+      type: "hermes_local"
+      config:
+        hermesCommand: "/opt/lexprive/paperclip-hermes/scripts/hermes-dev-worker"
+        cwd: "/opt/lexprive/product/ordering-intelligence"
+        timeoutSec: 7200
+        extraArgs:
+          - "--yolo"
+          - "--max-turns"
+          - "60"
+        persistSession: false
+        env:
+          HERMES_MODEL: "gpt-5.5"
+          HERMES_REASONING_EFFORT: "high"
+          PAPERCLIP_API_URL: "http://127.0.0.1:3100/api"
+          AI_COMPANY_OPS_TOOL: "/opt/lexprive/paperclip-hermes/scripts/lexprive-ops-tool.mjs"
+          LEXPRIVE_OPS_TOOL: "/opt/lexprive/paperclip-hermes/scripts/lexprive-ops-tool.mjs"
+          AI_COMPANY_WORKER_SSH_KEY: "/var/lib/lexprive-ai-company/ssh/paperclip_worker_ed25519"
+          LEXPRIVE_WORKER_SSH_KEY: "/var/lib/lexprive-ai-company/ssh/paperclip_worker_ed25519"
+          AI_COMPANY_ARTIFACT_BASE_DIR: "/opt/lexprive/ops/ai-company"
+          LEXPRIVE_LOCAL_ARTIFACT_BASE_DIR: "/opt/lexprive/ops/ai-company"
+          AI_COMPANY_ARTIFACTS_DIR: "/opt/lexprive/ops/ai-company/artifacts"
+          LEXPRIVE_LOCAL_ARTIFACTS_DIR: "/opt/lexprive/ops/ai-company/artifacts"
+          AI_COMPANY_REMOTE_HERMES_COMMAND: "/var/lib/lexprive-ai-company/hermes/bin/hermes-high"
+          LEXPRIVE_REMOTE_HERMES_COMMAND: "/var/lib/lexprive-ai-company/hermes/bin/hermes-high"
+          AI_COMPANY_REMOTE_CWD: "/opt/lexprive/product/ordering-intelligence"
+          LEXPRIVE_REMOTE_CWD: "/opt/lexprive/product/ordering-intelligence"
+          AI_COMPANY_HERMES_DEV_WORKER_HOST: "163.172.132.197"
+          LEXPRIVE_HERMES_DEV_WORKER_HOST: "163.172.132.197"
+          LEXPRIVE_GITHUB_REPOSITORY: "MohamedRed/ordering-intelligence"
+          LEXPRIVE_PRODUCT_REPO_PATH: "/opt/lexprive/product/ordering-intelligence"
+    permissions:
+      canAssignTasks: true
+  staff-reviewer-hermes:
+    role: "agent"
+    reportsTo: "engineering-lead-hermes"
+    adapter:
+      type: "hermes_local"
+      config:
+        hermesCommand: "/opt/lexprive/paperclip-hermes/scripts/hermes-dev-worker"
+        cwd: "/opt/lexprive/product/ordering-intelligence"
+        timeoutSec: 7200
+        extraArgs:
+          - "--yolo"
+          - "--max-turns"
+          - "60"
+        persistSession: false
+        env:
+          HERMES_MODEL: "gpt-5.5"
+          HERMES_REASONING_EFFORT: "high"
+          PAPERCLIP_API_URL: "http://127.0.0.1:3100/api"
+          AI_COMPANY_OPS_TOOL: "/opt/lexprive/paperclip-hermes/scripts/lexprive-ops-tool.mjs"
+          LEXPRIVE_OPS_TOOL: "/opt/lexprive/paperclip-hermes/scripts/lexprive-ops-tool.mjs"
+          AI_COMPANY_WORKER_SSH_KEY: "/var/lib/lexprive-ai-company/ssh/paperclip_worker_ed25519"
+          LEXPRIVE_WORKER_SSH_KEY: "/var/lib/lexprive-ai-company/ssh/paperclip_worker_ed25519"
+          AI_COMPANY_ARTIFACT_BASE_DIR: "/opt/lexprive/ops/ai-company"
+          LEXPRIVE_LOCAL_ARTIFACT_BASE_DIR: "/opt/lexprive/ops/ai-company"
+          AI_COMPANY_ARTIFACTS_DIR: "/opt/lexprive/ops/ai-company/artifacts"
+          LEXPRIVE_LOCAL_ARTIFACTS_DIR: "/opt/lexprive/ops/ai-company/artifacts"
+          AI_COMPANY_REMOTE_HERMES_COMMAND: "/var/lib/lexprive-ai-company/hermes/bin/hermes-high"
+          LEXPRIVE_REMOTE_HERMES_COMMAND: "/var/lib/lexprive-ai-company/hermes/bin/hermes-high"
+          AI_COMPANY_REMOTE_CWD: "/opt/lexprive/product/ordering-intelligence"
+          LEXPRIVE_REMOTE_CWD: "/opt/lexprive/product/ordering-intelligence"
+          AI_COMPANY_HERMES_DEV_WORKER_HOST: "163.172.132.197"
+          LEXPRIVE_HERMES_DEV_WORKER_HOST: "163.172.132.197"
+          LEXPRIVE_GITHUB_REPOSITORY: "MohamedRed/ordering-intelligence"
+          LEXPRIVE_PRODUCT_REPO_PATH: "/opt/lexprive/product/ordering-intelligence"
+    permissions:
+      canAssignTasks: true
+  support-triage-hermes:
+    role: "agent"
+    reportsTo: "customer-success-hermes"
+    adapter:
+      type: "hermes_local"
+      config:
+        hermesCommand: "/opt/lexprive/paperclip-hermes/scripts/hermes-ops-worker"
+        cwd: "/opt/lexprive/ops/ai-company"
+        timeoutSec: 7200
+        extraArgs:
+          - "--yolo"
+          - "--max-turns"
+          - "60"
+        persistSession: false
+        env:
+          HERMES_MODEL: "gpt-5.5"
+          HERMES_REASONING_EFFORT: "high"
+          PAPERCLIP_API_URL: "http://127.0.0.1:3100/api"
+          AI_COMPANY_OPS_TOOL: "/opt/lexprive/paperclip-hermes/scripts/lexprive-ops-tool.mjs"
+          LEXPRIVE_OPS_TOOL: "/opt/lexprive/paperclip-hermes/scripts/lexprive-ops-tool.mjs"
+          AI_COMPANY_WORKER_SSH_KEY: "/var/lib/lexprive-ai-company/ssh/paperclip_worker_ed25519"
+          LEXPRIVE_WORKER_SSH_KEY: "/var/lib/lexprive-ai-company/ssh/paperclip_worker_ed25519"
+          AI_COMPANY_ARTIFACT_BASE_DIR: "/opt/lexprive/ops/ai-company"
+          LEXPRIVE_LOCAL_ARTIFACT_BASE_DIR: "/opt/lexprive/ops/ai-company"
+          AI_COMPANY_ARTIFACTS_DIR: "/opt/lexprive/ops/ai-company/artifacts"
+          LEXPRIVE_LOCAL_ARTIFACTS_DIR: "/opt/lexprive/ops/ai-company/artifacts"
+          AI_COMPANY_REMOTE_HERMES_COMMAND: "/var/lib/lexprive-ai-company/hermes/bin/hermes-high"
+          LEXPRIVE_REMOTE_HERMES_COMMAND: "/var/lib/lexprive-ai-company/hermes/bin/hermes-high"
+          AI_COMPANY_REMOTE_CWD: "/opt/lexprive/ops/ai-company"
+          LEXPRIVE_REMOTE_CWD: "/opt/lexprive/ops/ai-company"
+          AI_COMPANY_HERMES_OPS_WORKER_HOST: "51.158.119.50"
+          LEXPRIVE_HERMES_OPS_WORKER_HOST: "51.158.119.50"
+    permissions:
+      canAssignTasks: true
+projects:
+  ordering-intelligence:
+    status: "backlog"
+    color: "#0891b2"
+    leadAgentSlug: "product-lead-hermes"
+    metadata:
+      repository: "MohamedRed/ordering-intelligence"
+      specializes: "generic-ai-native-company"
+tasks:
+  build-ordering-intelligence-mvp-plan:
+    status: "backlog"
+    priority: "high"
+    assigneeAgentSlug: "product-lead-hermes"
+    metadata:
+      sourceIssue: "Ordering Intelligence MVP operating plan"
+      repository: "MohamedRed/ordering-intelligence"
+      specializes: "generic-ai-native-company"
