@@ -223,6 +223,10 @@ locals {
       env_overrides = {
         ENVIRONMENT         = var.environment_name
         FIREBASE_PROJECT_ID = var.project_id
+        CORS_ORIGINS = join(",", [
+          "https://telegram-mini-oi2.web.app",
+          local.service_urls.channel_gateway,
+        ])
       }
       secret_env_overrides = {}
     }

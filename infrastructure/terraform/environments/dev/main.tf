@@ -272,6 +272,18 @@ locals {
       env_overrides = {
         ENVIRONMENT         = var.environment_name
         FIREBASE_PROJECT_ID = var.project_id
+        CORS_ORIGINS = join(",", [
+          "http://localhost:3000",
+          "http://localhost:4000",
+          "http://localhost:5173",
+          "http://localhost:8080",
+          "https://liive-dev-admin.web.app",
+          "https://liive-dev-business.web.app",
+          "https://liive-dev-consumer.web.app",
+          "https://liive-dev-driver.web.app",
+          "https://telegram-mini-oi2.web.app",
+          local.service_urls.channel_gateway,
+        ])
       }
       secret_env_overrides = {}
     }

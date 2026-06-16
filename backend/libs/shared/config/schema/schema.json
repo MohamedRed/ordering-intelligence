@@ -208,6 +208,11 @@
       "default": "development",
       "description": "Deployment environment identifier."
     },
+    "CORS_ORIGINS": {
+      "type": "string",
+      "required": true,
+      "description": "Comma-separated list of browser origins allowed to call payments-service."
+    },
     "FIREBASE_PROJECT_ID": {
       "type": "string",
       "required": true,

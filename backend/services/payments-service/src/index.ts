@@ -3,6 +3,7 @@ import "dotenv/config";
 import express from "express";
 import cors from "cors";
 import { getConfig } from "./config";
+import { buildCorsOptions } from "./cors";
 import { initFirestore } from "./firestore";
 import { buildStripe } from "./stripe_client";
 import { handleCheckout } from "./handlers/checkout";
@@ -28,7 +29,7 @@ const firestore = initFirestore(config.FIREBASE_PROJECT_ID);
 const stripe = buildStripe(config.STRIPE_SECRET_KEY);
 
 const app = express();
-app.use(cors({ origin: "*", methods: ["GET", "POST", "OPTIONS"], allowedHeaders: ["Content-Type", "Authorization"] }));
+app.use(cors(buildCorsOptions(config.CORS_ORIGINS)));
 
 app.get("/healthz", (_req, res) => {
   res.status(200).json({ status: "ok", service: "payments-service", environment: config.ENVIRONMENT });
