@@ -9,7 +9,7 @@ Minimal service to support admin onboarding flows (e.g., menu flyer uploads).
 ## Environment
 - `PORT` (default `8080`)
 - `GCS_BUCKET` (default `ordering-intelligence-menus-dev`)
-- `CORS_ORIGINS` (comma-separated, default `*`)
+- `CORS_ORIGINS` (comma-separated, required; wildcard is rejected in staging/production)
 - `PUBLIC_BASE_URL` (optional, override returned URL base). If unset, uses `https://storage.googleapis.com/<bucket>`.
 - `MAKE_PUBLIC` (`true`|`false`, default `true`) – when true, uploaded files are made public.
 

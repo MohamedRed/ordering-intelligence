@@ -9,6 +9,12 @@ agent_customization_cors_origins = [
   "https://staging-business.example.com",
 ]
 
+onboarding_cors_origins = [
+  "https://staging-admin.example.com",
+  "https://staging-business.example.com",
+  "https://staging-driver.example.com",
+]
+
 # Optional Cloud Run tuning (per service)
 # cloud_run_overrides = {
 #   order_service = {

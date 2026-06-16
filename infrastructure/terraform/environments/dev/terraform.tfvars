@@ -18,6 +18,16 @@ agent_customization_cors_origins = [
   "https://liive-dev-business.web.app",
 ]
 
+onboarding_cors_origins = [
+  "http://localhost:3000",
+  "http://localhost:4000",
+  "http://localhost:5173",
+  "http://localhost:8080",
+  "https://liive-dev-admin.web.app",
+  "https://liive-dev-business.web.app",
+  "https://liive-dev-driver.web.app",
+]
+
 cloud_run_overrides = {
   notification_service = {
     min_scale             = 0

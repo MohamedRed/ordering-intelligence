@@ -256,7 +256,7 @@ locals {
       startup_cpu_boost     = true
       env_overrides = {
         GCS_BUCKET   = "${var.project_id}-menus-${var.environment_name}"
-        CORS_ORIGINS = "*"
+        CORS_ORIGINS = join(",", var.onboarding_cors_origins)
         MAKE_PUBLIC  = "true"
       }
       secret_env_overrides = {}

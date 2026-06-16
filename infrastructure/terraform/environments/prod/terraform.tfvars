@@ -14,3 +14,9 @@ agent_customization_cors_origins = [
   "https://admin.liive.app",
   "https://business.liive.app",
 ]
+
+onboarding_cors_origins = [
+  "https://admin.liive.app",
+  "https://business.liive.app",
+  "https://driver.liive.app",
+]

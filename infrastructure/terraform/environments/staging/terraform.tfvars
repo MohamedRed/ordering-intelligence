@@ -14,3 +14,9 @@ agent_customization_cors_origins = [
   "https://staging-admin.liive.app",
   "https://staging-business.liive.app",
 ]
+
+onboarding_cors_origins = [
+  "https://staging-admin.liive.app",
+  "https://staging-business.liive.app",
+  "https://staging-driver.liive.app",
+]

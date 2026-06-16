@@ -24,16 +24,13 @@ import {
   phoneRouteDocIdFromElevenLabsPhoneNumberId,
   phoneRouteDocIdFromToNumber,
 } from './phone_routes.js';
+import { buildCorsOptions, resolveCorsOrigins } from './cors_policy.js';
 
 const app = express();
 const upload = multer({ storage: multer.memoryStorage() });
 
 const PORT = Number(process.env.PORT) || 8080;
 const BUCKET = process.env.GCS_BUCKET || 'ordering-intelligence-menus-dev';
-const CORS_ORIGINS = (process.env.CORS_ORIGINS || '*')
-  .split(',')
-  .map((s) => s.trim())
-  .filter((s) => s.length > 0);
 const PUBLIC_BASE_URL = process.env.PUBLIC_BASE_URL; // optional override for returned URLs
 const MAKE_PUBLIC = (process.env.MAKE_PUBLIC || 'true').toLowerCase() !== 'false';
 const STRIPE_SECRET_KEY = process.env.STRIPE_SECRET_KEY || '';
@@ -64,6 +61,7 @@ const vertex =
     : null;
 const MAPS_KEY = process.env.GOOGLE_MAPS_API_KEY || '';
 const ENVIRONMENT = (process.env.ENVIRONMENT || process.env.NODE_ENV || '').toLowerCase();
+const CORS_ORIGINS = resolveCorsOrigins(process.env.CORS_ORIGINS, ENVIRONMENT || 'development');
 const ALLOW_DEMO_SKIP_STRIPE =
   (process.env.ALLOW_DEMO_SKIP_STRIPE || '').toLowerCase() === 'true' ||
   ['dev', 'development', 'local'].includes(ENVIRONMENT);
@@ -324,11 +322,7 @@ app.use((req, res, next) => {
   return jsonParser(req, res, next);
 });
 app.use(morgan('tiny'));
-app.use(
-  cors({
-    origin: CORS_ORIGINS.includes('*') ? true : CORS_ORIGINS,
-  }),
-);
+app.use(cors(buildCorsOptions(CORS_ORIGINS)));
 
 registerDeliveryPartnerStripeRoutes({
   app,

@@ -10,6 +10,13 @@ agent_customization_cors_origins = [
   "https://business.example.com",
 ]
 
+onboarding_cors_origins = [
+  "http://localhost:3000",
+  "https://admin.example.com",
+  "https://business.example.com",
+  "https://driver.example.com",
+]
+
 # Optional Cloud Run tuning (per service)
 # cloud_run_overrides = {
 #   order_service = {
