@@ -77,10 +77,9 @@ Goal: let restaurants upload pictures of their menu and turn them into a structu
 - The menu-ingestion service account uses explicit least-privilege project roles for Firestore, Pub/Sub publishing, Vertex AI, logging, monitoring, and trace writing.
 - Menu upload object access is scoped to the menu ingestion bucket with bucket-level Storage Object Admin rather than a project-wide editor grant.
 
-Next UI step: Admin review page (not yet implemented) to show image + extracted rows for approval.
-
 Admin app wiring
-- A placeholder screen lives at `/menu-ingestion` in the Admin Flutter app; hook it to the API endpoints above and render the draft items side-by-side with the uploaded image. Use the `menus_drafts/{jobId}` doc (Firestore) to drive the view; approval should call `POST /ingest/:jobId/approve`.
+- The Admin Flutter app exposes `/menu-ingestion` for ops review. It lists ingestion jobs, loads the draft with original uploads and composite previews, shows extracted items with thumbnails, and approves drafts through `POST /ingest/:jobId/approve`.
+- New uploads are still initiated from the onboarding wizard, which stores menu flyers and triggers `/onboarding-sessions/:id/ingest-menu`; `/menu-ingestion` is the queue/review/publish surface for generated drafts.
 
 ### Automated test
 - Added `tests/e2e/scripts/menu_ingestion_flow.ts` with npm script `npm run menu:ingest --prefix tests/e2e`. It runs the full flow: start → upload sample image → submit → poll → read draft → approve → verify Firestore publish. Required envs: `MENU_INGESTION_BASE_URL`, `MENU_INGESTION_RESTAURANT_ID`, `MENU_INGESTION_SAMPLE_PATH`, and `GOOGLE_CLOUD_PROJECT`.
