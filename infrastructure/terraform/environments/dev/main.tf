@@ -1254,7 +1254,7 @@ resource "google_storage_bucket" "menu_ingestion" {
   }
 
   cors {
-    origin          = ["*"]
+    origin          = var.onboarding_cors_origins
     method          = ["GET", "HEAD", "OPTIONS"]
     response_header = ["Content-Type"]
     max_age_seconds = 3600
