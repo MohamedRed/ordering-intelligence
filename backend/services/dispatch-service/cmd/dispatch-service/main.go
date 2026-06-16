@@ -26,7 +26,6 @@ import (
 	"firebase.google.com/go/v4/auth"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
-	"github.com/go-chi/cors"
 	"github.com/joho/godotenv"
 	sharedconfig "github.com/ordering-intelligence/sharedconfig"
 	"golang.org/x/oauth2"
@@ -61,15 +60,16 @@ type serviceConfig struct {
 	FirestoreProjectID string
 	CredentialsFile    string
 	RequireAuth        bool
+	CORSOrigins        []string
 
 	InternalAuthAudience  string
 	InternalAllowedEmails []string
 
-	OrderServiceURL      string
-	DispatchEventsTopic  string
-	RadarAPIKey          string
-	AssignmentTTLSeconds int
-	TopKCandidates       int
+	OrderServiceURL           string
+	DispatchEventsTopic       string
+	RadarAPIKey               string
+	AssignmentTTLSeconds      int
+	TopKCandidates            int
 	MarketplaceCandidateLimit int
 
 	CloudTasksProjectID          string
@@ -267,14 +267,7 @@ func main() {
 	router.Use(middleware.RequestID)
 	router.Use(middleware.Logger)
 	router.Use(middleware.Recoverer)
-	router.Use(cors.Handler(cors.Options{
-		AllowedOrigins:   []string{"*"},
-		AllowedMethods:   []string{"GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"},
-		AllowedHeaders:   []string{"Accept", "Authorization", "Content-Type", "X-Requested-With"},
-		ExposedHeaders:   []string{"Link"},
-		AllowCredentials: true,
-		MaxAge:           300,
-	}))
+	router.Use(dispatchCORSMiddleware(cfg.CORSOrigins))
 
 	router.Get("/healthz", func(w http.ResponseWriter, r *http.Request) {
 		writeJSON(w, http.StatusOK, map[string]any{
@@ -530,6 +523,12 @@ func loadConfig() (*serviceConfig, error) {
 
 	internalAllowed := strings.TrimSpace(stringOrDefault(values["INTERNAL_ALLOWED_EMAILS"], strings.TrimSpace(os.Getenv("INTERNAL_ALLOWED_EMAILS"))))
 	internalAllowedEmails := splitCSV(internalAllowed)
+	corsOrigins, err := resolveDispatchCORSOrigins(
+		strings.TrimSpace(stringOrDefault(values["CORS_ORIGINS"], strings.TrimSpace(os.Getenv("CORS_ORIGINS")))),
+	)
+	if err != nil {
+		return nil, err
+	}
 
 	ttlSeconds := intFromEnv("ASSIGNMENT_TTL_SECONDS", 30)
 	if ttlSeconds < 10 {
@@ -556,6 +555,7 @@ func loadConfig() (*serviceConfig, error) {
 		FirestoreProjectID:           project,
 		CredentialsFile:              strings.TrimSpace(stringOrDefault(values["GOOGLE_APPLICATION_CREDENTIALS"], "")),
 		RequireAuth:                  strings.TrimSpace(stringOrDefault(values["REQUIRE_AUTH"], strings.TrimSpace(os.Getenv("REQUIRE_AUTH")))) != "false",
+		CORSOrigins:                  corsOrigins,
 		InternalAuthAudience:         strings.TrimSpace(stringOrDefault(values["INTERNAL_AUTH_AUDIENCE"], strings.TrimSpace(os.Getenv("INTERNAL_AUTH_AUDIENCE")))),
 		InternalAllowedEmails:        internalAllowedEmails,
 		OrderServiceURL:              strings.TrimSpace(stringOrDefault(values["ORDER_SERVICE_URL"], strings.TrimSpace(os.Getenv("ORDER_SERVICE_URL")))),

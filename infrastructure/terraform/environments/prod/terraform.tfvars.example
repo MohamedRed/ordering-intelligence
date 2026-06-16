@@ -27,6 +27,13 @@ notification_service_cors_origins = [
   "https://driver.example.com",
 ]
 
+dispatch_service_cors_origins = [
+  "https://admin.example.com",
+  "https://business.example.com",
+  "https://consumer.example.com",
+  "https://driver.example.com",
+]
+
 channel_gateway_cors_origins = [
   "https://consumer.example.com",
   "https://telegram.example.com",
