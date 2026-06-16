@@ -1380,7 +1380,7 @@ module "channel_gateway" {
     SNAPCHAT_CLIENT_ID           = "7277929e-9bf0-4943-be4d-2bf11b8cbe66"
     TYPESENSE_HOST               = var.typesense_host
     TYPESENSE_COLLECTION         = "stores"
-    CORS_ORIGINS                 = "*"
+    CORS_ORIGINS                 = join(",", concat(var.channel_gateway_cors_origins, [local.service_urls.channel_gateway]))
   }, lookup(local.cloud_run_config.channel_gateway, "env_overrides", {}))
   secret_env_vars = merge({
     ELEVENLABS_API_KEY       = google_secret_manager_secret.elevenlabs_api_key.secret_id

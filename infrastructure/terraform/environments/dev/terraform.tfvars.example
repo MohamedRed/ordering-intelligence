@@ -23,6 +23,14 @@ onboarding_cors_origins = [
   "https://driver.example.com",
 ]
 
+channel_gateway_cors_origins = [
+  "http://localhost:3000",
+  "http://localhost:4000",
+  "http://localhost:5173",
+  "https://consumer.example.com",
+  "https://telegram.example.com",
+]
+
 # Optional Cloud Run tuning (per service)
 # cloud_run_overrides = {
 #   order_service = {

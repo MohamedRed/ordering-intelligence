@@ -133,6 +133,18 @@ variable "onboarding_cors_origins" {
   }
 }
 
+variable "channel_gateway_cors_origins" {
+  description = "Explicit browser origins allowed to call channel-gateway. Wildcards are not allowed."
+  type        = list(string)
+
+  validation {
+    condition = length(var.channel_gateway_cors_origins) > 0 && alltrue([
+      for origin in var.channel_gateway_cors_origins : trimspace(origin) != "" && !can(regex("\\*", origin))
+    ])
+    error_message = "channel_gateway_cors_origins must contain at least one explicit origin and cannot include wildcards or blank values."
+  }
+}
+
 variable "agent_tools_gemini_model" {
   description = "Vertex AI Gemini model ID/path for agent-tools (leave empty to disable LLM script generation)."
   type        = string

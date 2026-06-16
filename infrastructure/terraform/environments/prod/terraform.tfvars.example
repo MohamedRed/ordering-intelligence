@@ -20,6 +20,11 @@ onboarding_cors_origins = [
   "https://driver.example.com",
 ]
 
+channel_gateway_cors_origins = [
+  "https://consumer.example.com",
+  "https://telegram.example.com",
+]
+
 order_service_lb_hostname         = "order-service.liive.app"
 order_service_lb_certificate_mode = "MANAGED"
 order_service_lb_managed_domains  = ["order-service.liive.app"]

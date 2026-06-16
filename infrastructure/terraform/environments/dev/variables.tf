@@ -140,6 +140,18 @@ variable "onboarding_cors_origins" {
   }
 }
 
+variable "channel_gateway_cors_origins" {
+  description = "Explicit browser origins allowed to call channel-gateway. Wildcards are not allowed."
+  type        = list(string)
+
+  validation {
+    condition = length(var.channel_gateway_cors_origins) > 0 && alltrue([
+      for origin in var.channel_gateway_cors_origins : trimspace(origin) != "" && !can(regex("\\*", origin))
+    ])
+    error_message = "channel_gateway_cors_origins must contain at least one explicit origin and cannot include wildcards or blank values."
+  }
+}
+
 # Dev-only toggle: ElevenLabs egress IP allowlist can be brittle if their outbound IPs change
 # or if the integration isn't actually coming from those IPs. When disabled, Cloud Armor
 # will default-allow but still apply rate limiting.

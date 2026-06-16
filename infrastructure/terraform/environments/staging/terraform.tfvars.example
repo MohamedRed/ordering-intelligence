@@ -20,6 +20,11 @@ onboarding_cors_origins = [
   "https://staging-driver.example.com",
 ]
 
+channel_gateway_cors_origins = [
+  "https://staging-consumer.example.com",
+  "https://staging-telegram.example.com",
+]
+
 # Optional Cloud Run tuning (per service)
 # cloud_run_overrides = {
 #   order_service = {

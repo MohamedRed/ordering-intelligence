@@ -769,8 +769,8 @@
     },
     "CORS_ORIGINS": {
       "type": "string",
-      "required": false,
-      "description": "Comma-separated list of allowed CORS origins (or *)."
+      "required": true,
+      "description": "Comma-separated list of explicit browser origins allowed to call channel-gateway. Wildcards are not allowed."
     }
   },
   "channel-comms": {

@@ -1691,7 +1691,7 @@ module "channel_gateway" {
     SNAPCHAT_CLIENT_ID           = "7277929e-9bf0-4943-be4d-2bf11b8cbe66"
     TYPESENSE_HOST               = var.typesense_host
     TYPESENSE_COLLECTION         = "stores"
-    CORS_ORIGINS                 = "*"
+    CORS_ORIGINS                 = join(",", concat(var.channel_gateway_cors_origins, [local.service_urls.channel_gateway]))
     INTERNAL_AUTH_AUDIENCE       = local.service_urls.channel_gateway
     INTERNAL_ALLOWED_EMAILS = join(",", [
       module.agent_tools_sa.email,

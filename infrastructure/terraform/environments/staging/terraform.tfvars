@@ -25,3 +25,12 @@ onboarding_cors_origins = [
   "https://staging-business.liive.app",
   "https://staging-driver.liive.app",
 ]
+
+channel_gateway_cors_origins = [
+  "https://staging-admin.liive.app",
+  "https://staging-business.liive.app",
+  "https://staging-consumer.liive.app",
+  "https://staging-driver.liive.app",
+  "https://telegram-mini-oi2.web.app",
+  "https://1457874399339347988.discordsays.com",
+]
