@@ -24,7 +24,7 @@ function parsePubSubBody(body: any): any {
 
 export function tasksRouter(ctx: AppContext) {
   const router = express.Router();
-  const { firestore, storage, bucket, signedReadUrls } = ctx;
+  const { firestore, storage, bucket, signedReadUrls, requireAuth } = ctx;
   const disableAsyncProcessing =
     String(process.env.DISABLE_TASK_PROCESSING || '').toLowerCase() === 'true' ||
     String(process.env.NODE_ENV || '').toLowerCase() === 'test';
@@ -218,7 +218,7 @@ export function tasksRouter(ctx: AppContext) {
     }
   }
 
-  router.post('/tasks/process', async (req, res) => {
+  router.post('/tasks/process', requireAuth, async (req, res) => {
     if (process.env.VERBOSE_LOGGING === 'true') {
       console.log('ingest task received', {
         messageId: req.body?.message?.messageId,

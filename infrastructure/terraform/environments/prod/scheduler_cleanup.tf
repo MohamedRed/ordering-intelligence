@@ -11,6 +11,7 @@ resource "google_cloud_scheduler_job" "menu_ingestion_cleanup" {
 
     oidc_token {
       service_account_email = module.menu_ingestion_sa.email
+      audience              = local.service_urls.menu_ingestion
     }
   }
 }

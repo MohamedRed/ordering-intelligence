@@ -17,11 +17,18 @@ const firebaseUser = process.env.FIREBASE_USER ?? 'admin-tester@example.com';
 const firebasePass = process.env.FIREBASE_PASS ?? 'AdminTest123!';
 
 async function main() {
+  const idToken = await getIdToken();
+  const authHeaders = { Authorization: `Bearer ${idToken}` };
+
   console.log('--- step 1: start');
-  const startResp = await axios.post(`${baseUrl}/ingest/start`, {
-    restaurantId,
-    pageCount: 1,
-  });
+  const startResp = await axios.post(
+    `${baseUrl}/ingest/start`,
+    {
+      restaurantId,
+      pageCount: 1,
+    },
+    { headers: authHeaders },
+  );
   const jobId: string = startResp.data.jobId;
   const uploadUrl: string = startResp.data.uploadUrls?.[0];
   console.log({ jobId, uploadUrl });
@@ -36,11 +43,11 @@ async function main() {
   console.log('upload complete');
 
   console.log('--- step 3: submit');
-  await axios.post(`${baseUrl}/ingest/submit`, { jobId });
+  await axios.post(`${baseUrl}/ingest/submit`, { jobId }, { headers: authHeaders });
   console.log('queued');
 
   console.log('--- step 4: poll job status');
-  const status = await waitForReady(baseUrl, jobId, 30, 5000);
+  const status = await waitForReady(baseUrl, jobId, 30, 5000, authHeaders);
   console.log('final status', status);
 
   const firestore = new Firestore({ projectId });
@@ -50,9 +57,8 @@ async function main() {
   if (status.status !== 'ready') return;
 
   console.log('--- step 5: draft fetch');
-  const idToken = await getIdToken();
   const draftResp = await axios.get(`${baseUrl}/ingest/${jobId}/draft`, {
-    headers: { Authorization: `Bearer ${idToken}` },
+    headers: authHeaders,
   });
   const draft = draftResp.data?.draft ?? {};
   console.log('draft counts', {
@@ -78,9 +84,15 @@ async function main() {
 
 type JobStatus = { status: string };
 
-async function waitForReady(baseUrl: string, jobId: string, attempts: number, delayMs: number) {
+async function waitForReady(
+  baseUrl: string,
+  jobId: string,
+  attempts: number,
+  delayMs: number,
+  headers: Record<string, string>
+) {
   for (let i = 0; i < attempts; i++) {
-    const resp = await axios.get<JobStatus>(`${baseUrl}/ingest/${jobId}`);
+    const resp = await axios.get<JobStatus>(`${baseUrl}/ingest/${jobId}`, { headers });
     if (resp.data.status === 'ready' || resp.data.status === 'error') return resp.data;
     await new Promise((r) => setTimeout(r, delayMs));
   }

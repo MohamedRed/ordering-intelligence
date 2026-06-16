@@ -1,5 +1,4 @@
 import express from 'express';
-import cors from 'cors';
 import { Storage } from '@google-cloud/storage';
 import { PubSub } from '@google-cloud/pubsub';
 import { Firestore } from '@google-cloud/firestore';
@@ -67,6 +66,61 @@ const BUCKET: string = bucketEnv;
 const TOPIC: string = topicEnv;
 const MENU_UPDATES_TOPIC = process.env.MENU_UPDATES_TOPIC ?? process.env.PUBSUB_TOPIC_MENU_UPDATES;
 
+function csvValues(value?: string): string[] {
+  return String(value || '')
+    .split(',')
+    .map((s) => s.trim())
+    .filter(Boolean);
+}
+
+function isStrictEnvironment(): boolean {
+  return ['prod', 'production', 'staging'].includes(
+    String(process.env.ENVIRONMENT || process.env.NODE_ENV || '').trim().toLowerCase(),
+  );
+}
+
+const configuredCorsOrigins = csvValues(process.env.MENU_INGESTION_CORS_ORIGINS ?? process.env.CORS_ORIGINS);
+const corsOrigins = configuredCorsOrigins.length ? configuredCorsOrigins : (isStrictEnvironment() ? [] : ['*']);
+const allowAnyCorsOrigin = corsOrigins.includes('*');
+if (isStrictEnvironment()) {
+  if (!corsOrigins.length) {
+    throw new Error('MENU_INGESTION_CORS_ORIGINS or CORS_ORIGINS is required in staging/production');
+  }
+  if (allowAnyCorsOrigin) {
+    throw new Error('Wildcard CORS origins are not allowed for menu-ingestion in staging/production');
+  }
+}
+
+const googleIdTokenAudiences = csvValues(
+  process.env.GOOGLE_ID_TOKEN_AUDIENCES ?? process.env.INTERNAL_AUTH_AUDIENCE,
+);
+const googleIdTokenAllowedEmails = csvValues(process.env.GOOGLE_ID_TOKEN_ALLOWED_EMAILS).map((email) =>
+  email.toLowerCase(),
+);
+const allowGoogleIdTokens = String(process.env.ALLOW_GOOGLE_ID_TOKENS || '').toLowerCase() === 'true';
+if (isStrictEnvironment() && allowGoogleIdTokens && !googleIdTokenAllowedEmails.length) {
+  throw new Error('GOOGLE_ID_TOKEN_ALLOWED_EMAILS is required when Google ID tokens are enabled in staging/production');
+}
+
+function requestOrigin(req: express.Request): string {
+  const host = req.get('host') || '';
+  const forwardedProto = (req.get('x-forwarded-proto') || 'https').split(',')[0].trim();
+  return `${forwardedProto}://${host}`;
+}
+
+function applyCors(req: express.Request, res: express.Response): boolean {
+  const origin = req.get('origin');
+  if (!origin) return true;
+  const allowed = allowAnyCorsOrigin || corsOrigins.includes(origin);
+  if (!allowed) return false;
+  res.header('Access-Control-Allow-Origin', allowAnyCorsOrigin ? origin : origin);
+  res.header('Vary', 'Origin');
+  res.header('Access-Control-Allow-Methods', 'GET,POST,OPTIONS');
+  res.header('Access-Control-Allow-Headers', 'Authorization, Content-Type, Origin, Accept');
+  res.header('Access-Control-Max-Age', '600');
+  return true;
+}
+
 async function signedReadUrls(files: string[]): Promise<string[]> {
   const urls: string[] = [];
   for (const object of files) {
@@ -97,9 +151,6 @@ async function requireAuth(req: express.Request, res: express.Response, next: ex
   try {
     const header = req.header('Authorization');
     if (!header || !header.toLowerCase().startsWith('bearer ')) {
-      res.header('Access-Control-Allow-Origin', '*');
-      res.header('Access-Control-Allow-Methods', 'GET,POST,OPTIONS');
-      res.header('Access-Control-Allow-Headers', 'Authorization, Content-Type, Origin, Accept');
       return res.status(401).json({ error: 'missing bearer token' });
     }
     const token = header.substring(7);
@@ -110,27 +161,17 @@ async function requireAuth(req: express.Request, res: express.Response, next: ex
       return next();
     } catch (firebaseErr) {
       // 2) Optional: Google IAM OIDC identity token (for ops scripts).
-      const allowGoogle = String(process.env.ALLOW_GOOGLE_ID_TOKENS || '').toLowerCase() === 'true';
-      if (!allowGoogle) {
+      if (!allowGoogleIdTokens) {
         throw firebaseErr;
       }
 
-      const host = req.get('host') || '';
-      const forwardedProto = (req.get('x-forwarded-proto') || 'https').split(',')[0].trim();
-      const audience = `${forwardedProto}://${host}`;
+      const audiences = googleIdTokenAudiences.length ? googleIdTokenAudiences : [requestOrigin(req)];
 
-      const ticket = await googleOauth.verifyIdToken({ idToken: token, audience });
+      const ticket = await googleOauth.verifyIdToken({ idToken: token, audience: audiences });
       const payload = ticket.getPayload();
       const email = String(payload?.email || '').trim().toLowerCase();
 
-      const allowedEmails = String(process.env.GOOGLE_ID_TOKEN_ALLOWED_EMAILS || '')
-        .split(',')
-        .map((s) => s.trim().toLowerCase())
-        .filter(Boolean);
-      if (!email || (allowedEmails.length > 0 && !allowedEmails.includes(email))) {
-        res.header('Access-Control-Allow-Origin', '*');
-        res.header('Access-Control-Allow-Methods', 'GET,POST,OPTIONS');
-        res.header('Access-Control-Allow-Headers', 'Authorization, Content-Type, Origin, Accept');
+      if (!email || (googleIdTokenAllowedEmails.length > 0 && !googleIdTokenAllowedEmails.includes(email))) {
         return res.status(401).json({ error: 'invalid token' });
       }
 
@@ -139,9 +180,6 @@ async function requireAuth(req: express.Request, res: express.Response, next: ex
     }
   } catch (e) {
     console.error('auth failed', e);
-    res.header('Access-Control-Allow-Origin', '*');
-    res.header('Access-Control-Allow-Methods', 'GET,POST,OPTIONS');
-    res.header('Access-Control-Allow-Headers', 'Authorization, Content-Type, Origin, Accept');
     return res.status(401).json({ error: 'invalid token' });
   }
 }
@@ -150,23 +188,16 @@ async function requireAuth(req: express.Request, res: express.Response, next: ex
 export const app = express();
 app.use(express.json({ limit: '2mb' }));
 
-// CORS: allow all origins for dev; ensure headers are set even on auth failures.
-const corsOptions: cors.CorsOptions = {
-  origin: (_origin, cb) => cb(null, true),
-  credentials: true,
-  methods: ['GET', 'POST', 'OPTIONS'],
-  allowedHeaders: ['Authorization', 'Content-Type', 'Origin', 'Accept'],
-};
 app.use((req, res, next) => {
-  res.header('Access-Control-Allow-Origin', '*');
-  res.header('Access-Control-Allow-Methods', 'GET,POST,OPTIONS');
-  res.header('Access-Control-Allow-Headers', 'Authorization, Content-Type, Origin, Accept');
+  const corsAllowed = applyCors(req, res);
   if (req.method === 'OPTIONS') {
-    return res.sendStatus(200);
+    return res.sendStatus(corsAllowed ? 204 : 403);
+  }
+  if (!corsAllowed) {
+    return res.status(403).json({ error: 'origin_not_allowed' });
   }
   next();
 });
-app.use(cors(corsOptions));
 
 // Health
 app.get('/health', (_req, res) => res.json({ ok: true }));
@@ -214,6 +245,9 @@ console.log(
       agentWaitMs: AGENT_QUEUE_WAIT_MS,
       agentConfigDoc: AGENT_CONFIG_DOC,
       menuUpdatesTopic: MENU_UPDATES_TOPIC,
+      corsOrigins: allowAnyCorsOrigin ? ['*'] : corsOrigins,
+      googleIdTokenAudiences,
+      googleIdTokenAllowedEmails,
     },
     null,
     2,

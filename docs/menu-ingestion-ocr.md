@@ -73,6 +73,7 @@ Goal: let restaurants upload pictures/PDFs of their menu and turn them into a st
   - `GET /ingest/:jobId` → job status/draft pointer.
   - `POST /ingest/:jobId/approve` → publish to Firestore menus.
   - `/tasks/process` (Pub/Sub push) → Vision OCR → Vertex AI Gemini mapping → validation → Firestore draft.
+- Auth/CORS: all endpoints except `/health` require bearer auth. Admin calls use Firebase ID tokens; Pub/Sub/Scheduler/CI use allowlisted Google OIDC ID tokens. Staging/prod reject wildcard CORS origins at startup.
 - Data stores: Firestore (`menus_ingest`, `menus_drafts`, `restaurants/{id}/menus`), GCS bucket for uploads.
 - Compute: Cloud Run + Pub/Sub push; OCR via Cloud Vision; LLM via Vertex Gemini 1.5 Flash.
 - Config: `MENU_BUCKET`, `MENU_INGEST_TOPIC`, `VERTEX_PROJECT`, `VERTEX_LOCATION`, `GOOGLE_CLOUD_PROJECT`.

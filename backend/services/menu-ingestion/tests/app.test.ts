@@ -114,6 +114,28 @@ describe('app routers', () => {
   it('exposes health endpoint', async () => {
     await requestAgent.get('/health').expect(200).expect({ ok: true });
   });
+
+  it('requires auth for ingest job creation', async () => {
+    const res = await requestAgent
+      .post('/ingest/start')
+      .set('Origin', 'https://admin.example.test')
+      .send({ restaurantId: 'foo', pageCount: 1 })
+      .expect(401);
+    expect(res.body.error).toBe('missing bearer token');
+    expect(res.headers['access-control-allow-origin']).toBe('https://admin.example.test');
+  });
+
+  it('rejects disallowed browser origins when configured', async () => {
+    process.env.MENU_INGESTION_CORS_ORIGINS = 'https://admin.example.test';
+    jest.resetModules();
+    await setupMocks();
+    const importedApp = await import('../src/app');
+    await supertest(importedApp.default as any)
+      .options('/ingest/start')
+      .set('Origin', 'https://evil.example.test')
+      .expect(403);
+    delete process.env.MENU_INGESTION_CORS_ORIGINS;
+  });
 });
 
 const makeIngestApp = (exists: boolean) => {

@@ -36,7 +36,7 @@ export function ingestRouter(ctx: AppContext) {
   });
 
   // 1) Start: generate signed URLs for uploads
-  router.post('/ingest/start', async (req, res) => {
+  router.post('/ingest/start', requireAuth, async (req, res) => {
     const body = req.body as IngestStartRequest;
     if (!body.restaurantId || !body.pageCount || body.pageCount < 1) {
       return res.status(400).json({ error: 'restaurantId and pageCount are required' });
@@ -73,7 +73,7 @@ export function ingestRouter(ctx: AppContext) {
   });
 
   // 2) Submit for processing (after uploads)
-  router.post('/ingest/submit', async (req, res) => {
+  router.post('/ingest/submit', requireAuth, async (req, res) => {
     const { jobId } = req.body as { jobId?: string };
     if (!jobId) return res.status(400).json({ error: 'jobId required' });
 
@@ -88,7 +88,7 @@ export function ingestRouter(ctx: AppContext) {
   });
 
   // 3) Poll job
-  router.get('/ingest/:jobId', async (req, res) => {
+  router.get('/ingest/:jobId', requireAuth, async (req, res) => {
     const snap = await firestore.collection('menus_ingest').doc(req.params.jobId).get();
     if (!snap.exists) return res.status(404).json({ error: 'not found' });
     res.json(snap.data());

@@ -204,19 +204,27 @@ locals {
         VERTEX_LOCATION    = var.region
         VERTEX_MODEL       = "gemini-2.5-flash"
         # Gemini 3 image/text models for menu compositing & analysis.
-        COMPOSITE_MODEL        = "gemini-3-pro-image-preview"
-        ANALYSIS_MODEL         = "gemini-3-pro-preview"
-        RENDER_MODEL           = "gemini-3-pro-image-preview"
-        IMAGE_REGION           = "global"
-        TEXT_REGION            = "global"
-        GEN_TIMEOUT_MS         = "120000"
-        PURE_GEMINI_IMAGE      = "true"
-        GOOGLE_CLOUD_PROJECT   = var.project_id
-        USE_GENAI_IMAGE        = "true"
-        AGENT_COMPOSITE_URL    = "https://genai-app-fastfoodmenuextraction-1-1764171394659-230152279015.us-central1.run.app"
-        AGENT_ANALYSIS_URL     = "https://genai-app-countingcardsincomposite-1-176417409497-230152279015.us-central1.run.app"
-        ALLOW_GOOGLE_ID_TOKENS = "true"
+        COMPOSITE_MODEL      = "gemini-3-pro-image-preview"
+        ANALYSIS_MODEL       = "gemini-3-pro-preview"
+        RENDER_MODEL         = "gemini-3-pro-image-preview"
+        IMAGE_REGION         = "global"
+        TEXT_REGION          = "global"
+        GEN_TIMEOUT_MS       = "120000"
+        PURE_GEMINI_IMAGE    = "true"
+        GOOGLE_CLOUD_PROJECT = var.project_id
+        USE_GENAI_IMAGE      = "true"
+        AGENT_COMPOSITE_URL  = "https://genai-app-fastfoodmenuextraction-1-1764171394659-230152279015.us-central1.run.app"
+        AGENT_ANALYSIS_URL   = "https://genai-app-countingcardsincomposite-1-176417409497-230152279015.us-central1.run.app"
+        MENU_INGESTION_CORS_ORIGINS = join(",", [
+          local.service_urls.admin_service,
+          "http://localhost:3000",
+          "http://localhost:4000",
+          "http://localhost:8080",
+        ])
+        ALLOW_GOOGLE_ID_TOKENS    = "true"
+        GOOGLE_ID_TOKEN_AUDIENCES = local.service_urls.menu_ingestion
         GOOGLE_ID_TOKEN_ALLOWED_EMAILS = join(",", [
+          module.menu_ingestion_sa.email,
           module.agent_tools_sa.email,
           module.github_ci_sa.email,
         ])
@@ -2383,6 +2391,16 @@ resource "google_cloud_run_service_iam_member" "notification_service_public" {
   depends_on = [module.notification_service]
 }
 
+resource "google_cloud_run_service_iam_member" "menu_ingestion_public" {
+  project  = var.project_id
+  location = var.region
+  service  = local.service_names.menu_ingestion
+  role     = "roles/run.invoker"
+  member   = "allUsers"
+
+  depends_on = [module.menu_ingestion]
+}
+
 resource "google_eventarc_trigger" "typesense_indexer_stores" {
   name                    = "typesense-indexer-stores-${var.environment_name}"
   location                = var.firestore_location
@@ -2462,6 +2480,7 @@ resource "google_pubsub_subscription" "menu_ingest_push" {
     push_endpoint = "${local.service_urls.menu_ingestion}/tasks/process"
     oidc_token {
       service_account_email = module.menu_ingestion_sa.email
+      audience              = local.service_urls.menu_ingestion
     }
   }
 

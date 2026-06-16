@@ -4,14 +4,22 @@
 - Alert: `menu_ingestion_backlog` policy (Terraform `infra/terraform/monitoring_ingestion.tf`) fires when `menu-ingest-push` undelivered messages > threshold for 10m. Wire `alert_channel_ids` to email/PagerDuty.
 - Logs to watch: Cloud Run `menu-ingestion` for repeated "ingest failed" or Gemini 429s; Pub/Sub DLQ (if configured).
 
+## Auth
+- All endpoints except `/health` require bearer auth.
+- Admin/browser calls use Firebase ID tokens.
+- Pub/Sub push, Cloud Scheduler, and CI/ops calls use Google OIDC ID tokens when `ALLOW_GOOGLE_ID_TOKENS=true`.
+- Set `GOOGLE_ID_TOKEN_AUDIENCES` to the menu-ingestion base URL and include only trusted service-account emails in `GOOGLE_ID_TOKEN_ALLOWED_EMAILS`.
+- Staging and production must set explicit `MENU_INGESTION_CORS_ORIGINS`; wildcard CORS is rejected at startup.
+
 ## Cleanup
-- Endpoint: `POST /tasks/cleanup` (no auth by default; protect with IAP/proxy) resets `processing` jobs whose `processingExpiresAt` has passed back to `queued`. Schedule hourly via Cloud Scheduler:
+- Endpoint: `POST /tasks/cleanup` resets `processing` jobs whose `processingExpiresAt` has passed back to `queued`. Schedule hourly via Cloud Scheduler with an OIDC token whose audience matches `GOOGLE_ID_TOKEN_AUDIENCES`:
   ```
   gcloud scheduler jobs create http menu-ingestion-cleanup \
     --schedule="0 * * * *" \
     --uri="https://MENU_INGESTION_URL/tasks/cleanup" \
     --http-method=POST \
-    --oidc-service-account-email=menu-ingestion@PROJECT_ID.iam.gserviceaccount.com
+    --oidc-service-account-email=menu-ingestion@PROJECT_ID.iam.gserviceaccount.com \
+    --oidc-token-audience="https://MENU_INGESTION_URL"
   ```
 
 ## Quotas / Cost

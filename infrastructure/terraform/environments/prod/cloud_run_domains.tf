@@ -9,7 +9,7 @@ module "cloud_run_domain_mappings" {
 
   depends_on = [
     module.admin_service,
-    module.agent_customization,
+    module.agent_customization_service,
     module.agent_tools,
     module.agent_webhooks,
     module.channel_gateway,

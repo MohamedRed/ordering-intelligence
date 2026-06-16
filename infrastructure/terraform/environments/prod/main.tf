@@ -181,13 +181,19 @@ locals {
       memory                = "512Mi"
       startup_cpu_boost     = true
       env_overrides = {
-        MENU_BUCKET          = "${var.project_id}-menus-${var.environment_name}"
-        MENU_INGEST_TOPIC    = "menu-ingest"
-        MENU_UPDATES_TOPIC   = "menu-updates"
-        VERTEX_PROJECT       = var.project_id
-        VERTEX_LOCATION      = var.region
-        VERTEX_MODEL         = "gemini-2.5-flash"
-        GOOGLE_CLOUD_PROJECT = var.project_id
+        MENU_BUCKET                 = "${var.project_id}-menus-${var.environment_name}"
+        MENU_INGEST_TOPIC           = "menu-ingest"
+        MENU_UPDATES_TOPIC          = "menu-updates"
+        VERTEX_PROJECT              = var.project_id
+        VERTEX_LOCATION             = var.region
+        VERTEX_MODEL                = "gemini-2.5-flash"
+        GOOGLE_CLOUD_PROJECT        = var.project_id
+        MENU_INGESTION_CORS_ORIGINS = local.service_urls.admin_service
+        ALLOW_GOOGLE_ID_TOKENS      = "true"
+        GOOGLE_ID_TOKEN_AUDIENCES   = local.service_urls.menu_ingestion
+        GOOGLE_ID_TOKEN_ALLOWED_EMAILS = join(",", [
+          module.menu_ingestion_sa.email,
+        ])
       }
       secret_env_overrides = {}
     }
@@ -947,10 +953,10 @@ resource "google_secret_manager_secret" "agent_tools_jwt_signing_secret" {
 
 resource "google_secret_manager_secret_iam_member" "onboarding_secret_access" {
   for_each = {
-    stripe_secret_key     = google_secret_manager_secret.stripe_secret_key.secret_id
-    stripe_webhook_secret = google_secret_manager_secret.stripe_webhook_secret.secret_id
+    stripe_secret_key      = google_secret_manager_secret.stripe_secret_key.secret_id
+    stripe_webhook_secret  = google_secret_manager_secret.stripe_webhook_secret.secret_id
     stripe_publishable_key = google_secret_manager_secret.stripe_publishable_key.secret_id
-    twilio_account_sid    = google_secret_manager_secret.twilio_account_sid.secret_id
+    twilio_account_sid     = google_secret_manager_secret.twilio_account_sid.secret_id
   }
   project   = var.project_id
   secret_id = each.value
@@ -1236,12 +1242,12 @@ module "onboarding_service" {
     ELEVENLABS_TEMPLATE_AUTO_PARTS_AGENT_ID = "agent_9201kbnjy570f0ysjk9mssmwewm3"
   }, lookup(local.cloud_run_config.onboarding_service, "env_overrides", {}))
   secret_env_vars = {
-    STRIPE_SECRET_KEY     = google_secret_manager_secret.stripe_secret_key.secret_id
-    STRIPE_WEBHOOK_SECRET = google_secret_manager_secret.stripe_webhook_secret.secret_id
+    STRIPE_SECRET_KEY      = google_secret_manager_secret.stripe_secret_key.secret_id
+    STRIPE_WEBHOOK_SECRET  = google_secret_manager_secret.stripe_webhook_secret.secret_id
     STRIPE_PUBLISHABLE_KEY = google_secret_manager_secret.stripe_publishable_key.secret_id
-    TWILIO_ACCOUNT_SID    = google_secret_manager_secret.twilio_account_sid.secret_id
-    TWILIO_AUTH_TOKEN     = "twilio-auth-token"
-    ELEVENLABS_API_KEY    = google_secret_manager_secret.elevenlabs_api_key.secret_id
+    TWILIO_ACCOUNT_SID     = google_secret_manager_secret.twilio_account_sid.secret_id
+    TWILIO_AUTH_TOKEN      = "twilio-auth-token"
+    ELEVENLABS_API_KEY     = google_secret_manager_secret.elevenlabs_api_key.secret_id
   }
 
   depends_on = [
@@ -1481,10 +1487,10 @@ module "payments_service" {
   startup_cpu_boost     = local.cloud_run_config.payments_service.startup_cpu_boost
   service_account       = module.payments_service_sa.email
   env_vars = merge({
-    ENVIRONMENT              = var.environment_name
-    FIREBASE_PROJECT_ID      = var.project_id
-    ORDER_SERVICE_URL        = local.service_urls.order_service
-    NOTIFICATION_SERVICE_URL = local.service_urls.notification_service
+    ENVIRONMENT                   = var.environment_name
+    FIREBASE_PROJECT_ID           = var.project_id
+    ORDER_SERVICE_URL             = local.service_urls.order_service
+    NOTIFICATION_SERVICE_URL      = local.service_urls.notification_service
     STRIPE_WEBHOOK_ALLOWED_EVENTS = "checkout.session.completed,checkout.session.expired,payment_intent.succeeded,payment_intent.payment_failed,setup_intent.succeeded"
   }, lookup(local.cloud_run_config.payments_service, "env_overrides", {}))
   secret_env_vars = merge({
@@ -1743,6 +1749,16 @@ resource "google_cloud_run_service_iam_member" "notification_service_public" {
   member   = "allUsers"
 
   depends_on = [module.notification_service]
+}
+
+resource "google_cloud_run_service_iam_member" "menu_ingestion_public" {
+  project  = var.project_id
+  location = var.region
+  service  = local.service_names.menu_ingestion
+  role     = "roles/run.invoker"
+  member   = "allUsers"
+
+  depends_on = [module.menu_ingestion]
 }
 
 resource "google_eventarc_trigger" "typesense_indexer_stores" {
@@ -2156,6 +2172,7 @@ resource "google_pubsub_subscription" "menu_ingest_push" {
     push_endpoint = "${local.service_urls.menu_ingestion}/tasks/process"
     oidc_token {
       service_account_email = module.menu_ingestion_sa.email
+      audience              = local.service_urls.menu_ingestion
     }
   }
 

@@ -23,11 +23,18 @@ async function main() {
     throw new Error(`Sample file not found at ${samplePath}`);
   }
 
+  const idToken = await getIdToken();
+  const authHeaders = { Authorization: `Bearer ${idToken}` };
+
   console.log('[start] requesting upload URLs');
-  const startResp = await axios.post(`${baseUrl}/ingest/start`, {
-    restaurantId,
-    pageCount: 1,
-  });
+  const startResp = await axios.post(
+    `${baseUrl}/ingest/start`,
+    {
+      restaurantId,
+      pageCount: 1,
+    },
+    { headers: authHeaders }
+  );
 
   if (!startResp.data?.uploadUrls || startResp.data.uploadUrls.length !== 1) {
     throw new Error(
@@ -47,12 +54,12 @@ async function main() {
   });
   console.log('[upload] done');
 
-  await axios.post(`${baseUrl}/ingest/submit`, { jobId });
+  await axios.post(`${baseUrl}/ingest/submit`, { jobId }, { headers: authHeaders });
   console.log('[submit] queued');
 
   // Allow longer processing because image generation may fall back to external worker.
   const maxAttempts = Number(process.env.MENU_INGESTION_STATUS_ATTEMPTS ?? 60); // ~10 min at 10s
-  const status = await waitForReady(baseUrl, jobId, maxAttempts, 10_000);
+  const status = await waitForReady(baseUrl, jobId, maxAttempts, 10_000, authHeaders);
   console.log('[status]', status.status);
   if (status.status !== 'ready') {
     throw new Error(`job did not reach ready state (status=${status.status})`);
@@ -68,13 +75,10 @@ async function main() {
     console.log(`[draft] items: ${draft?.items?.length ?? 0}`);
   }
 
-  const idToken = await getIdToken();
   await axios.post(
     `${baseUrl}/ingest/${jobId}/approve`,
     {},
-    {
-      headers: { Authorization: `Bearer ${idToken}` },
-    }
+    { headers: authHeaders }
   );
   console.log('[approve] published');
 
@@ -89,9 +93,15 @@ async function main() {
 
 type JobStatus = { status: string };
 
-async function waitForReady(baseUrl: string, jobId: string, attempts: number, delayMs: number) {
+async function waitForReady(
+  baseUrl: string,
+  jobId: string,
+  attempts: number,
+  delayMs: number,
+  headers: Record<string, string>
+) {
   for (let i = 0; i < attempts; i++) {
-    const resp = await axios.get<JobStatus>(`${baseUrl}/ingest/${jobId}`);
+    const resp = await axios.get<JobStatus>(`${baseUrl}/ingest/${jobId}`, { headers });
     if (resp.data.status === 'ready' || resp.data.status === 'error') return resp.data;
     // keep waiting on 'processing' because external worker may be generating the image
     await new Promise((r) => setTimeout(r, delayMs));

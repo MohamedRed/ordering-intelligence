@@ -6,7 +6,7 @@ export function cleanupRouter(ctx: AppContext) {
   const router = express.Router();
   const { firestore } = ctx;
 
-  router.post('/tasks/cleanup', async (_req, res) => {
+  router.post('/tasks/cleanup', ctx.requireAuth, async (_req, res) => {
     const now = Date.now();
     // Avoid composite index requirement: query by expiry time then filter status in memory.
     const snap = await firestore
