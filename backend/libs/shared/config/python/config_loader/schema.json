@@ -309,7 +309,7 @@
       "type": "string",
       "required": false,
       "sensitive": true,
-      "description": "Shared secret used to authenticate ElevenLabs conversation-init webhook requests."
+      "description": "Shared secret used to authenticate ElevenLabs conversation-init webhook requests. Required in staging/production."
     },
     "AGENT_WEBHOOK_SECRET": {
       "type": "string",

@@ -21,7 +21,7 @@ Environment variables (same conventions as other Go services in this repo):
 
 Webhook auth:
 
-- `ELEVENLABS_CONVERSATION_INIT_SECRET` (optional)
+- `ELEVENLABS_CONVERSATION_INIT_SECRET` (required in staging/production; optional for local/dev)
   - If set, request must include header `x-elevenlabs-conversation-init-secret`
     (or legacy `x-onboarding-webhook-secret`) with the same value.
 
@@ -31,5 +31,4 @@ Reads:
 
 - `phone_number_routes/elpn_<elevenlabs_phone_number_id>`
 - `phone_number_routes/to_<e164_without_plus>`
-
 

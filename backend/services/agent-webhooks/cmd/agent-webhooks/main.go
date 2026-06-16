@@ -3,10 +3,8 @@ package main
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 	"log"
 	"net/http"
-	"os"
 	"strings"
 	"time"
 
@@ -15,24 +13,9 @@ import (
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/joho/godotenv"
 	agentcontext "github.com/ordering-intelligence/agentcontext"
-	sharedconfig "github.com/ordering-intelligence/sharedconfig"
-	"google.golang.org/api/option"
 )
 
 const agentWebhookEventsCollection = "agent_webhook_events"
-
-type serviceConfig struct {
-	Port                      string
-	Environment               string
-	ProjectID                 string
-	Credentials               string
-	Secret                    string
-	InternalAuthAudience      string
-	InternalAllowedEmails     []string
-	CustomerProfileServiceURL string
-	RecommendationServiceURL  string
-	WaitTimeServiceURL        string
-}
 
 func main() {
 	_ = godotenv.Load()
@@ -73,77 +56,6 @@ func main() {
 	if err := http.ListenAndServe(":"+cfg.Port, router); err != nil {
 		log.Fatalf("server failed: %v", err)
 	}
-}
-
-func loadConfig() (*serviceConfig, error) {
-	values, err := sharedconfig.Load("agent-webhooks", nil)
-	if err != nil {
-		return nil, err
-	}
-
-	port := os.Getenv("PORT")
-	if port == "" {
-		port = "8086"
-	}
-
-	// Keep the same env var name as onboarding for easy migration of the webhook.
-	secret := os.Getenv("ELEVENLABS_CONVERSATION_INIT_SECRET")
-	if secret == "" {
-		secret = os.Getenv("AGENT_WEBHOOK_SECRET")
-	}
-
-	return &serviceConfig{
-		Port:        port,
-		Environment: stringOrDefault(values["ENVIRONMENT"], "development"),
-		ProjectID:   stringOrDefault(values["FIRESTORE_PROJECT_ID"], ""),
-		Credentials: stringOrDefault(values["GOOGLE_APPLICATION_CREDENTIALS"], ""),
-		Secret:      strings.TrimSpace(secret),
-		InternalAuthAudience: strings.TrimSpace(firstNonEmpty(
-			os.Getenv("INTERNAL_AUTH_AUDIENCE"),
-			stringOrDefault(values["INTERNAL_AUTH_AUDIENCE"], ""),
-		)),
-		InternalAllowedEmails: splitCSV(firstNonEmpty(
-			os.Getenv("INTERNAL_ALLOWED_EMAILS"),
-			stringOrDefault(values["INTERNAL_ALLOWED_EMAILS"], ""),
-		)),
-		CustomerProfileServiceURL: strings.TrimSpace(firstNonEmpty(
-			os.Getenv("CUSTOMER_PROFILE_SERVICE_URL"),
-			stringOrDefault(values["CUSTOMER_PROFILE_SERVICE_URL"], ""),
-		)),
-		RecommendationServiceURL: strings.TrimSpace(firstNonEmpty(
-			os.Getenv("RECOMMENDATION_SERVICE_URL"),
-			stringOrDefault(values["RECOMMENDATION_SERVICE_URL"], ""),
-		)),
-		WaitTimeServiceURL: strings.TrimSpace(firstNonEmpty(
-			os.Getenv("WAIT_TIME_SERVICE_URL"),
-			stringOrDefault(values["WAIT_TIME_SERVICE_URL"], ""),
-		)),
-	}, nil
-}
-
-func stringOrDefault(value interface{}, fallback string) string {
-	switch v := value.(type) {
-	case string:
-		if v == "" {
-			return fallback
-		}
-		return v
-	case int64:
-		return fmt.Sprintf("%d", v)
-	default:
-		return fallback
-	}
-}
-
-func newFirestoreClient(ctx context.Context, cfg *serviceConfig) (*cloudfirestore.Client, error) {
-	if cfg.ProjectID == "" {
-		return nil, fmt.Errorf("FIRESTORE_PROJECT_ID not configured")
-	}
-	var opts []option.ClientOption
-	if cfg.Credentials != "" {
-		opts = append(opts, option.WithCredentialsFile(cfg.Credentials))
-	}
-	return cloudfirestore.NewClient(ctx, cfg.ProjectID, opts...)
 }
 
 func handleConversationInit(
@@ -310,33 +222,6 @@ func writeJSON(w http.ResponseWriter, status int, payload any) {
 	if err := json.NewEncoder(w).Encode(payload); err != nil {
 		log.Printf("failed writing response: %v", err)
 	}
-}
-
-func firstNonEmpty(values ...string) string {
-	for _, v := range values {
-		v = strings.TrimSpace(v)
-		if v != "" {
-			return v
-		}
-	}
-	return ""
-}
-
-func splitCSV(value string) []string {
-	value = strings.TrimSpace(value)
-	if value == "" {
-		return nil
-	}
-	parts := strings.Split(value, ",")
-	var out []string
-	for _, p := range parts {
-		p = strings.TrimSpace(p)
-		if p == "" {
-			continue
-		}
-		out = append(out, p)
-	}
-	return out
 }
 
 func getString(m map[string]any, key string) string {
