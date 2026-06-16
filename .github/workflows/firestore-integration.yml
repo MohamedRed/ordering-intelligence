@@ -26,7 +26,7 @@ concurrency:
 
 jobs:
   order-service-firestore:
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, linux, x64, liive-dev]
     defaults:
       run:
         working-directory: backend/services/order-service

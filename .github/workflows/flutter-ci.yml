@@ -29,7 +29,7 @@ concurrency:
 jobs:
   security-lints:
     name: Flutter security lints
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, linux, x64, liive-dev]
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -45,7 +45,7 @@ jobs:
 
   analyze-test:
     name: Flutter (${{ matrix.app }})
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, linux, x64, liive-dev]
     needs: security-lints
     strategy:
       fail-fast: false

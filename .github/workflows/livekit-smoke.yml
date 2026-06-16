@@ -11,7 +11,7 @@ on:
 
 jobs:
   smoke:
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, linux, x64, liive-dev]
     steps:
       - uses: actions/checkout@v4
       - name: Install LiveKit CLI
