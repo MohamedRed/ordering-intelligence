@@ -265,9 +265,18 @@ locals {
       env_overrides = {
         GCS_BUCKET                  = "${var.project_id}-menus-${var.environment_name}"
         CORS_ORIGINS                = join(",", var.onboarding_cors_origins)
+        FIREBASE_PROJECT_ID         = var.project_id
+        GOOGLE_CLOUD_PROJECT        = var.project_id
         MAKE_PUBLIC                 = "true"
         MENU_MAX_PAGES              = "5"
         MENU_FLYER_MAX_UPLOAD_BYTES = "10485760"
+        ONBOARDING_REQUIRE_AUTH     = "true"
+        ALLOW_GOOGLE_ID_TOKENS      = "true"
+        GOOGLE_ID_TOKEN_AUDIENCES   = local.service_urls.onboarding_service
+        GOOGLE_ID_TOKEN_ALLOWED_EMAILS = join(",", [
+          module.onboarding_service_sa.email,
+          module.github_ci_sa.email,
+        ])
       }
       secret_env_overrides = {}
     }

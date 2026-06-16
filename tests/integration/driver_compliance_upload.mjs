@@ -1,4 +1,5 @@
 import { patchFirestoreDoc } from './lib/firestore_admin.mjs';
+import { getOnboardingAuthHeaders } from './lib/onboarding_auth.mjs';
 
 const DEFAULT_TIMEOUT_MS = 20000;
 const baseUrl = process.env.ONBOARDING_BASE_URL;
@@ -19,6 +20,7 @@ if (!delivererId) {
 }
 
 const apiBase = baseUrl.replace(/\/$/, '');
+const authHeaders = getOnboardingAuthHeaders(apiBase);
 
 const fetchJson = async (url, options = {}) => {
   const controller = new AbortController();
@@ -28,6 +30,7 @@ const fetchJson = async (url, options = {}) => {
       ...options,
       signal: controller.signal,
       headers: {
+        ...authHeaders,
         ...(options.headers || {})
       }
     });

@@ -5,6 +5,9 @@ import morgan from 'morgan';
 import { Storage } from '@google-cloud/storage';
 import { Firestore, FieldValue, Timestamp } from '@google-cloud/firestore';
 import { PubSub } from '@google-cloud/pubsub';
+import { initializeApp, applicationDefault, getApps } from 'firebase-admin/app';
+import { getAuth } from 'firebase-admin/auth';
+import { OAuth2Client } from 'google-auth-library';
 import bodyParser from 'body-parser';
 import twilio from 'twilio';
 import { v4 as uuidv4 } from 'uuid';
@@ -26,6 +29,10 @@ import {
 import { buildCorsOptions, resolveCorsOrigins } from './cors_policy.js';
 import { validateMenuFlyerCount } from './menu_ingestion_limits.js';
 import { registerMenuFlyerUploadRoutes } from './menu_flyer_upload.js';
+import {
+  createOnboardingAuthMiddleware,
+  resolveOnboardingAuthPolicy,
+} from './auth_policy.js';
 
 const app = express();
 
@@ -62,6 +69,15 @@ const vertex =
 const MAPS_KEY = process.env.GOOGLE_MAPS_API_KEY || '';
 const ENVIRONMENT = (process.env.ENVIRONMENT || process.env.NODE_ENV || '').toLowerCase();
 const CORS_ORIGINS = resolveCorsOrigins(process.env.CORS_ORIGINS, ENVIRONMENT || 'development');
+const AUTH_POLICY = resolveOnboardingAuthPolicy(process.env);
+if ((AUTH_POLICY.requireAuth || AUTH_POLICY.firebaseProjectId) && !getApps().length) {
+  initializeApp({
+    credential: applicationDefault(),
+    projectId: AUTH_POLICY.firebaseProjectId || undefined,
+  });
+}
+const firebaseAuth = getApps().length ? getAuth() : undefined;
+const googleOAuth = new OAuth2Client();
 const ALLOW_DEMO_SKIP_STRIPE =
   (process.env.ALLOW_DEMO_SKIP_STRIPE || '').toLowerCase() === 'true' ||
   ['dev', 'development', 'local'].includes(ENVIRONMENT);
@@ -323,6 +339,21 @@ app.use((req, res, next) => {
 });
 app.use(morgan('tiny'));
 app.use(cors(buildCorsOptions(CORS_ORIGINS)));
+app.use(
+  createOnboardingAuthMiddleware(AUTH_POLICY, {
+    verifyFirebaseToken: (token) => {
+      if (!firebaseAuth) throw new Error('firebase_auth_not_configured');
+      return firebaseAuth.verifyIdToken(token);
+    },
+    verifyGoogleIdToken: async (token, audiences) => {
+      const ticket = await googleOAuth.verifyIdToken({
+        idToken: token,
+        audience: audiences,
+      });
+      return ticket.getPayload() ?? {};
+    },
+  }),
+);
 
 registerDeliveryPartnerStripeRoutes({
   app,

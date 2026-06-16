@@ -284,6 +284,88 @@
       "description": "Path to service account JSON for Firestore access."
     }
   },
+  "onboarding-service": {
+    "PORT": {
+      "type": "number",
+      "default": 8080,
+      "description": "HTTP port for onboarding service."
+    },
+    "ENVIRONMENT": {
+      "type": "string",
+      "default": "development",
+      "description": "Deployment environment identifier."
+    },
+    "CORS_ORIGINS": {
+      "type": "string",
+      "required": true,
+      "description": "Comma-separated browser origins allowed to call onboarding-service. Staging and production require explicit origins and disallow wildcards."
+    },
+    "FIRESTORE_PROJECT_ID": {
+      "type": "string",
+      "required": false,
+      "description": "Firestore project identifier."
+    },
+    "FIREBASE_PROJECT_ID": {
+      "type": "string",
+      "required": false,
+      "description": "Firebase project ID used to verify admin Firebase ID tokens. Required when onboarding auth is enabled."
+    },
+    "GOOGLE_APPLICATION_CREDENTIALS": {
+      "type": "string",
+      "required": false,
+      "description": "Path to service account JSON for Firestore/Firebase access."
+    },
+    "GCS_BUCKET": {
+      "type": "string",
+      "required": true,
+      "description": "GCS bucket for onboarding menu flyer uploads."
+    },
+    "MENU_INGEST_TOPIC": {
+      "type": "string",
+      "required": false,
+      "default": "menu-ingest",
+      "description": "Pub/Sub topic used to enqueue menu ingestion jobs."
+    },
+    "ONBOARDING_REQUIRE_AUTH": {
+      "type": "string",
+      "required": false,
+      "default": "true",
+      "description": "Whether onboarding endpoints require Firebase or internal Google OIDC bearer auth. Staging and production cannot disable it."
+    },
+    "ALLOW_GOOGLE_ID_TOKENS": {
+      "type": "string",
+      "required": false,
+      "default": "false",
+      "description": "Whether allowlisted Google OIDC ID tokens may authenticate internal onboarding calls such as Pub/Sub push and CI smoke tests."
+    },
+    "GOOGLE_ID_TOKEN_AUDIENCES": {
+      "type": "string",
+      "required": false,
+      "description": "Comma-separated accepted audiences for internal Google OIDC ID tokens."
+    },
+    "GOOGLE_ID_TOKEN_ALLOWED_EMAILS": {
+      "type": "string",
+      "required": false,
+      "description": "Comma-separated service-account email allowlist for internal Google OIDC ID tokens. Required when Google ID tokens are enabled."
+    },
+    "STRIPE_SECRET_KEY": {
+      "type": "string",
+      "required": false,
+      "sensitive": true,
+      "description": "Stripe secret key for merchant and delivery partner onboarding."
+    },
+    "STRIPE_WEBHOOK_SECRET": {
+      "type": "string",
+      "required": false,
+      "sensitive": true,
+      "description": "Stripe webhook signing secret."
+    },
+    "STRIPE_PUBLISHABLE_KEY": {
+      "type": "string",
+      "required": false,
+      "description": "Stripe publishable key for embedded onboarding pages."
+    }
+  },
   "agent-webhooks": {
     "PORT": {
       "type": "number",
