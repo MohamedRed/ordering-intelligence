@@ -67,6 +67,21 @@ dispatch_service_cors_origins = [
   "https://1457874399339347988.discordsays.com",
 ]
 
+delivery_service_cors_origins = [
+  "http://localhost:3000",
+  "http://localhost:4000",
+  "http://localhost:4001",
+  "http://localhost:5173",
+  "http://localhost:8080",
+  "http://127.0.0.1:4000",
+  "https://liive-dev-admin.web.app",
+  "https://liive-dev-business.web.app",
+  "https://liive-dev-consumer.web.app",
+  "https://liive-dev-driver.web.app",
+  "https://telegram-mini-oi2.web.app",
+  "https://1457874399339347988.discordsays.com",
+]
+
 channel_gateway_cors_origins = [
   "http://localhost:3000",
   "http://localhost:4000",

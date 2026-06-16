@@ -448,6 +448,7 @@ locals {
       startup_cpu_boost     = true
       env_overrides = {
         ENVIRONMENT            = var.environment_name
+        CORS_ORIGINS           = join(",", var.delivery_service_cors_origins)
         FIRESTORE_PROJECT_ID   = var.project_id
         REQUIRE_AUTH           = "true"
         INTERNAL_AUTH_AUDIENCE = local.service_urls.delivery_service

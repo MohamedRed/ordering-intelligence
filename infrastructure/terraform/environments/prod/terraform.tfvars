@@ -44,6 +44,15 @@ dispatch_service_cors_origins = [
   "https://1457874399339347988.discordsays.com",
 ]
 
+delivery_service_cors_origins = [
+  "https://admin.liive.app",
+  "https://business.liive.app",
+  "https://consumer.liive.app",
+  "https://driver.liive.app",
+  "https://telegram-mini-oi2.web.app",
+  "https://1457874399339347988.discordsays.com",
+]
+
 channel_gateway_cors_origins = [
   "https://admin.liive.app",
   "https://business.liive.app",
