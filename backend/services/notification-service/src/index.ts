@@ -15,10 +15,12 @@ import { loadConfig } from "@ordering-intelligence/config";
 import cors from "cors";
 import axios from "axios";
 import { GoogleAuth, OAuth2Client } from "google-auth-library";
+import { buildNotificationCorsOptions, resolveNotificationCorsOrigins } from "./cors_policy";
 
 interface NotificationConfig {
   PORT: number;
   ENVIRONMENT: string;
+  CORS_ORIGINS?: string;
   FIREBASE_PROJECT_ID: string;
   FIREBASE_SERVICE_ACCOUNT: string;
   TWILIO_ACCOUNT_SID?: string;
@@ -161,33 +163,11 @@ type StoreDoc = {
 
 export const app = express();
 app.use(express.json());
-const corsAllowlist = new Set([
-  "http://localhost:3000",
-  "http://localhost:4000",
-  "http://localhost:4001",
-  "http://127.0.0.1:4000"
-]);
-
-app.use(cors({
-  origin: (origin, callback) => {
-    if (!origin) {
-      callback(null, true);
-      return;
-    }
-    if (origin.startsWith("http://localhost") || origin.startsWith("http://127.0.0.1")) {
-      callback(null, true);
-      return;
-    }
-    if (corsAllowlist.has(origin)) {
-      callback(null, true);
-      return;
-    }
-    callback(new Error(`CORS blocked for origin: ${origin}`));
-  },
-  methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
-  allowedHeaders: ["Content-Type", "Authorization"],
-  maxAge: 300
-}));
+const notificationCorsOrigins = resolveNotificationCorsOrigins(
+  process.env.CORS_ORIGINS ?? config.CORS_ORIGINS,
+  config.ENVIRONMENT
+);
+app.use(cors(buildNotificationCorsOptions(notificationCorsOrigins)));
 
 const port = Number(process.env.PORT || config.PORT || 8080);
 

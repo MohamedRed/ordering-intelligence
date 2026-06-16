@@ -71,6 +71,12 @@
       "default": "development",
       "description": "Deployment environment identifier."
     },
+    "CORS_ORIGINS": {
+      "type": "string",
+      "required": false,
+      "default": "",
+      "description": "Comma-separated browser origins allowed to call notification-service. Staging and production require explicit origins and disallow wildcards."
+    },
     "FIREBASE_PROJECT_ID": {
       "type": "string",
       "required": true,

@@ -248,6 +248,7 @@ locals {
       startup_cpu_boost     = true
       env_overrides = {
         ENVIRONMENT         = var.environment_name
+        CORS_ORIGINS        = join(",", var.notification_service_cors_origins)
         FIREBASE_PROJECT_ID = var.project_id
         # FIREBASE_SERVICE_ACCOUNT can be injected via overrides or Secret Manager if needed.
       }
@@ -1527,6 +1528,7 @@ module "notification_service" {
   service_account       = module.notification_service_sa.email
   env_vars = merge({
     ENVIRONMENT                     = var.environment_name
+    CORS_ORIGINS                    = join(",", var.notification_service_cors_origins)
     FIREBASE_PROJECT_ID             = var.project_id
     CUSTOMER_PROFILE_SERVICE_URL    = local.service_urls.customer_profile
     ORDERS_EVENTS_OIDC_AUDIENCE     = local.service_urls.notification_service

@@ -140,6 +140,16 @@ variable "onboarding_cors_origins" {
   }
 }
 
+variable "notification_service_cors_origins" {
+  description = "Explicit browser origins allowed to call notification-service. Wildcards are not allowed."
+  type        = list(string)
+
+  validation {
+    condition     = length(var.notification_service_cors_origins) > 0 && !contains(var.notification_service_cors_origins, "*")
+    error_message = "notification_service_cors_origins must contain at least one explicit origin and cannot include '*'."
+  }
+}
+
 variable "channel_gateway_cors_origins" {
   description = "Explicit browser origins allowed to call channel-gateway. Wildcards are not allowed."
   type        = list(string)

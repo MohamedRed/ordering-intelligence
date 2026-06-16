@@ -169,8 +169,12 @@ locals {
       cpu                   = "1000m"
       memory                = "512Mi"
       startup_cpu_boost     = true
-      env_overrides         = {}
-      secret_env_overrides  = {}
+      env_overrides = {
+        ENVIRONMENT         = var.environment_name
+        CORS_ORIGINS        = join(",", var.notification_service_cors_origins)
+        FIREBASE_PROJECT_ID = var.project_id
+      }
+      secret_env_overrides = {}
     }
     menu_ingestion = {
       min_scale             = 0
@@ -1456,6 +1460,7 @@ module "notification_service" {
 
   env_vars = merge({
     ENVIRONMENT                     = var.environment_name
+    CORS_ORIGINS                    = join(",", var.notification_service_cors_origins)
     FIREBASE_PROJECT_ID             = var.project_id
     CUSTOMER_PROFILE_SERVICE_URL    = local.service_urls.customer_profile
     ORDERS_EVENTS_OIDC_AUDIENCE     = local.service_urls.notification_service

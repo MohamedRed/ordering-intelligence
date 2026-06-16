@@ -18,3 +18,5 @@ PATH="tools/node/bin:$PATH" npm run dev
 ```
 
 Populate `.env` from `.env.example`. The `FIREBASE_SERVICE_ACCOUNT` value may be a JSON string or a file path. When Twilio or SendGrid credentials are absent the corresponding channel is skipped gracefully.
+
+`CORS_ORIGINS` must be set to explicit browser origins in staging and production. Wildcards are rejected in production-like environments.

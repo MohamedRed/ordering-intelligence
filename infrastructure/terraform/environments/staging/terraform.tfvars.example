@@ -20,6 +20,13 @@ onboarding_cors_origins = [
   "https://staging-driver.example.com",
 ]
 
+notification_service_cors_origins = [
+  "https://staging-admin.example.com",
+  "https://staging-business.example.com",
+  "https://staging-consumer.example.com",
+  "https://staging-driver.example.com",
+]
+
 channel_gateway_cors_origins = [
   "https://staging-consumer.example.com",
   "https://staging-telegram.example.com",
