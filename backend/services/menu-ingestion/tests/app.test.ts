@@ -186,6 +186,16 @@ describe('ingest router standalone', () => {
     expect(res.body.uploadUrls).toHaveLength(2);
   });
 
+  it('rejects start requests above the page limit', async () => {
+    const server = makeIngestApp(false);
+    const res = await supertest(server)
+      .post('/ingest/start')
+      .send({ restaurantId: 'foo', pageCount: 6 })
+      .expect(400);
+    expect(res.body.error).toBe('too_many_pages');
+    expect(res.body.maxPages).toBe(5);
+  });
+
   it('submit 404 when job missing', async () => {
     const server = makeIngestApp(false);
     await supertest(server).post('/ingest/submit').send({ jobId: 'foo' }).expect(404);

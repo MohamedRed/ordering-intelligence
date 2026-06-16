@@ -1,6 +1,7 @@
 import express from 'express';
 import type { AppContext } from '../app.js';
 import type { IngestJob, DraftMenu } from '../types.js';
+import { assertFilesWithinPageLimit } from '../ingestion_limits.js';
 import {
   analyzeMenuFromOriginal,
   generateComposites,
@@ -59,6 +60,7 @@ export function tasksRouter(ctx: AppContext) {
     try {
       await ensureWorkflowRoot(jobId, job.restaurantId);
       await ensureNotCanceled();
+      assertFilesWithinPageLimit(job.files);
       const pipelineMode = (job.pipelineMode ?? 'full') as 'menu_only' | 'full';
       const nowMs = Date.now();
 

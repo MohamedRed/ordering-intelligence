@@ -69,7 +69,7 @@ Goal: let restaurants upload pictures of their menu and turn them into a structu
 - **Order-service sync:** On approve, the service now also upserts a canonical menu document into the `menus` collection (storeId doc) matching order-service schema so `/stores/{storeId}/menu/snapshot` stays in sync.
 - Admin UI: set `MENU_INGESTION_BASE_URL` (Dart define) in the admin app to point at the per-env Cloud Run URL.
 - Pub/Sub fan-out: optional `MENU_UPDATES_TOPIC` (`PUBSUB_TOPIC_MENU_UPDATES`) will receive a message `{storeId, updatedAt, jobId, source}` on approval for downstream cache busting/agents.
-- Cost guards (defaults): process max 5 pages, 40 items/page, 120 items total per job (`MENU_MAX_PAGES`, `MENU_MAX_ITEMS_PER_PAGE`, `MENU_MAX_TOTAL_ITEMS`). Increase cautiously; Gemini 3 image calls are the main cost driver.
+- Cost guards (defaults): accept/process max 5 pages, 40 items/page, 120 items total per job (`MENU_MAX_PAGES`, `MENU_MAX_ITEMS_PER_PAGE`, `MENU_MAX_TOTAL_ITEMS`). Increase cautiously; Gemini 3 image calls are the main cost driver.
 - Loop guard: jobs are marked `processedAt`; push handler skips reprocessing unless a `processing` job exceeds its 30m window, then it can be retried once. This prevents Pub/Sub redeliveries from re-running the same job endlessly.
 - Stuck-job cleanup: endpoint `/tasks/cleanup` resets expired `processing` jobs to `queued` (schedule via Cloud Scheduler hourly).
 

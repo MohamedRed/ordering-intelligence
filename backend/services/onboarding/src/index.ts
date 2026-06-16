@@ -25,6 +25,7 @@ import {
   phoneRouteDocIdFromToNumber,
 } from './phone_routes.js';
 import { buildCorsOptions, resolveCorsOrigins } from './cors_policy.js';
+import { validateMenuFlyerCount } from './menu_ingestion_limits.js';
 
 const app = express();
 const upload = multer({ storage: multer.memoryStorage() });
@@ -718,6 +719,10 @@ app.post('/onboarding-sessions/:id/ingest-menu', async (req, res) => {
     const flyers = (snap.flyers ?? []).filter(Boolean);
     if (!flyers.length) {
       return res.status(400).json({ error: 'no_flyers' });
+    }
+    const flyerLimitError = validateMenuFlyerCount(flyers.length);
+    if (flyerLimitError) {
+      return res.status(400).json({ error: 'too_many_flyers', message: flyerLimitError });
     }
 
     // menu-ingestion expects a Firestore doc in `menus_ingest` with ID=jobId, and a Pub/Sub message {jobId}.

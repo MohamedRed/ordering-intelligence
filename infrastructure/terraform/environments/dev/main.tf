@@ -197,12 +197,15 @@ locals {
       memory                = "512Mi"
       startup_cpu_boost     = true
       env_overrides = {
-        MENU_BUCKET        = "${var.project_id}-menus-${var.environment_name}"
-        MENU_INGEST_TOPIC  = "menu-ingest"
-        MENU_UPDATES_TOPIC = "menu-updates"
-        VERTEX_PROJECT     = var.project_id
-        VERTEX_LOCATION    = var.region
-        VERTEX_MODEL       = "gemini-2.5-flash"
+        MENU_BUCKET             = "${var.project_id}-menus-${var.environment_name}"
+        MENU_INGEST_TOPIC       = "menu-ingest"
+        MENU_UPDATES_TOPIC      = "menu-updates"
+        MENU_MAX_PAGES          = "5"
+        MENU_MAX_ITEMS_PER_PAGE = "40"
+        MENU_MAX_TOTAL_ITEMS    = "120"
+        VERTEX_PROJECT          = var.project_id
+        VERTEX_LOCATION         = var.region
+        VERTEX_MODEL            = "gemini-2.5-flash"
         # Gemini 3 image/text models for menu compositing & analysis.
         COMPOSITE_MODEL      = "gemini-3-pro-image-preview"
         ANALYSIS_MODEL       = "gemini-3-pro-preview"
@@ -255,9 +258,10 @@ locals {
       memory                = "512Mi"
       startup_cpu_boost     = true
       env_overrides = {
-        GCS_BUCKET   = "${var.project_id}-menus-${var.environment_name}"
-        CORS_ORIGINS = join(",", var.onboarding_cors_origins)
-        MAKE_PUBLIC  = "true"
+        GCS_BUCKET     = "${var.project_id}-menus-${var.environment_name}"
+        CORS_ORIGINS   = join(",", var.onboarding_cors_origins)
+        MAKE_PUBLIC    = "true"
+        MENU_MAX_PAGES = "5"
       }
       secret_env_overrides = {}
     }

@@ -2,6 +2,7 @@ import express from 'express';
 import { v4 as uuidv4 } from 'uuid';
 import type { AppContext } from '../app.js';
 import type { IngestJob, IngestStartRequest, DraftMenu } from '../types.js';
+import { IngestionLimitError, parseRequestedPageCount } from '../ingestion_limits.js';
 import { analyzeMenuFromOriginal, assignThumbsToMenu, extractItemsFromComposites, generateComposites } from '../services/ingestion.js';
 import { mapDraftItemsToOrderServiceMenu } from '../services/order-service-sync.js';
 
@@ -38,8 +39,18 @@ export function ingestRouter(ctx: AppContext) {
   // 1) Start: generate signed URLs for uploads
   router.post('/ingest/start', requireAuth, async (req, res) => {
     const body = req.body as IngestStartRequest;
-    if (!body.restaurantId || !body.pageCount || body.pageCount < 1) {
+    const restaurantId = String(body.restaurantId ?? '').trim();
+    if (!restaurantId) {
       return res.status(400).json({ error: 'restaurantId and pageCount are required' });
+    }
+    let pageCount: number;
+    try {
+      pageCount = parseRequestedPageCount(body.pageCount);
+    } catch (err) {
+      if (err instanceof IngestionLimitError) {
+        return res.status(400).json({ error: err.code, message: err.message, ...err.details });
+      }
+      throw err;
     }
 
     const jobId = uuidv4();
@@ -47,8 +58,8 @@ export function ingestRouter(ctx: AppContext) {
     const files: string[] = [];
     const signedUrls: string[] = [];
 
-    for (let i = 0; i < body.pageCount; i++) {
-      const object = `menu-raw/${body.restaurantId}/${jobId}/page-${i + 1}.jpg`;
+    for (let i = 0; i < pageCount; i++) {
+      const object = `menu-raw/${restaurantId}/${jobId}/page-${i + 1}.jpg`;
       const [url] = await storage.bucket(bucket).file(object).getSignedUrl({
         action: 'write',
         expires: Date.now() + 15 * 60 * 1000,
@@ -60,7 +71,7 @@ export function ingestRouter(ctx: AppContext) {
 
     const job: IngestJob = {
       jobId,
-      restaurantId: body.restaurantId,
+      restaurantId,
       status: 'uploading',
       files,
       createdAt: now,
