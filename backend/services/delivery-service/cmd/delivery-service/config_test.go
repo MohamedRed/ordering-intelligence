@@ -29,3 +29,29 @@ func TestLoadConfigRejectsWildcardCORSOrigins(t *testing.T) {
 		t.Fatal("expected loadConfig to reject wildcard CORS origins")
 	}
 }
+
+func TestLoadConfigRejectsMockProviderModeInProduction(t *testing.T) {
+	setRequiredConfigEnv(t)
+	t.Setenv("ENVIRONMENT", "production")
+	t.Setenv("PROVIDER_MODE", "mock")
+
+	if _, err := loadConfig(); err == nil {
+		t.Fatal("expected loadConfig to reject mock provider mode in production")
+	}
+}
+
+func TestLoadConfigAcceptsLiveProviderModeWithCredentialsInProduction(t *testing.T) {
+	setRequiredConfigEnv(t)
+	t.Setenv("ENVIRONMENT", "production")
+	t.Setenv("PROVIDER_MODE", "live")
+	t.Setenv("UBER_DIRECT_CUSTOMER_ID", "customer-123")
+	t.Setenv("UBER_DIRECT_ACCESS_TOKEN", "token-123")
+
+	cfg, err := loadConfig()
+	if err != nil {
+		t.Fatalf("unexpected loadConfig error: %v", err)
+	}
+	if cfg.ProviderMode != deliveryProviderModeLive {
+		t.Fatalf("expected live provider mode, got %q", cfg.ProviderMode)
+	}
+}

@@ -399,7 +399,7 @@ locals {
         DISPATCH_SERVICE_URL        = local.service_urls.dispatch_service
         ORDERS_EVENTS_OIDC_AUDIENCE = local.service_urls.delivery_service
         DELIVERIES_EVENTS_TOPIC     = module.core.pubsub_topics["deliveries-events"]
-        PROVIDER_MODE               = "mock"
+        PROVIDER_MODE               = "live"
       }
       secret_env_overrides = {}
     }

@@ -3,6 +3,7 @@ export type ConfigValue = string | number | boolean | undefined;
 export interface ConfigDefinition {
   readonly type: "string" | "number" | "boolean";
   readonly required?: boolean;
+  readonly enum?: readonly string[];
   readonly default?: ConfigValue;
   readonly description?: string;
   readonly sensitive?: boolean;

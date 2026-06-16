@@ -576,9 +576,13 @@
     },
     "PROVIDER_MODE": {
       "type": "string",
+      "enum": [
+        "mock",
+        "live"
+      ],
       "required": false,
       "default": "mock",
-      "description": "Delivery provider mode (mock for non-production)."
+      "description": "Delivery provider mode. Use mock only for local/dev; staging and production must set live."
     },
     "UBER_DIRECT_API_KEY": {
       "type": "string",
