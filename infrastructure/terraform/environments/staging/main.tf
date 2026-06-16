@@ -156,6 +156,8 @@ locals {
       env_overrides = {
         ENVIRONMENT             = var.environment_name
         FIRESTORE_PROJECT_ID    = var.project_id
+        FIREBASE_PROJECT_ID     = var.project_id
+        REQUIRE_AUTH            = "true"
         CORS_ORIGINS            = join(",", var.agent_customization_cors_origins)
         ELEVENLABS_API_BASE_URL = "https://api.elevenlabs.io"
       }

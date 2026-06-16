@@ -366,6 +366,56 @@
       "description": "Stripe publishable key for embedded onboarding pages."
     }
   },
+  "agent-customization": {
+    "PORT": {
+      "type": "number",
+      "default": 8080,
+      "description": "HTTP port for agent-customization service."
+    },
+    "ENVIRONMENT": {
+      "type": "string",
+      "default": "development",
+      "description": "Deployment environment identifier."
+    },
+    "CORS_ORIGINS": {
+      "type": "string",
+      "required": true,
+      "description": "Comma-separated browser origins allowed to call agent-customization. Staging and production require explicit origins and disallow wildcards."
+    },
+    "FIRESTORE_PROJECT_ID": {
+      "type": "string",
+      "required": true,
+      "description": "Firestore project identifier."
+    },
+    "FIREBASE_PROJECT_ID": {
+      "type": "string",
+      "required": false,
+      "description": "Firebase project ID used to verify admin and business Firebase ID tokens. Required when agent customization auth is enabled."
+    },
+    "GOOGLE_APPLICATION_CREDENTIALS": {
+      "type": "string",
+      "required": false,
+      "description": "Path to service account JSON for Firestore/Firebase access."
+    },
+    "REQUIRE_AUTH": {
+      "type": "string",
+      "required": false,
+      "default": "true",
+      "description": "Whether voice customization endpoints require Firebase bearer auth. Staging and production cannot disable it."
+    },
+    "ELEVENLABS_API_KEY": {
+      "type": "string",
+      "required": true,
+      "sensitive": true,
+      "description": "ElevenLabs API key used for voice list/create/preview and agent branch updates."
+    },
+    "ELEVENLABS_API_BASE_URL": {
+      "type": "string",
+      "required": false,
+      "default": "https://api.elevenlabs.io",
+      "description": "ElevenLabs API base URL."
+    }
+  },
   "agent-webhooks": {
     "PORT": {
       "type": "number",
