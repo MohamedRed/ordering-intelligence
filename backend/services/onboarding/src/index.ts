@@ -1,7 +1,6 @@
 import 'dotenv/config';
 import express from 'express';
 import cors from 'cors';
-import multer from 'multer';
 import morgan from 'morgan';
 import { Storage } from '@google-cloud/storage';
 import { Firestore, FieldValue, Timestamp } from '@google-cloud/firestore';
@@ -26,9 +25,9 @@ import {
 } from './phone_routes.js';
 import { buildCorsOptions, resolveCorsOrigins } from './cors_policy.js';
 import { validateMenuFlyerCount } from './menu_ingestion_limits.js';
+import { registerMenuFlyerUploadRoutes } from './menu_flyer_upload.js';
 
 const app = express();
-const upload = multer({ storage: multer.memoryStorage() });
 
 const PORT = Number(process.env.PORT) || 8080;
 const BUCKET = process.env.GCS_BUCKET || 'ordering-intelligence-menus-dev';
@@ -345,6 +344,12 @@ registerMerchantStripeEmbedRoutes({
   stripe,
   publicBaseUrl: PUBLIC_BASE_URL,
   stripePublishableKey: STRIPE_PUBLISHABLE_KEY,
+});
+registerMenuFlyerUploadRoutes({
+  app,
+  bucket,
+  publicBaseUrl: PUBLIC_BASE_URL,
+  makePublic: MAKE_PUBLIC,
 });
 // Dedicated raw parser for Pub/Sub push (accept any content-type)
 const pubsubRaw = bodyParser.raw({ type: '*/*' });
@@ -1315,59 +1320,6 @@ app.get('/onboarding-sessions/:id/ingest-workflow', async (req, res) => {
   } catch (err: any) {
     console.error('ingest-workflow error', err);
     res.status(500).json({ error: 'ingest_workflow_failed', message: err.message });
-  }
-});
-
-app.post('/uploads/menu-flyer', upload.single('file'), async (req, res) => {
-  try {
-    if (!req.file) {
-      return res.status(400).json({ error: 'file is required (field "file")' });
-    }
-    const { originalname, buffer, mimetype } = req.file;
-    const ext = originalname.split('.').pop() || '';
-    const key = `menu-flyers/${uuidv4()}-${originalname}`;
-
-    const file = bucket.file(key);
-    await file.save(buffer, {
-      resumable: false,
-      contentType: mimetype || 'application/octet-stream',
-      metadata: {
-        cacheControl: 'public, max-age=86400',
-      },
-    });
-
-    let url: string | undefined;
-    if (MAKE_PUBLIC) {
-      // With uniform bucket-level access, per-object ACLs are disabled; use a signed URL instead.
-      const [signed] = await file.getSignedUrl({
-        action: 'read',
-        expires: Date.now() + 7 * 24 * 60 * 60 * 1000, // 7 days
-      });
-      url = signed;
-    }
-    if (!url) {
-      const baseUrl =
-        PUBLIC_BASE_URL?.replace(/\/$/, '') || `https://storage.googleapis.com/${bucket.name}`;
-      url = `${baseUrl}/${key}`;
-    }
-
-    res.status(201).json({ url, key, bucket: bucket.name, contentType: mimetype, ext });
-  } catch (err) {
-    console.error('Upload failed', err);
-    res.status(500).json({ error: 'upload_failed' });
-  }
-});
-
-app.delete('/uploads/menu-flyer', express.json(), async (req, res) => {
-  try {
-    const key = req.body?.key as string | undefined;
-    if (!key) return res.status(400).json({ error: 'key_required' });
-    const file = bucket.file(key);
-    await file.delete({ ignoreNotFound: true });
-    res.status(204).send();
-  } catch (err) {
-    console.error('Delete failed', err);
-    res.status(500).json({ error: 'delete_failed' });
   }
 });
 

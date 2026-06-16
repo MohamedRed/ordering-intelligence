@@ -1,4 +1,3 @@
-
 import 'package:flutter/material.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
 import 'flyer_attachment.dart';
@@ -38,7 +37,7 @@ class FlyerTile extends StatelessWidget {
                                 )
                               : const Icon(Icons.image_outlined, size: 36)),
                     )
-                  : const Icon(Icons.picture_as_pdf, size: 36, color: Colors.red),
+                  : const Icon(Icons.image_not_supported_outlined, size: 36),
             ),
             Positioned(
               top: 4,
@@ -111,7 +110,8 @@ class AddFlyerTile extends StatelessWidget {
       child: OutlinedButton(
         style: OutlinedButton.styleFrom(
           side: BorderSide(color: cs.border),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         ),
         onPressed: onPick,
         child: Column(
@@ -119,7 +119,8 @@ class AddFlyerTile extends StatelessWidget {
           children: const [
             Icon(Icons.add, size: 20),
             SizedBox(height: 6),
-            Text('Add flyer', textAlign: TextAlign.center, style: TextStyle(fontSize: 12)),
+            Text('Add flyer',
+                textAlign: TextAlign.center, style: TextStyle(fontSize: 12)),
           ],
         ),
       ),

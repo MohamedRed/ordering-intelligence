@@ -457,7 +457,6 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
     if (lower.endsWith('.jpg') || lower.endsWith('.jpeg')) return 'image/jpeg';
     if (lower.endsWith('.png')) return 'image/png';
     if (lower.endsWith('.webp')) return 'image/webp';
-    if (lower.endsWith('.pdf')) return 'application/pdf';
     // Signed URLs often omit the filename extension; assume image for menu-flyer keys.
     if (lower.contains('/menu-flyers/')) return 'image/jpeg';
     return 'application/octet-stream';
@@ -3159,7 +3158,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
     final result = await FilePicker.platform.pickFiles(
       allowMultiple: multiple,
       type: FileType.custom,
-      allowedExtensions: ['png', 'jpg', 'jpeg', 'webp', 'pdf'],
+      allowedExtensions: ['png', 'jpg', 'jpeg', 'webp'],
       withData: true,
     );
     if (result == null) return;
@@ -3213,8 +3212,6 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
         return 'image/png';
       case 'webp':
         return 'image/webp';
-      case 'pdf':
-        return 'application/pdf';
       default:
         return 'application/octet-stream';
     }

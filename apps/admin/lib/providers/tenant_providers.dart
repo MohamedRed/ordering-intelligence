@@ -473,7 +473,6 @@ class TenantApi {
     if (ext == 'jpg' || ext == 'jpeg') mediaType = MediaType('image', 'jpeg');
     if (ext == 'png') mediaType = MediaType('image', 'png');
     if (ext == 'webp') mediaType = MediaType('image', 'webp');
-    if (ext == 'pdf') mediaType = MediaType('application', 'pdf');
 
     request.files.add(http.MultipartFile.fromBytes(
       'file',

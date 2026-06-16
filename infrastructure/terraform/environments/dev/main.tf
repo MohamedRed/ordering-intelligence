@@ -262,10 +262,11 @@ locals {
       memory                = "512Mi"
       startup_cpu_boost     = true
       env_overrides = {
-        GCS_BUCKET     = "${var.project_id}-menus-${var.environment_name}"
-        CORS_ORIGINS   = join(",", var.onboarding_cors_origins)
-        MAKE_PUBLIC    = "true"
-        MENU_MAX_PAGES = "5"
+        GCS_BUCKET                  = "${var.project_id}-menus-${var.environment_name}"
+        CORS_ORIGINS                = join(",", var.onboarding_cors_origins)
+        MAKE_PUBLIC                 = "true"
+        MENU_MAX_PAGES              = "5"
+        MENU_FLYER_MAX_UPLOAD_BYTES = "10485760"
       }
       secret_env_overrides = {}
     }

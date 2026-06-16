@@ -103,7 +103,6 @@ function inferMime(p: string): string {
   const ext = path.extname(p).toLowerCase();
   if (ext === '.png') return 'image/png';
   if (ext === '.jpg' || ext === '.jpeg') return 'image/jpeg';
-  if (ext === '.pdf') return 'application/pdf';
   return 'application/octet-stream';
 }
 

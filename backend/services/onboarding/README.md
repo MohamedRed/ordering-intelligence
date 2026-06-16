@@ -4,7 +4,7 @@ Minimal service to support admin onboarding flows (e.g., menu flyer uploads).
 
 ## Endpoints
 - `GET /healthz` – liveness probe
-- `POST /uploads/menu-flyer` – multipart upload (`file` field). Stores in GCS bucket and returns `{ url, key, bucket }`.
+- `POST /uploads/menu-flyer` – multipart image upload (`file` field; JPEG, PNG, or WebP; max size configured by `MENU_FLYER_MAX_UPLOAD_BYTES`). Stores in GCS bucket and returns `{ url, key, bucket }`.
 
 ## Environment
 - `PORT` (default `8080`)
@@ -12,6 +12,7 @@ Minimal service to support admin onboarding flows (e.g., menu flyer uploads).
 - `CORS_ORIGINS` (comma-separated, required; wildcard is rejected in staging/production)
 - `PUBLIC_BASE_URL` (optional, override returned URL base). If unset, uses `https://storage.googleapis.com/<bucket>`.
 - `MAKE_PUBLIC` (`true`|`false`, default `true`) – when true, uploaded files are made public.
+- `MENU_FLYER_MAX_UPLOAD_BYTES` (default `10485760`) – max upload size for menu flyer images.
 
 ## Local dev
 ```bash
