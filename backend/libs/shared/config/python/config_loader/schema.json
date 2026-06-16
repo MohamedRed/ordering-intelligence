@@ -257,6 +257,11 @@
       "default": "development",
       "description": "Deployment environment identifier."
     },
+    "CORS_ORIGINS": {
+      "type": "string",
+      "required": true,
+      "description": "Comma-separated list of explicit browser origins allowed to call admin-service. Wildcards are not allowed."
+    },
     "FIRESTORE_PROJECT_ID": {
       "type": "string",
       "required": true,

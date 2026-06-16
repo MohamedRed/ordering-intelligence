@@ -141,7 +141,7 @@ locals {
         FIRESTORE_PROJECT_ID = var.project_id
         FIREBASE_PROJECT_ID  = var.project_id
         REQUIRE_AUTH         = "true"
-        CORS_ORIGINS         = "*"
+        CORS_ORIGINS         = join(",", var.admin_service_cors_origins)
       }
       secret_env_overrides = {}
     }

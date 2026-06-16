@@ -103,6 +103,16 @@ variable "cloud_run_overrides" {
   default = {}
 }
 
+variable "admin_service_cors_origins" {
+  description = "Explicit browser origins allowed to call admin-service. Wildcards are not allowed."
+  type        = list(string)
+
+  validation {
+    condition     = length(var.admin_service_cors_origins) > 0 && !contains(var.admin_service_cors_origins, "*")
+    error_message = "admin_service_cors_origins must contain at least one explicit origin and cannot include '*'."
+  }
+}
+
 variable "agent_customization_cors_origins" {
   description = "Explicit browser origins allowed to call agent-customization. Wildcards are not allowed."
   type        = list(string)

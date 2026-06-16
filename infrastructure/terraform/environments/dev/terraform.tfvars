@@ -9,6 +9,15 @@ custom_domain_prefix             = "dev-"
 enable_cloud_dns                 = true
 enable_cloud_run_domain_mappings = true
 
+admin_service_cors_origins = [
+  "http://localhost:3000",
+  "http://localhost:4000",
+  "http://localhost:5173",
+  "http://localhost:8080",
+  "https://liive-dev-admin.web.app",
+  "https://liive-dev-business.web.app",
+]
+
 agent_customization_cors_origins = [
   "http://localhost:3000",
   "http://localhost:4000",

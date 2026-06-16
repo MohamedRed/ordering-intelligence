@@ -4,6 +4,12 @@ billing_account = ""
 custom_domain_base = ""
 enable_cloud_dns = false
 
+admin_service_cors_origins = [
+  "http://localhost:3000",
+  "https://admin.example.com",
+  "https://business.example.com",
+]
+
 agent_customization_cors_origins = [
   "http://localhost:3000",
   "https://admin.example.com",

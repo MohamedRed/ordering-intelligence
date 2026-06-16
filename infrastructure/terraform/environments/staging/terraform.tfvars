@@ -10,6 +10,11 @@ order_service_lb_hostname         = "staging-order-service.liive.app"
 order_service_lb_certificate_mode = "MANAGED"
 order_service_lb_managed_domains  = ["staging-order-service.liive.app"]
 
+admin_service_cors_origins = [
+  "https://staging-admin.liive.app",
+  "https://staging-business.liive.app",
+]
+
 agent_customization_cors_origins = [
   "https://staging-admin.liive.app",
   "https://staging-business.liive.app",

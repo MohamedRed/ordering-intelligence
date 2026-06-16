@@ -119,6 +119,9 @@ func TestNewFirestoreClientMissingProject(t *testing.T) {
 
 func TestLoadConfigDefaultsPortAndEnv(t *testing.T) {
 	t.Setenv("PORT", "")
+	t.Setenv("CORS_ORIGINS", "http://localhost:3000")
+	t.Setenv("FIRESTORE_PROJECT_ID", "test-project")
+	t.Setenv("FIREBASE_PROJECT_ID", "test-project")
 	cfg, err := loadConfig()
 	if err != nil {
 		// loadConfig relies on sharedconfig; if it fails due to missing fixture, skip
@@ -126,5 +129,14 @@ func TestLoadConfigDefaultsPortAndEnv(t *testing.T) {
 	}
 	if cfg.Port != "8085" {
 		t.Fatalf("expected default port 8085, got %s", cfg.Port)
+	}
+}
+
+func TestLoadConfigRequiresCORSOrigins(t *testing.T) {
+	t.Setenv("CORS_ORIGINS", "")
+	t.Setenv("FIRESTORE_PROJECT_ID", "test-project")
+	t.Setenv("FIREBASE_PROJECT_ID", "test-project")
+	if _, err := loadConfig(); err == nil {
+		t.Fatalf("expected missing CORS_ORIGINS to fail")
 	}
 }
