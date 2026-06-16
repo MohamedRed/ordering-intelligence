@@ -24,6 +24,7 @@
 
 ## Quotas / Cost
 - Default caps: `MENU_MAX_PAGES`=5, `MENU_MAX_ITEMS_PER_PAGE`=40, `MENU_MAX_TOTAL_ITEMS`=120.
+- Default image quality gates: `MENU_MIN_IMAGE_SHORT_EDGE`=600, `MENU_MIN_IMAGE_LONG_EDGE`=800, `MENU_MAX_IMAGE_PIXELS`=25000000, `MENU_MIN_LAPLACIAN_VARIANCE`=25.
 - Gemini image calls are the main cost driver—keep caps conservative; monitor Pub/Sub backlog and job counts.
 
 ## Pub/Sub

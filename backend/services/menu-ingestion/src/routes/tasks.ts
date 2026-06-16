@@ -8,6 +8,7 @@ import {
   extractItemsFromComposites,
   assignThumbsToMenu,
 } from '../services/ingestion.js';
+import { validateMenuImages } from '../services/image_quality.js';
 import { normalizeMenuStructure } from '../services/normalize_menu.js';
 import { ensureWorkflowRoot, finishWorkflowNode } from '../services/workflow.js';
 
@@ -61,6 +62,9 @@ export function tasksRouter(ctx: AppContext) {
       await ensureWorkflowRoot(jobId, job.restaurantId);
       await ensureNotCanceled();
       assertFilesWithinPageLimit(job.files);
+      await setProgress('validate_images', 5);
+      await validateMenuImages(job.files, { bucketName: bucket });
+      await ensureNotCanceled();
       const pipelineMode = (job.pipelineMode ?? 'full') as 'menu_only' | 'full';
       const nowMs = Date.now();
 

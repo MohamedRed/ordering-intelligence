@@ -31,6 +31,10 @@ MENU_INGESTION_CORS_ORIGINS=https://admin.example.com
 MENU_MAX_PAGES=5
 MENU_MAX_ITEMS_PER_PAGE=40
 MENU_MAX_TOTAL_ITEMS=120
+MENU_MIN_IMAGE_SHORT_EDGE=600
+MENU_MIN_IMAGE_LONG_EDGE=800
+MENU_MAX_IMAGE_PIXELS=25000000
+MENU_MIN_LAPLACIAN_VARIANCE=25
 ALLOW_GOOGLE_ID_TOKENS=true
 GOOGLE_ID_TOKEN_AUDIENCES=https://menu-ingestion.example.com
 GOOGLE_ID_TOKEN_ALLOWED_EMAILS=menu-ingestion@PROJECT_ID.iam.gserviceaccount.com
@@ -41,6 +45,7 @@ RENDER_TIMEOUT_MS=60000   # optional; defaults to 60s per image generation
 - Staging and production must set explicit CORS origins; wildcard origins are rejected at startup.
 - Pub/Sub push subscriptions and Cloud Scheduler jobs should set their OIDC audience to `GOOGLE_ID_TOKEN_AUDIENCES`.
 - `MENU_MAX_PAGES` is enforced before signed upload URLs are issued and again before async processing starts.
+- Menu image quality gates reject unreadable, low-resolution, oversized, and blurry uploads before Gemini analysis.
 
 Optional overrides: `STORAGE_BUCKET_MENUS`, `PUBSUB_TOPIC_MENU_INGEST`, `ORDER_SERVICE_URL` if you want to push final menus downstream later.
 

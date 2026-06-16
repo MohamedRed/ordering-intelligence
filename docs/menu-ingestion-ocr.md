@@ -6,7 +6,7 @@ Goal: let restaurants upload pictures of their menu and turn them into a structu
 
 1) **Capture/Upload**
    - Accept page-by-page menu photos through signed upload URLs.
-   - Auto-reject blurry/low-resolution/tilted images (simple Laplacian blur + perspective heuristic).
+   - Auto-reject unreadable, low-resolution, oversized, and blurry images before analysis.
    - Encourage page-by-page shots; allow multi-page uploads.
 
 2) **Image Analysis**
@@ -70,6 +70,7 @@ Goal: let restaurants upload pictures of their menu and turn them into a structu
 - Admin UI: set `MENU_INGESTION_BASE_URL` (Dart define) in the admin app to point at the per-env Cloud Run URL.
 - Pub/Sub fan-out: optional `MENU_UPDATES_TOPIC` (`PUBSUB_TOPIC_MENU_UPDATES`) will receive a message `{storeId, updatedAt, jobId, source}` on approval for downstream cache busting/agents.
 - Cost guards (defaults): accept/process max 5 pages, 40 items/page, 120 items total per job (`MENU_MAX_PAGES`, `MENU_MAX_ITEMS_PER_PAGE`, `MENU_MAX_TOTAL_ITEMS`). Increase cautiously; Gemini 3 image calls are the main cost driver.
+- Image quality guards (defaults): require short edge >= 600px, long edge >= 800px, max 25M pixels, and Laplacian blur variance >= 25 (`MENU_MIN_IMAGE_SHORT_EDGE`, `MENU_MIN_IMAGE_LONG_EDGE`, `MENU_MAX_IMAGE_PIXELS`, `MENU_MIN_LAPLACIAN_VARIANCE`).
 - Loop guard: jobs are marked `processedAt`; push handler skips reprocessing unless a `processing` job exceeds its 30m window, then it can be retried once. This prevents Pub/Sub redeliveries from re-running the same job endlessly.
 - Stuck-job cleanup: endpoint `/tasks/cleanup` resets expired `processing` jobs to `queued` (schedule via Cloud Scheduler hourly).
 
