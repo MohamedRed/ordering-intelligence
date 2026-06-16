@@ -3,11 +3,9 @@ import 'package:consumer_ui/consumer_ui.dart';
 import 'package:flutter/widgets.dart';
 
 class WebMiniAppPlatform extends MiniAppPlatform {
-  WebMiniAppPlatform({
-    ChannelGatewayApi? api,
-    PaymentsAdapter? paymentsAdapter,
-  })  : _api = api ?? ChannelGatewayApi(baseUrl: 'http://localhost'),
-        _paymentsAdapter = paymentsAdapter ?? const _NoopPaymentsAdapter();
+  WebMiniAppPlatform({ChannelGatewayApi? api, PaymentsAdapter? paymentsAdapter})
+    : _api = api ?? ChannelGatewayApi(baseUrl: 'http://localhost'),
+      _paymentsAdapter = paymentsAdapter ?? _NoopPaymentsAdapter();
 
   final ChannelGatewayApi _api;
   final PaymentsAdapter _paymentsAdapter;
@@ -97,8 +95,6 @@ class WebMiniAppPlatform extends MiniAppPlatform {
 }
 
 class _NoopPaymentsAdapter extends PaymentsAdapter {
-  const _NoopPaymentsAdapter();
-
   @override
   Future<CheckoutIntent?> startCheckout({
     required Map<String, dynamic> orderResponse,

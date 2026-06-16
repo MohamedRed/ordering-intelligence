@@ -12,7 +12,8 @@ class ChannelRoutesScreen extends ConsumerStatefulWidget {
   const ChannelRoutesScreen({super.key});
 
   @override
-  ConsumerState<ChannelRoutesScreen> createState() => _ChannelRoutesScreenState();
+  ConsumerState<ChannelRoutesScreen> createState() =>
+      _ChannelRoutesScreenState();
 }
 
 class _ChannelRoutesScreenState extends ConsumerState<ChannelRoutesScreen> {
@@ -29,9 +30,10 @@ class _ChannelRoutesScreenState extends ConsumerState<ChannelRoutesScreen> {
   void initState() {
     super.initState();
     _storeIdCtrl.text = effectiveStoreId();
-    _tenantIdCtrl.text = const String.fromEnvironment('TENANT_ID', defaultValue: 'dev');
-    _businessTypeCtrl.text =
-        const String.fromEnvironment('BUSINESS_TYPE', defaultValue: 'fast_food');
+    _tenantIdCtrl.text =
+        const String.fromEnvironment('TENANT_ID', defaultValue: 'dev');
+    _businessTypeCtrl.text = const String.fromEnvironment('BUSINESS_TYPE',
+        defaultValue: 'fast_food');
   }
 
   @override
@@ -52,9 +54,10 @@ class _ChannelRoutesScreenState extends ConsumerState<ChannelRoutesScreen> {
     _accountIdCtrl.clear();
     _agentIdCtrl.clear();
     _storeIdCtrl.text = effectiveStoreId();
-    _tenantIdCtrl.text = const String.fromEnvironment('TENANT_ID', defaultValue: 'dev');
-    _businessTypeCtrl.text =
-        const String.fromEnvironment('BUSINESS_TYPE', defaultValue: 'fast_food');
+    _tenantIdCtrl.text =
+        const String.fromEnvironment('TENANT_ID', defaultValue: 'dev');
+    _businessTypeCtrl.text = const String.fromEnvironment('BUSINESS_TYPE',
+        defaultValue: 'fast_food');
   }
 
   void _prefill(ChannelRoute route) {
@@ -134,7 +137,7 @@ class _ChannelRoutesScreenState extends ConsumerState<ChannelRoutesScreen> {
                     ),
                     const SizedBox(height: 12),
                     DropdownButtonFormField<String>(
-                      value: _channel,
+                      initialValue: _channel,
                       decoration: const InputDecoration(
                         labelText: 'Channel',
                         border: OutlineInputBorder(),
@@ -155,9 +158,8 @@ class _ChannelRoutesScreenState extends ConsumerState<ChannelRoutesScreen> {
                       controller: _accountIdCtrl,
                       label: const Text('Account ID'),
                       placeholder: const Text('Telegram bot id'),
-                      validator: (v) => v.trim().isEmpty
-                          ? 'Account ID is required'
-                          : null,
+                      validator: (v) =>
+                          v.trim().isEmpty ? 'Account ID is required' : null,
                     ),
                     const SizedBox(height: 12),
                     ShadInputFormField(
@@ -201,7 +203,8 @@ class _ChannelRoutesScreenState extends ConsumerState<ChannelRoutesScreen> {
                         ),
                         ShadButton(
                           onPressed: _submit,
-                          child: Text(_editing == null ? 'Save route' : 'Update route'),
+                          child: Text(
+                              _editing == null ? 'Save route' : 'Update route'),
                         ),
                       ],
                     ),
@@ -243,7 +246,8 @@ class _ChannelRoutesScreenState extends ConsumerState<ChannelRoutesScreen> {
                                 children: [
                                   Text(
                                     '${route.channel} • ${route.accountId}',
-                                    style: const TextStyle(fontWeight: FontWeight.w600),
+                                    style: const TextStyle(
+                                        fontWeight: FontWeight.w600),
                                   ),
                                   const SizedBox(height: 4),
                                   Text('Store: ${route.storeId}'),

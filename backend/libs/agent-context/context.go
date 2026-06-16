@@ -268,10 +268,7 @@ func DocIDFromElevenLabsPhoneNumberID(id string) string {
 
 func DocIDFromToNumber(to string) string {
 	n := NormalizePhoneNumber(to)
-	if strings.HasPrefix(n, "+") {
-		n = n[1:]
-	}
-	return "to_" + n
+	return "to_" + strings.TrimPrefix(n, "+")
 }
 
 func DocIDFromChannelAccount(channel, accountID string) string {

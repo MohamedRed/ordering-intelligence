@@ -239,7 +239,7 @@ jobs:
           flutter-version: '3.38.5'
           channel: 'stable'
           cache: true
-          cache-dependency-path: apps/**/pubspec.lock
+          pub-cache-key: flutter-pub-${{ runner.os }}-${{ hashFiles('apps/**/pubspec.lock') }}
 
       - name: Trust Flutter SDK directory
         run: git config --global --add safe.directory "$FLUTTER_ROOT"

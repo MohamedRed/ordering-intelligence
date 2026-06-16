@@ -364,10 +364,11 @@ class _VoiceScreenState extends State<VoiceScreen> {
             children: [
               Expanded(
                 child: DropdownButtonFormField<String>(
-                  value: _voiceId != null && _voiceId!.isNotEmpty
+                  initialValue: _voiceId != null && _voiceId!.isNotEmpty
                       ? _voiceId
                       : null,
-                  decoration: const InputDecoration(labelText: 'Existing voices'),
+                  decoration:
+                      const InputDecoration(labelText: 'Existing voices'),
                   items: _voiceOptions
                       .map((v) => DropdownMenuItem(
                             value: v.id,
@@ -428,8 +429,8 @@ class _VoiceScreenState extends State<VoiceScreen> {
                 ShadBadge.secondary(
                   padding:
                       const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                  child: Text(
-                      'Applied: ${_appliedVoiceName ?? _appliedVoiceId}'),
+                  child:
+                      Text('Applied: ${_appliedVoiceName ?? _appliedVoiceId}'),
                 ),
             ],
           ),
@@ -448,7 +449,8 @@ class _VoiceScreenState extends State<VoiceScreen> {
             _TipTile(
               icon: Icons.headset_off,
               title: 'Avoid noisy environments',
-              body: 'Background sounds interfere with recording quality results.',
+              body:
+                  'Background sounds interfere with recording quality results.',
             ),
             SizedBox(width: 16),
             _TipTile(
@@ -503,11 +505,12 @@ class _VoiceScreenState extends State<VoiceScreen> {
                 const SizedBox(height: 14),
                 Row(
                   children: [
-                    _WaveformBars(color: cs.onSurfaceVariant.withOpacity(0.6)),
+                    _WaveformBars(
+                      color: cs.onSurfaceVariant.withValues(alpha: 0.6),
+                    ),
                     const Spacer(),
                     _TimePill(
-                      text:
-                          '${_formatClock(_recordingElapsed)}  /  00:30',
+                      text: '${_formatClock(_recordingElapsed)}  /  00:30',
                     ),
                   ],
                 ),
@@ -543,13 +546,14 @@ class _VoiceScreenState extends State<VoiceScreen> {
                   icon: const Icon(Icons.play_arrow),
                 ),
                 IconButton(
-                  onPressed: () => setState(() => _voiceSamples.removeAt(index)),
+                  onPressed: () =>
+                      setState(() => _voiceSamples.removeAt(index)),
                   icon: const Icon(Icons.delete_outline),
                 ),
               ],
             ),
           );
-        }).toList(),
+        }),
         const SizedBox(height: 4),
         Row(
           children: [
@@ -589,9 +593,8 @@ class _VoiceScreenState extends State<VoiceScreen> {
             const Text('10 seconds of audio required'),
             const Spacer(),
             ShadButton(
-              onPressed: voiceReady
-                  ? () => setState(() => _voiceCloneStep = 1)
-                  : null,
+              onPressed:
+                  voiceReady ? () => setState(() => _voiceCloneStep = 1) : null,
               child: const Text('Next'),
             ),
           ],
@@ -633,11 +636,13 @@ class _VoiceScreenState extends State<VoiceScreen> {
         Row(
           children: const [
             Expanded(
-              child: Text('Label', style: TextStyle(fontWeight: FontWeight.w600)),
+              child:
+                  Text('Label', style: TextStyle(fontWeight: FontWeight.w600)),
             ),
             SizedBox(width: 10),
             Expanded(
-              child: Text('Value', style: TextStyle(fontWeight: FontWeight.w600)),
+              child:
+                  Text('Value', style: TextStyle(fontWeight: FontWeight.w600)),
             ),
           ],
         ),
@@ -679,7 +684,7 @@ class _VoiceScreenState extends State<VoiceScreen> {
               ],
             ),
           );
-        }).toList(),
+        }),
         ShadButton.outline(
           onPressed: () => setState(() => _voiceLabels.add(_VoiceLabelRow())),
           child: const Text('Add label'),
@@ -933,9 +938,7 @@ class _VoiceStepItem extends StatelessWidget {
           label,
           style: TextStyle(
             fontWeight: active ? FontWeight.w700 : FontWeight.w500,
-            color: active
-                ? null
-                : cs.onSurfaceVariant,
+            color: active ? null : cs.onSurfaceVariant,
           ),
         ),
       ],
@@ -1158,12 +1161,12 @@ class _FinishCard extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(title, style: const TextStyle(fontWeight: FontWeight.w700)),
+                Text(title,
+                    style: const TextStyle(fontWeight: FontWeight.w700)),
                 const SizedBox(height: 2),
                 Text(body,
                     style: TextStyle(
-                        color:
-                            Theme.of(context).colorScheme.onSurfaceVariant)),
+                        color: Theme.of(context).colorScheme.onSurfaceVariant)),
               ],
             ),
           ),
@@ -1178,28 +1181,20 @@ class _DashedBorder extends StatelessWidget {
   const _DashedBorder({
     required this.child,
     required this.color,
-    this.radius = 16,
-    this.dashLength = 6,
-    this.gapLength = 4,
-    this.strokeWidth = 1.2,
   });
 
   final Widget child;
   final Color color;
-  final double radius;
-  final double dashLength;
-  final double gapLength;
-  final double strokeWidth;
 
   @override
   Widget build(BuildContext context) {
     return CustomPaint(
       painter: _DashedBorderPainter(
         color: color,
-        radius: radius,
-        dashLength: dashLength,
-        gapLength: gapLength,
-        strokeWidth: strokeWidth,
+        radius: 16,
+        dashLength: 6,
+        gapLength: 4,
+        strokeWidth: 1.2,
       ),
       child: child,
     );

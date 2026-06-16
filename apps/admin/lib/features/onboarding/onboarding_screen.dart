@@ -5,7 +5,6 @@ import 'package:file_picker/file_picker.dart';
 import 'dart:async';
 import 'dart:math' as math;
 import 'dart:convert';
-import 'dart:typed_data';
 import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 
@@ -74,7 +73,6 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
   String? _agentId;
   String? _voiceId;
   String? _voiceName;
-  String? _voiceBranchId;
   bool _voiceApplied = false;
   bool _voiceLoading = false;
   bool _voiceSaving = false;
@@ -348,9 +346,10 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
               '')
           .toString()
           .trim();
-      final fuelDefaultCents = _anyToInt(business?['fuel_default_prepay_cents'] ??
-          business?['fuel_prepay_default_cents'] ??
-          business?['fuelDefaultPrepayCents']);
+      final fuelDefaultCents = _anyToInt(
+          business?['fuel_default_prepay_cents'] ??
+              business?['fuel_prepay_default_cents'] ??
+              business?['fuelDefaultPrepayCents']);
       var resumeStep = _stepMenu;
 
       setState(() {
@@ -362,7 +361,6 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
         _agentId = agentId;
         _voiceId = voiceId;
         _voiceName = voiceName;
-        _voiceBranchId = branchId;
         _voiceApplied = branchId != null && branchId.isNotEmpty;
         if (voiceName != null && voiceName.isNotEmpty) {
           _voiceNameCtrl.text = voiceName;
@@ -416,7 +414,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
           } else if (!done) {
             // Job is running, but we already have a fast draft: treat this as image enrichment.
             resumeStep = _stepImages;
-        } else if (agentId != null && agentId.isNotEmpty) {
+          } else if (agentId != null && agentId.isNotEmpty) {
             // If agent is already created, proceed to Stripe (or finalize if Stripe is already ready/skipped).
             resumeStep = _step2Valid() ? _stepFinalize : _stepStripe;
           } else {
@@ -735,6 +733,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
       if (!mounted) return;
       setState(() => _agentId = agentId);
       await _applyVoiceIfNeeded(sessionId);
+      if (!mounted) return;
       if (!auto) {
         showShadSnack(
           context,
@@ -905,9 +904,11 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
     try {
       final api = AgentCustomizationApi();
       final name = _voiceOptions
-          .firstWhere((v) => v.id == voiceId, orElse: () => ElevenLabsVoice(id: voiceId, name: voiceId))
+          .firstWhere((v) => v.id == voiceId,
+              orElse: () => ElevenLabsVoice(id: voiceId, name: voiceId))
           .name;
-      await api.setSessionVoice(sessionId: sessionId, voiceId: voiceId, voiceName: name);
+      await api.setSessionVoice(
+          sessionId: sessionId, voiceId: voiceId, voiceName: name);
       if (!mounted) return;
       setState(() {
         _voiceId = voiceId;
@@ -1760,9 +1761,8 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                             setState(() => _businessType = v ?? 'fast_food'),
                   );
                   final currencyField = DropdownButtonFormField<String>(
-                    value: _currencyCode,
-                    decoration:
-                        const InputDecoration(labelText: 'Currency'),
+                    initialValue: _currencyCode,
+                    decoration: const InputDecoration(labelText: 'Currency'),
                     items: const [
                       DropdownMenuItem(value: 'USD', child: Text('USD')),
                       DropdownMenuItem(value: 'EUR', child: Text('EUR')),
@@ -1773,7 +1773,8 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                   );
                   final fuelPrepayField = ShadInputFormField(
                     controller: _fuelPrepayCtrl,
-                    label: Text('Default fuel prepay (${_currencyCode.toUpperCase()})'),
+                    label: Text(
+                        'Default fuel prepay (${_currencyCode.toUpperCase()})'),
                     keyboardType:
                         const TextInputType.numberWithOptions(decimal: true),
                   );
@@ -1846,7 +1847,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                 children: [
                   Expanded(
                     child: DropdownButtonFormField<String>(
-                      value: _voiceId != null && _voiceId!.isNotEmpty
+                      initialValue: _voiceId != null && _voiceId!.isNotEmpty
                           ? _voiceId
                           : null,
                       decoration: const InputDecoration(
@@ -1975,7 +1976,8 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
             _TipTile(
               icon: Icons.headset_off,
               title: 'Avoid noisy environments',
-              body: 'Background sounds interfere with recording quality results.',
+              body:
+                  'Background sounds interfere with recording quality results.',
             ),
             SizedBox(width: 16),
             _TipTile(
@@ -2032,11 +2034,12 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                 const SizedBox(height: 14),
                 Row(
                   children: [
-                    _WaveformBars(color: cs.onSurfaceVariant.withOpacity(0.6)),
+                    _WaveformBars(
+                      color: cs.onSurfaceVariant.withValues(alpha: 0.6),
+                    ),
                     const Spacer(),
                     _TimePill(
-                      text:
-                          '${_formatClock(_recordingElapsed)}  /  00:30',
+                      text: '${_formatClock(_recordingElapsed)}  /  00:30',
                     ),
                   ],
                 ),
@@ -2072,13 +2075,14 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                   icon: const Icon(Icons.play_arrow),
                 ),
                 IconButton(
-                  onPressed: () => setState(() => _voiceSamples.removeAt(index)),
+                  onPressed: () =>
+                      setState(() => _voiceSamples.removeAt(index)),
                   icon: const Icon(Icons.delete_outline),
                 ),
               ],
             ),
           );
-        }).toList(),
+        }),
         const SizedBox(height: 4),
         Row(
           children: [
@@ -2118,9 +2122,8 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
             const Text('10 seconds of audio required'),
             const Spacer(),
             ShadButton(
-              onPressed: voiceReady
-                  ? () => setState(() => _voiceCloneStep = 1)
-                  : null,
+              onPressed:
+                  voiceReady ? () => setState(() => _voiceCloneStep = 1) : null,
               child: const Text('Next'),
             ),
           ],
@@ -2161,9 +2164,13 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
         const SizedBox(height: 12),
         Row(
           children: const [
-            Expanded(child: Text('Label', style: TextStyle(fontWeight: FontWeight.w600))),
+            Expanded(
+                child: Text('Label',
+                    style: TextStyle(fontWeight: FontWeight.w600))),
             SizedBox(width: 10),
-            Expanded(child: Text('Value', style: TextStyle(fontWeight: FontWeight.w600))),
+            Expanded(
+                child: Text('Value',
+                    style: TextStyle(fontWeight: FontWeight.w600))),
           ],
         ),
         const SizedBox(height: 6),
@@ -2204,7 +2211,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
               ],
             ),
           );
-        }).toList(),
+        }),
         ShadButton.outline(
           onPressed: () => setState(() => _voiceLabels.add(_VoiceLabelRow())),
           child: const Text('Add label'),
@@ -2293,8 +2300,6 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
     );
   }
 
-  String _formatDuration(Duration d) => _formatClock(d);
-
   Widget _step2() {
     final cs = Theme.of(context).colorScheme;
     final demoSkip = _demoSkipStripe;
@@ -2338,7 +2343,8 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                     try {
                       final api = ref.read(tenantApiProvider);
                       final sessionId = await _ensureSession(api);
-                      final url = await api.createStripeEmbeddedSession(sessionId);
+                      final url =
+                          await api.createStripeEmbeddedSession(sessionId);
                       if (!await launchUrl(Uri.parse(url),
                           mode: LaunchMode.externalApplication)) {
                         throw Exception('Could not launch Stripe onboarding');
@@ -2574,13 +2580,13 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                 value: _workflowVisible,
                 onChanged:
                     (_ingestJobIds.isEmpty && !inProgress && !done && !failed)
-                    ? null
-                    : (v) async {
-                        setState(() => _workflowVisible = v);
-                        if (v) {
-                          await _pollWorkflowOnce(force: true);
-                        }
-                      },
+                        ? null
+                        : (v) async {
+                            setState(() => _workflowVisible = v);
+                            if (v) {
+                              await _pollWorkflowOnce(force: true);
+                            }
+                          },
               ),
             ],
           ),
@@ -2916,12 +2922,11 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
 
   Widget _step4() {
     final cs = Theme.of(context).colorScheme;
-    final typeLabel =
-        _businessType == 'auto_parts'
-            ? 'Auto Parts'
-            : _businessType == 'gas_station'
-                ? 'Gas Station'
-                : 'Fast Food';
+    final typeLabel = _businessType == 'auto_parts'
+        ? 'Auto Parts'
+        : _businessType == 'gas_station'
+            ? 'Gas Station'
+            : 'Fast Food';
     final storeId = _storeIdCtrl.text.trim();
     final tenantId = widget.tenantId.trim();
     return ShadCard(
@@ -3332,7 +3337,6 @@ class _VoiceStepItem extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
-    final color = done || active ? Colors.green : cs.onSurfaceVariant;
     return Row(
       children: [
         Container(
@@ -3575,8 +3579,8 @@ class _FinishCard extends StatelessWidget {
                     style: const TextStyle(fontWeight: FontWeight.w700)),
                 const SizedBox(height: 2),
                 Text(body,
-                    style:
-                        TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant)),
+                    style: TextStyle(
+                        color: Theme.of(context).colorScheme.onSurfaceVariant)),
               ],
             ),
           ),
@@ -3591,28 +3595,24 @@ class _DashedBorder extends StatelessWidget {
   const _DashedBorder({
     required this.child,
     required this.color,
-    this.radius = 16,
-    this.dashLength = 6,
-    this.gapLength = 4,
-    this.strokeWidth = 1.2,
   });
 
   final Widget child;
   final Color color;
-  final double radius;
-  final double dashLength;
-  final double gapLength;
-  final double strokeWidth;
+  static const double _radius = 16;
+  static const double _dashLength = 6;
+  static const double _gapLength = 4;
+  static const double _strokeWidth = 1.2;
 
   @override
   Widget build(BuildContext context) {
     return CustomPaint(
       painter: _DashedBorderPainter(
         color: color,
-        radius: radius,
-        dashLength: dashLength,
-        gapLength: gapLength,
-        strokeWidth: strokeWidth,
+        radius: _radius,
+        dashLength: _dashLength,
+        gapLength: _gapLength,
+        strokeWidth: _strokeWidth,
       ),
       child: child,
     );

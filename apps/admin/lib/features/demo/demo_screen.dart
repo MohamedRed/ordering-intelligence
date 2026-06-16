@@ -108,7 +108,8 @@ class _DemoScreenState extends ConsumerState<DemoScreen> {
     return _fastFoodAgentId;
   }
 
-  String _businessOrdersUrl({required String baseUrl, required String storeId}) {
+  String _businessOrdersUrl(
+      {required String baseUrl, required String storeId}) {
     final trimmed = baseUrl.trim().replaceAll(RegExp(r'/*$'), '');
     // Flutter web typically uses hash routing unless path strategy is enabled.
     return '$trimmed/#/orders?storeId=${Uri.encodeComponent(storeId)}';
@@ -149,9 +150,11 @@ class _DemoScreenState extends ConsumerState<DemoScreen> {
     final route = _demoStatus?['route'];
     final lastEvent = _demoStatus?['lastEvent'];
     final lastVars = (lastEvent is Map<String, dynamic>)
-        ? (lastEvent['dynamic_variables'] as Map?)?.cast<String, dynamic>() ?? const {}
+        ? (lastEvent['dynamic_variables'] as Map?)?.cast<String, dynamic>() ??
+            const {}
         : const <String, dynamic>{};
-    final routeMap = route is Map<String, dynamic> ? route : const <String, dynamic>{};
+    final routeMap =
+        route is Map<String, dynamic> ? route : const <String, dynamic>{};
 
     String? pickString(List<String> keys) {
       for (final key in keys) {
@@ -195,11 +198,14 @@ class _DemoScreenState extends ConsumerState<DemoScreen> {
       return null;
     }
 
-    final storeId = pickString(['store_id', 'storeId']) ?? _selectedTenant?.storeId;
-    final tenantId = pickString(['tenant_id', 'tenantId']) ?? _selectedTenant?.id;
-    final businessType =
-        pickString(['business_type', 'businessType']) ?? _selectedTenant?.businessType;
-    final etaMinutes = pickInt(['demo_eta_minutes', 'eta_minutes', 'etaMinutes']);
+    final storeId =
+        pickString(['store_id', 'storeId']) ?? _selectedTenant?.storeId;
+    final tenantId =
+        pickString(['tenant_id', 'tenantId']) ?? _selectedTenant?.id;
+    final businessType = pickString(['business_type', 'businessType']) ??
+        _selectedTenant?.businessType;
+    final etaMinutes =
+        pickInt(['demo_eta_minutes', 'eta_minutes', 'etaMinutes']);
     final isReturning = pickBool([
       'demo_is_returning_customer',
       'isReturningCustomer',
@@ -215,7 +221,9 @@ class _DemoScreenState extends ConsumerState<DemoScreen> {
     if (tenantId != null) out['tenantId'] = tenantId;
     if (businessType != null) out['businessType'] = businessType;
     if (etaMinutes != null) out['eta_minutes'] = etaMinutes.toString();
-    if (isReturning != null) out['isReturningCustomer'] = isReturning.toString();
+    if (isReturning != null) {
+      out['isReturningCustomer'] = isReturning.toString();
+    }
     if (customerName != null) out['customerName'] = customerName;
     if (topReorders != null) {
       if (topReorders is String) {
@@ -269,7 +277,8 @@ class _DemoScreenState extends ConsumerState<DemoScreen> {
             tenantId: t.id,
             storeId: t.storeId,
             businessType: t.businessType,
-            environment: const String.fromEnvironment('ENVIRONMENT', defaultValue: 'dev'),
+            environment: const String.fromEnvironment('ENVIRONMENT',
+                defaultValue: 'dev'),
             demoSessionId: jsonEncode({
               'ts': DateTime.now().toIso8601String(),
             }),
@@ -285,7 +294,8 @@ class _DemoScreenState extends ConsumerState<DemoScreen> {
       showShadSnack(
         context,
         title: 'Demo routing set',
-        message: 'Agent $_agentId will inject context for ${t.name} (${t.storeId}).',
+        message:
+            'Agent $_agentId will inject context for ${t.name} (${t.storeId}).',
         type: ShadSnackType.success,
       );
       await _refreshDemoStatus();
@@ -307,7 +317,9 @@ class _DemoScreenState extends ConsumerState<DemoScreen> {
     if (agentId.isEmpty) return;
     setState(() => _loadingStatus = true);
     try {
-      final status = await ref.read(tenantApiProvider).getDemoAgentRouteStatus(agentId: agentId);
+      final status = await ref
+          .read(tenantApiProvider)
+          .getDemoAgentRouteStatus(agentId: agentId);
       if (!mounted) return;
       setState(() {
         _demoStatus = status;
@@ -349,7 +361,7 @@ class _DemoScreenState extends ConsumerState<DemoScreen> {
                         error: (e, _) => Text('Failed to load tenants: $e'),
                         data: (tenants) {
                           return DropdownButtonFormField<Tenant>(
-                            value: _selectedTenant,
+                            initialValue: _selectedTenant,
                             decoration: const InputDecoration(
                               labelText: 'Tenant',
                               border: OutlineInputBorder(),
@@ -457,7 +469,9 @@ class _DemoScreenState extends ConsumerState<DemoScreen> {
                     const SizedBox(width: 12),
                     ShadButton(
                       onPressed: _loadingStatus ? null : _refreshDemoStatus,
-                      child: Text(_loadingStatus ? 'Refreshing…' : 'Refresh last webhook'),
+                      child: Text(_loadingStatus
+                          ? 'Refreshing…'
+                          : 'Refresh last webhook'),
                     ),
                   ],
                 ),
@@ -468,7 +482,8 @@ class _DemoScreenState extends ConsumerState<DemoScreen> {
               child: Stack(
                 children: [
                   tenantsAsync.when(
-                    loading: () => const Center(child: CircularProgressIndicator()),
+                    loading: () =>
+                        const Center(child: CircularProgressIndicator()),
                     error: (e, _) => Center(
                       child: ShadAlert.destructive(
                         title: const Text('Failed to load'),
@@ -481,7 +496,8 @@ class _DemoScreenState extends ConsumerState<DemoScreen> {
                         return Center(
                           child: ShadAlert(
                             title: const Text('Select a tenant'),
-                            description: const Text('Pick a tenant to start the split-view demo.'),
+                            description: const Text(
+                                'Pick a tenant to start the split-view demo.'),
                           ),
                         );
                       }
@@ -491,7 +507,8 @@ class _DemoScreenState extends ConsumerState<DemoScreen> {
                       );
                       final driverUrl =
                           _driverAppUrl(baseUrl: _driverBaseCtrl.text);
-                      final widgetDoc = _elevenLabsWidgetSrcDoc(agentId: _agentId);
+                      final widgetDoc =
+                          _elevenLabsWidgetSrcDoc(agentId: _agentId);
 
                       return Row(
                         children: [
@@ -504,9 +521,11 @@ class _DemoScreenState extends ConsumerState<DemoScreen> {
                                     padding: const EdgeInsets.all(12),
                                     width: double.infinity,
                                     decoration: BoxDecoration(
-                                      border: Border(bottom: BorderSide(color: cs.border)),
+                                      border: Border(
+                                          bottom: BorderSide(color: cs.border)),
                                     ),
-                                    child: Text('Agent view • ElevenLabs widget ($_agentId)'),
+                                    child: Text(
+                                        'Agent view • ElevenLabs widget ($_agentId)'),
                                   ),
                                   Expanded(
                                     child: WebIFrame(
@@ -514,23 +533,31 @@ class _DemoScreenState extends ConsumerState<DemoScreen> {
                                       srcDoc: widgetDoc,
                                     ),
                                   ),
-                                  if ((_demoStatus?['lastEvent'] as Map?) != null)
+                                  if ((_demoStatus?['lastEvent'] as Map?) !=
+                                      null)
                                     Container(
                                       width: double.infinity,
                                       padding: const EdgeInsets.all(12),
                                       decoration: BoxDecoration(
-                                        border: Border(top: BorderSide(color: cs.border)),
+                                        border: Border(
+                                            top: BorderSide(color: cs.border)),
                                       ),
                                       child: Builder(
                                         builder: (context) {
-                                          final lastEvent = _demoStatus?['lastEvent'] as Map?;
-                                          final dv = (lastEvent?['dynamic_variables'] as Map?) ?? const {};
+                                          final lastEvent =
+                                              _demoStatus?['lastEvent'] as Map?;
+                                          final dv =
+                                              (lastEvent?['dynamic_variables']
+                                                      as Map?) ??
+                                                  const {};
                                           final storeId = dv['storeId'];
                                           final tenantId = dv['tenantId'];
-                                          final businessType = dv['businessType'];
+                                          final businessType =
+                                              dv['businessType'];
                                           return Text(
                                             'Last injected: tenantId=$tenantId • storeId=$storeId • businessType=$businessType',
-                                            style: TextStyle(color: cs.mutedForeground),
+                                            style: TextStyle(
+                                                color: cs.mutedForeground),
                                           );
                                         },
                                       ),
@@ -549,9 +576,11 @@ class _DemoScreenState extends ConsumerState<DemoScreen> {
                                     padding: const EdgeInsets.all(12),
                                     width: double.infinity,
                                     decoration: BoxDecoration(
-                                      border: Border(bottom: BorderSide(color: cs.border)),
+                                      border: Border(
+                                          bottom: BorderSide(color: cs.border)),
                                     ),
-                                    child: Text('Business view • Orders (${t.storeId})'),
+                                    child: Text(
+                                        'Business view • Orders (${t.storeId})'),
                                   ),
                                   Expanded(
                                     child: WebIFrame(
@@ -573,13 +602,15 @@ class _DemoScreenState extends ConsumerState<DemoScreen> {
                                     padding: const EdgeInsets.all(12),
                                     width: double.infinity,
                                     decoration: BoxDecoration(
-                                      border: Border(bottom: BorderSide(color: cs.border)),
+                                      border: Border(
+                                          bottom: BorderSide(color: cs.border)),
                                     ),
                                     child: const Text('Driver view'),
                                   ),
                                   Expanded(
                                     child: WebIFrame(
-                                      key: ValueKey('driver_${t.storeId}_$_rev'),
+                                      key:
+                                          ValueKey('driver_${t.storeId}_$_rev'),
                                       url: driverUrl,
                                     ),
                                   ),

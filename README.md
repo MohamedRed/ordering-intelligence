@@ -8,7 +8,7 @@ This repository houses the implementation of the Ordering Intelligence AI platfo
 
 - `docs/` – product and technical specifications, runbooks, and supplemental documentation.
 - `backend/` – microservices (order service, notification service, voice agent worker, etc.).
-  - `backend/services/menu-ingestion` – Cloud Run service that turns menu photos/PDFs into structured menus using Vision OCR + Vertex AI, with Firestore drafts.
+  - `backend/services/menu-ingestion` – Cloud Run service that turns menu photos/PDFs into structured menus using Vertex Gemini image analysis, with Firestore drafts.
 - `apps/` – Flutter client applications for business staff and platform administrators.
 - `infrastructure/` – Terraform and deployment assets for GCP/Firebase/Twilio/LiveKit resources.
 - `ops/` – operational playbooks, monitoring configs, and incident response materials.
@@ -37,8 +37,8 @@ This repository houses the implementation of the Ordering Intelligence AI platfo
 
 GitHub Actions workflows provide baseline validation:
 
-- `.github/workflows/backend-ci.yml` – builds Node.js, Python, and Go services.
-- `.github/workflows/flutter-ci.yml` – runs `flutter analyze` for both client apps.
+- `.github/workflows/backend-ci.yml` – builds and tests Node.js packages, Go modules, and the shared Python config package.
+- `.github/workflows/flutter-ci.yml` – runs `flutter analyze` and `flutter test --coverage` for Flutter apps.
 - `.github/workflows/terraform-ci.yml` – enforces `terraform fmt` and validates each environment configuration.
 
 ## Shared Configuration
@@ -55,7 +55,7 @@ The canonical schema is defined in `schema/schema.json`; update once when adding
 
 - Order service: `cd backend/services/order-service && go test ./...`
 - Notification service: `cd backend/services/notification-service && PATH="tools/node/bin:$PATH" npm test`
-- Flutter apps: `cd apps/business && PATH="tools/flutter/bin:$PATH" flutter analyze` (repeat for `apps/admin`)
+- Flutter apps: `PATH="tools/flutter/bin:$PATH" scripts/ci/run-flutter-tests.sh`
 - E2E synthetic call: `cd tests/e2e && PATH="tools/node/bin:$PATH" npm test -- --dry-run` (set `DRY_RUN=false` with credentials for a live call)
 
 CI workflows exercise the same commands automatically on pull requests.
@@ -65,6 +65,7 @@ CI workflows exercise the same commands automatically on pull requests.
 
 ```bash
 scripts/ci/run-go-tests.sh
+scripts/ci/run-node-tests.sh
 scripts/ci/run-flutter-tests.sh
 scripts/ci/run-all-tests.sh
 ```

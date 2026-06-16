@@ -142,7 +142,14 @@ class _TvPairingScreenState extends State<TvPairingScreen> {
                   QrImageView(
                     data: pairing.pairUrl,
                     size: 220,
-                    foregroundColor: Colors.black,
+                    eyeStyle: const QrEyeStyle(
+                      eyeShape: QrEyeShape.square,
+                      color: Colors.black,
+                    ),
+                    dataModuleStyle: const QrDataModuleStyle(
+                      dataModuleShape: QrDataModuleShape.square,
+                      color: Colors.black,
+                    ),
                   ),
                 const SizedBox(height: 24),
                 Text(
@@ -188,10 +195,7 @@ class _TvPairingScreenState extends State<TvPairingScreen> {
             style: const TextStyle(color: Colors.redAccent),
           ),
           const SizedBox(height: 12),
-          OutlinedButton(
-            onPressed: _startPairing,
-            child: const Text('Retry'),
-          ),
+          OutlinedButton(onPressed: _startPairing, child: const Text('Retry')),
         ],
       ),
     );

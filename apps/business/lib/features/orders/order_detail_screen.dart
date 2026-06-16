@@ -207,8 +207,7 @@ class _DeliveryDetailsCard extends StatelessWidget {
     final statusColor = _deliveryStatusColor(statusKey);
     final dropoff = delivery.dropoffAddress?.display() ?? '';
     final hasLatLng = delivery.dropoffLatLng != null &&
-        (delivery.dropoffLatLng!.lat != 0 ||
-            delivery.dropoffLatLng!.lng != 0);
+        (delivery.dropoffLatLng!.lat != 0 || delivery.dropoffLatLng!.lng != 0);
 
     return ShadCard(
       padding: const EdgeInsets.all(12),
@@ -222,16 +221,17 @@ class _DeliveryDetailsCard extends StatelessWidget {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
               decoration: BoxDecoration(
-                color: statusColor.withOpacity(0.12),
+                color: statusColor.withValues(alpha: 0.12),
                 borderRadius: BorderRadius.circular(999),
-                border: Border.all(color: statusColor.withOpacity(0.35)),
+                border: Border.all(color: statusColor.withValues(alpha: 0.35)),
               ),
               child: Text('Status: $statusLabel',
                   style: TextStyle(color: statusColor)),
             ),
           ],
           const SizedBox(height: 8),
-          Text('Fleet: ${delivery.fleetMode.isEmpty ? 'unknown' : delivery.fleetMode}'),
+          Text(
+              'Fleet: ${delivery.fleetMode.isEmpty ? 'unknown' : delivery.fleetMode}'),
           if (delivery.assignmentStatus.isNotEmpty)
             Text('Assignment: ${delivery.assignmentStatus}'),
           if (delivery.assignedDriverId.isNotEmpty)
@@ -508,9 +508,9 @@ class _StatusPill extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.15),
+        color: color.withValues(alpha: 0.15),
         borderRadius: BorderRadius.circular(999),
-        border: Border.all(color: color.withOpacity(0.4)),
+        border: Border.all(color: color.withValues(alpha: 0.4)),
       ),
       child: Text(_statusLabel(status), style: TextStyle(color: color)),
     );

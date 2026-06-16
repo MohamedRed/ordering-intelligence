@@ -11,6 +11,7 @@
     "test": "npx c8 -r text tsx --test src/runtime/__tests__/*.test.ts"
   },
   "dependencies": {
+    "@google-cloud/pubsub": "^4.11.0",
     "@livekit/agents": "^1.0.17",
     "@ordering-intelligence/voice-agent-config": "file:../../libs/voice-agent-config",
     "dotenv": "^16.4.5",

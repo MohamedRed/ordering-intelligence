@@ -13,6 +13,34 @@ jest.mock('../../src/services/agent_queue', () => ({
   waitForAgentJob: (...args: any[]) => waitForAgentJobMock(...args),
 }));
 
+jest.mock('@google-cloud/storage', () => ({
+  Storage: class Storage {
+    bucket() {
+      return {
+        file: () => ({
+          download: async () => [Buffer.from('agent-output')],
+        }),
+      };
+    }
+  },
+}));
+
+jest.mock('@google-cloud/vertexai', () => ({
+  VertexAI: class VertexAI {
+    getGenerativeModel() {
+      return {};
+    }
+  },
+}));
+
+jest.mock('google-auth-library', () => ({
+  GoogleAuth: class GoogleAuth {
+    getAccessToken() {
+      return Promise.resolve('token');
+    }
+  },
+}));
+
 const fetchMock = jest.fn();
 (global as any).fetch = fetchMock;
 

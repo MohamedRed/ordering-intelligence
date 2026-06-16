@@ -43,7 +43,7 @@ class DeliverySettingsCard extends StatelessWidget {
           ),
           const SizedBox(height: 8),
           DropdownButtonFormField<String>(
-            value: fleetMode,
+            initialValue: fleetMode,
             decoration: const InputDecoration(
               labelText: 'Fleet mode',
               border: OutlineInputBorder(),

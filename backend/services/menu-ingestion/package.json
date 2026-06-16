@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
-  "description": "Menu ingestion service (upload -> OCR -> LLM -> review) on GCP",
+  "description": "Menu ingestion service (upload -> Vertex Gemini analysis -> review) on GCP",
   "scripts": {
     "dev": "tsx src/index.ts",
     "start": "node dist/index.js",
@@ -15,7 +15,6 @@
     "@google-cloud/pubsub": "^4.7.5",
     "@google-cloud/storage": "^7.12.0",
     "@google-cloud/vertexai": "^1.9.0",
-    "@google-cloud/vision": "^4.3.2",
     "@google/genai": "^0.7.0",
     "@gradio/client": "^2.0.0",
     "cors": "^2.8.5",

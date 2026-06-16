@@ -97,8 +97,8 @@ export function loadTelephonyRouting(
 
   return {
     provider,
-    number,
-    dispatchRuleId,
+    number: number!,
+    dispatchRuleId: dispatchRuleId!,
   };
 }
 

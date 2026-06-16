@@ -1,15 +1,45 @@
 name: Terraform CI
 
 on:
+  push:
+    branches:
+      - main
+      - before-release
+      - 'codex/**'
+    paths:
+      - '.github/workflows/terraform-ci.yml'
+      - 'infra/terraform/**'
+      - 'infrastructure/terraform/**'
+      - 'ops/security/**'
+      - 'scripts/terraform/**'
+  pull_request:
+    paths:
+      - '.github/workflows/terraform-ci.yml'
+      - 'infra/terraform/**'
+      - 'infrastructure/terraform/**'
+      - 'ops/security/**'
+      - 'scripts/terraform/**'
   workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: terraform-ci-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   terraform:
     runs-on: ubuntu-latest
     env:
-      TF_IN_AUTOMATION: "true"
+      TF_IN_AUTOMATION: 'true'
     steps:
       - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+          cache-dependency-path: ops/security/package-lock.json
       - name: Security lints
         working-directory: ops/security
         run: |
@@ -20,14 +50,8 @@ jobs:
         with:
           terraform_version: 1.7.5
       - name: Terraform fmt
-        working-directory: infrastructure/terraform
-        run: terraform fmt -check -recursive
-      - name: Validate environments
         run: |
-          for env in dev staging prod; do
-            echo "Validating $env"
-            pushd infrastructure/terraform/environments/$env > /dev/null
-            terraform init -backend=false
-            terraform validate
-            popd > /dev/null
-          done
+          terraform -chdir=infrastructure/terraform fmt -check -recursive
+          terraform -chdir=infra/terraform fmt -check -recursive
+      - name: Validate environments
+        run: scripts/terraform/validate.sh

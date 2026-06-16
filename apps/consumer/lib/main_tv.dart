@@ -1,3 +1,5 @@
+import 'dart:ui' show PointerDeviceKind;
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
@@ -20,18 +22,18 @@ class ConsumerTvApp extends StatelessWidget {
   static const _accentDark = Color(0xFFFF4D5A);
 
   ShadColorScheme _lightScheme() => const ShadRedColorScheme.light().copyWith(
-        primary: _accent,
-        ring: _accent,
-        destructive: _accent,
-        selection: const Color(0x33E4002B),
-      );
+    primary: _accent,
+    ring: _accent,
+    destructive: _accent,
+    selection: const Color(0x33E4002B),
+  );
 
   ShadColorScheme _darkScheme() => const ShadRedColorScheme.dark().copyWith(
-        primary: _accentDark,
-        ring: _accentDark,
-        destructive: _accentDark,
-        selection: const Color(0x66FF4D5A),
-      );
+    primary: _accentDark,
+    ring: _accentDark,
+    destructive: _accentDark,
+    selection: const Color(0x66FF4D5A),
+  );
 
   @override
   Widget build(BuildContext context) {
@@ -63,11 +65,10 @@ class ConsumerTvApp extends StatelessWidget {
 
         final themedApp = MaterialApp(
           title: 'Ordering Intelligence TV',
-          useInheritedMediaQuery: true,
           debugShowCheckedModeBanner: false,
           scrollBehavior: _TvScrollBehavior(),
-          shortcuts: const <LogicalKeySet, Intent>{
-            LogicalKeySet(LogicalKeyboardKey.select): ActivateIntent(),
+          shortcuts: const <ShortcutActivator, Intent>{
+            SingleActivator(LogicalKeyboardKey.select): ActivateIntent(),
           },
           theme: base.copyWith(
             scaffoldBackgroundColor: Colors.transparent,
@@ -96,13 +97,13 @@ class ConsumerTvApp extends StatelessWidget {
 class _TvScrollBehavior extends MaterialScrollBehavior {
   @override
   Set<PointerDeviceKind> get dragDevices => {
-        PointerDeviceKind.touch,
-        PointerDeviceKind.mouse,
-        PointerDeviceKind.trackpad,
-        PointerDeviceKind.stylus,
-        PointerDeviceKind.invertedStylus,
-        PointerDeviceKind.unknown,
-      };
+    PointerDeviceKind.touch,
+    PointerDeviceKind.mouse,
+    PointerDeviceKind.trackpad,
+    PointerDeviceKind.stylus,
+    PointerDeviceKind.invertedStylus,
+    PointerDeviceKind.unknown,
+  };
 }
 
 /// Wraps content with focus traversal so remote arrows move focus predictably.
@@ -112,9 +113,6 @@ class _TvFocusShell extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return FocusTraversalGroup(
-      policy: OrderedTraversalPolicy(),
-      child: child,
-    );
+    return FocusTraversalGroup(policy: OrderedTraversalPolicy(), child: child);
   }
 }

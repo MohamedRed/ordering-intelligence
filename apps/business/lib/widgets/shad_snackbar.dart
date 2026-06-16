@@ -28,9 +28,9 @@ void showShadSnack(
           ? ShadAlertVariant.destructive
           : ShadAlertVariant.primary,
       decoration: ShadDecoration(
-        color: bg.withOpacity(0.1),
+        color: bg.withValues(alpha: 0.1),
         border: ShadBorder.all(
-          color: bg.withOpacity(0.35),
+          color: bg.withValues(alpha: 0.35),
           width: 1,
           radius: BorderRadius.circular(10),
         ),

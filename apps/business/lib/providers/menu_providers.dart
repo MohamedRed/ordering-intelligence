@@ -46,7 +46,7 @@ class MenuApi {
 
   Future<String?> _token() async {
     final user = FirebaseAuth.instance.currentUser;
-    return user != null ? user.getIdToken() : null;
+    return user?.getIdToken();
   }
 }
 

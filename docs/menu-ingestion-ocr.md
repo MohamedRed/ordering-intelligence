@@ -1,48 +1,37 @@
-# Menu Ingestion via Photos/PDFs
+# Menu Ingestion via Photos
 
-Goal: let restaurants upload pictures/PDFs of their menu and turn them into a structured, reviewable catalog with minimal effort and high safety.
+Goal: let restaurants upload pictures of their menu and turn them into a structured, reviewable catalog with minimal effort and high safety.
 
 ## Pipeline Overview
 
 1) **Capture/Upload**
-   - Accept JPEG/PNG/PDF.
+   - Accept page-by-page menu photos through signed upload URLs.
    - Auto-reject blurry/low-resolution/tilted images (simple Laplacian blur + perspective heuristic).
    - Encourage page-by-page shots; allow multi-page uploads.
 
-2) **OCR + Layout**
-   - Run an OCR engine that returns text + bounding boxes (e.g., PaddleOCR/DocTR/Tesseract). Keep raw text + coordinates.
-   - Group into lines/columns using geometric clustering; preserve heading hierarchy when present.
+2) **Image Analysis**
+   - Run Vertex Gemini image analysis against the uploaded page image.
+   - Require strict JSON output and preserve enough job metadata to review the original upload alongside extracted rows.
 
 3) **LLM Mapping (schema constrained)**
-   - Input: JSON of OCR blocks (text, box, page, column group).
+   - Input: uploaded page image and prompt guardrails.
    - Model prompt maps to strict schema: `id`, `name`, `category`, `price`, `currency`, `size/variant`, `allergens`, `available`.
-   - Enforce enums/ranges in the prompt and require valid JSON; reject hallucinated items not present in OCR text.
+   - Enforce enums/ranges in the prompt and require valid JSON; reject hallucinated items not visible on the uploaded menu.
 
 4) **Validation**
    - Hard checks: required fields, price bounds (e.g., 0.5–200), duplicate IDs/names, currency consistency.
-   - Confidence: if OCR/LLM confidence < threshold or price is missing, flag for review.
+   - Confidence: if model confidence is weak or price is missing, flag for review.
 
 5) **Human Review UI**
-   - Side-by-side: image/PDF page on left, extracted rows on right.
+   - Side-by-side: image page on left, extracted rows on right.
    - Inline edits for name/price/category/size; accept/reject rows; set availability.
-   - Approval publishes a versioned menu record; store raw OCR + LLM draft + approved output.
+   - Approval publishes a versioned menu record; store original uploads + LLM draft + approved output.
 
 6) **Publish**
    - Write approved items to the canonical menu store (Order Service/Firestore).
    - Trigger cache invalidation so voice agents pick up new items immediately.
 
 ## Data Shapes
-
-### OCR block (input to LLM)
-```json
-{
-  "page": 1,
-  "text": "Big Mac®",
-  "box": [x0, y0, x1, y1],
-  "line": 12,
-  "column": 1
-}
-```
 
 ### Menu item (LLM output → validator)
 ```json
@@ -59,7 +48,7 @@ Goal: let restaurants upload pictures/PDFs of their menu and turn them into a st
 ```
 
 ## Prompt Guardrails (LLM step)
-- “Only use text present in OCR blocks. Do not invent items or prices.”
+- “Only use text visible in the uploaded menu image. Do not invent items or prices.”
 - “Return strict JSON array of menu items; no prose.”
 - “Price range 0.5–200; currency must be inferred from symbols or locale.”
 - “If size/variant is unclear, leave sizes empty; do not guess.”
@@ -72,10 +61,10 @@ Goal: let restaurants upload pictures/PDFs of their menu and turn them into a st
   - `POST /ingest/submit` → enqueue Pub/Sub task.
   - `GET /ingest/:jobId` → job status/draft pointer.
   - `POST /ingest/:jobId/approve` → publish to Firestore menus.
-  - `/tasks/process` (Pub/Sub push) → Vision OCR → Vertex AI Gemini mapping → validation → Firestore draft.
+  - `/tasks/process` (Pub/Sub push) → Vertex AI Gemini image analysis → validation → Firestore draft.
 - Auth/CORS: all endpoints except `/health` require bearer auth. Admin calls use Firebase ID tokens; Pub/Sub/Scheduler/CI use allowlisted Google OIDC ID tokens. Staging/prod reject wildcard CORS origins at startup.
 - Data stores: Firestore (`menus_ingest`, `menus_drafts`, `restaurants/{id}/menus`), GCS bucket for uploads.
-- Compute: Cloud Run + Pub/Sub push; OCR via Cloud Vision; LLM via Vertex Gemini 1.5 Flash.
+- Compute: Cloud Run + Pub/Sub push; image analysis and mapping via Vertex Gemini.
 - Config: `MENU_BUCKET`, `MENU_INGEST_TOPIC`, `VERTEX_PROJECT`, `VERTEX_LOCATION`, `GOOGLE_CLOUD_PROJECT`.
 - **Order-service sync:** On approve, the service now also upserts a canonical menu document into the `menus` collection (storeId doc) matching order-service schema so `/stores/{storeId}/menu/snapshot` stays in sync.
 - Admin UI: set `MENU_INGESTION_BASE_URL` (Dart define) in the admin app to point at the per-env Cloud Run URL.
@@ -85,8 +74,8 @@ Goal: let restaurants upload pictures/PDFs of their menu and turn them into a st
 - Stuck-job cleanup: endpoint `/tasks/cleanup` resets expired `processing` jobs to `queued` (schedule via Cloud Scheduler hourly).
 
 ### IAM / Permissions
-- The menu-ingestion service account currently uses `roles/editor` plus `roles/storage.objectAdmin`, `roles/pubsub.publisher`, `roles/aiplatform.user`, logging/monitoring/trace writers.
-- Rationale: legacy `roles/cloudvision.user` is not provisioned by IAM and custom roles cannot include `vision.images.annotate`. `roles/editor` is the smallest predefined role that consistently allows Vision OCR calls; tighten later once Google exposes a dedicated Vision role.
+- The menu-ingestion service account uses explicit least-privilege project roles for Firestore, Pub/Sub publishing, Vertex AI, logging, monitoring, and trace writing.
+- Menu upload object access is scoped to the menu ingestion bucket with bucket-level Storage Object Admin rather than a project-wide editor grant.
 
 Next UI step: Admin review page (not yet implemented) to show image + extracted rows for approval.
 
@@ -96,19 +85,18 @@ Admin app wiring
 ### Automated test
 - Added `tests/e2e/scripts/menu_ingestion_flow.ts` with npm script `npm run menu:ingest --prefix tests/e2e`. It runs the full flow: start → upload sample image → submit → poll → read draft → approve → verify Firestore publish. Required envs: `MENU_INGESTION_BASE_URL`, `MENU_INGESTION_RESTAURANT_ID`, `MENU_INGESTION_SAMPLE_PATH`, and `GOOGLE_CLOUD_PROJECT`.
 
-## Why hybrid (OCR + LLM) instead of pure multimodal
-- Auditability: raw text + boxes are stored and reviewable.
-- Cost/latency: OCR is cheap; LLM sees compact JSON, not pixels.
-- Determinism: you can re-run mapping with new prompts without re-uploading images.
+## Why direct multimodal analysis
+- Simpler production IAM: the service only needs Vertex AI plus scoped storage, Firestore, and Pub/Sub permissions.
+- Lower pipeline complexity: no separate OCR service or OCR-specific permission model is required.
+- Reviewability: original uploads, extracted rows, generated composites, and approval state are stored for audit.
 
 ## Safety & Compliance
-- Keep original uploads + OCR text for audit trails.
+- Keep original uploads + extracted draft data for audit trails.
 - Record who approved and when (versioned menus).
 - Add price/availability sanity gates to prevent wrong charges.
 
 ## Rollout Plan
-1) Prototype locally with PaddleOCR + one LLM (gpt-4o-mini or similar) and the schema above.
-2) Add validator + minimal review UI; gate publishing on approval.
-3) Integrate Order Service write-path; add cache invalidation for voice agent menus.
-4) Add per-tenant storage/billing limits and S3/GCS lifecycle (e.g., 30–90 days).
-5) Expand with allergen detection and multi-language menus as needed.
+1) Keep validator and review UI coverage current with the production API.
+2) Keep Order Service write-path and voice-agent cache invalidation covered by integration tests.
+3) Add per-tenant storage/billing limits and GCS lifecycle policies (e.g., 30–90 days).
+4) Expand with allergen detection and multi-language menus as needed.

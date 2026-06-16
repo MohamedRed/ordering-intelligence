@@ -240,17 +240,21 @@ export async function geminiJson(
     const token = await auth.getAccessToken();
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), GEN_TIMEOUT_MS);
-    const res = await fetch(url, {
-      method: 'POST',
-      headers: {
-        Authorization: `Bearer ${token}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(body),
-      signal: controller.signal,
-    });
-    clearTimeout(timeout);
-    resText = await res.text();
+    let res: any;
+    try {
+      res = await fetch(url, {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(body),
+        signal: controller.signal,
+      });
+      resText = await res.text();
+    } finally {
+      clearTimeout(timeout);
+    }
     const contentType = res.headers.get('content-type') || '';
     if (!res.ok || !contentType.includes('application/json')) {
       console.error('analysis-json fetch failed', {
@@ -344,17 +348,21 @@ export async function geminiJsonText(
     const token = await auth.getAccessToken();
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), GEN_TIMEOUT_MS);
-    const res = await fetch(url, {
-      method: 'POST',
-      headers: {
-        Authorization: `Bearer ${token}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(body),
-      signal: controller.signal,
-    });
-    clearTimeout(timeout);
-    resText = await res.text();
+    let res: any;
+    try {
+      res = await fetch(url, {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(body),
+        signal: controller.signal,
+      });
+      resText = await res.text();
+    } finally {
+      clearTimeout(timeout);
+    }
     const contentType = res.headers.get('content-type') || '';
     if (!res.ok || !contentType.includes('application/json')) {
       console.error('analysis-json-text fetch failed', {

@@ -3,7 +3,11 @@ set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 
-ENVS=("${@:-dev staging prod}")
+if [[ $# -gt 0 ]]; then
+  ENVS=("$@")
+else
+  ENVS=(dev staging prod)
+fi
 
 for env in "${ENVS[@]}"; do
   echo "==> Validating terraform env: ${env}"
@@ -12,4 +16,3 @@ for env in "${ENVS[@]}"; do
   terraform validate
   popd >/dev/null
 done
-

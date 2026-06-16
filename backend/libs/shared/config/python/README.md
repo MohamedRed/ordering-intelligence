@@ -1,6 +1,6 @@
 # Ordering Intelligence Config (Python)
 
-Lightweight configuration loader shared across Ordering Intelligence Python services. It validates environment variables against the canonical schema located in `backend/libs/shared/config/schema.json` and performs basic type coercion.
+Lightweight configuration loader shared across Ordering Intelligence Python services. It validates environment variables against the packaged copy of the canonical shared configuration schema and performs basic type coercion.
 
 ## Usage
 

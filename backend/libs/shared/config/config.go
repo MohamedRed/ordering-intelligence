@@ -99,8 +99,8 @@ func Load(service string, env map[string]string) (Config, error) {
 		if value == nil {
 			if definition.Default != nil {
 				value = definition.Default
-			} else if definition.Required {
-				errs = append(errs, fmt.Sprintf("missing required value"))
+				} else if definition.Required {
+					errs = append(errs, "missing required value")
 				continue
 			}
 		}

@@ -1,9 +1,9 @@
 # TTL uses a field named expireAt; services should write this field.
 resource "google_firestore_field" "orders_ttl" {
-  project  = var.project_id
-  database = "(default)"
+  project    = var.project_id
+  database   = "(default)"
   collection = "orders"
-  field    = "expireAt"
+  field      = "expireAt"
 
   ttl_config {
     state = "ENABLED"

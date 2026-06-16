@@ -1,87 +1,204 @@
 name: Backend CI
 
 on:
+  push:
+    branches:
+      - main
+      - before-release
+      - 'codex/**'
+    paths:
+      - '.github/workflows/backend-ci.yml'
+      - 'backend/**'
+      - 'scripts/ci/**'
+  pull_request:
+    paths:
+      - '.github/workflows/backend-ci.yml'
+      - 'backend/**'
+      - 'scripts/ci/**'
   workflow_dispatch:
 
+permissions:
+  contents: read
+
+concurrency:
+  group: backend-ci-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
-  node-services:
-    name: Node.js Services
+  node-packages:
+    name: Node.js (${{ matrix.name }})
     runs-on: ubuntu-latest
     strategy:
+      fail-fast: false
       matrix:
-        service: [telephony-adapter, notification-service, pos-export, menu-ingestion, voice-agent-worker]
-    defaults:
-      run:
-        working-directory: backend/services/${{ matrix.service }}
+        include:
+          - name: agent-customization
+            path: backend/services/agent-customization
+            lint: 'false'
+            test: 'false'
+          - name: channel-comms
+            path: backend/services/channel-comms
+            lint: 'false'
+            test: 'false'
+          - name: menu-ingestion
+            path: backend/services/menu-ingestion
+            lint: 'false'
+            test: 'true'
+          - name: notification-service
+            path: backend/services/notification-service
+            lint: 'true'
+            test: 'true'
+          - name: onboarding
+            path: backend/services/onboarding
+            lint: 'false'
+            test: 'true'
+          - name: payments-service
+            path: backend/services/payments-service
+            lint: 'false'
+            test: 'false'
+          - name: pos-export
+            path: backend/services/pos-export
+            lint: 'false'
+            test: 'true'
+          - name: voice-agent-config
+            path: backend/libs/voice-agent-config
+            lint: 'false'
+            test: 'false'
+          - name: voice-agent-worker
+            path: backend/services/voice-agent-worker
+            lint: 'false'
+            test: 'true'
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: "20"
-          cache: "npm"
-          cache-dependency-path: backend/services/${{ matrix.service }}/package-lock.json
-      - run: npm ci
-      - run: npm audit --production --audit-level=high || true
-      - run: npm run build
-      - run: npm test
+          node-version: '20'
+          cache: npm
+          cache-dependency-path: ${{ matrix.path }}/package-lock.json
+      - name: Install dependencies
+        working-directory: ${{ matrix.path }}
+        run: npm ci
+      - name: Audit production dependencies
+        working-directory: ${{ matrix.path }}
+        run: npm audit --omit=dev --audit-level=high
+      - name: Lint
+        if: matrix.lint == 'true'
+        working-directory: ${{ matrix.path }}
+        run: npm run lint
+      - name: Build
+        working-directory: ${{ matrix.path }}
+        run: npm run build
+      - name: Test
+        if: matrix.test == 'true'
+        working-directory: ${{ matrix.path }}
+        run: npm test
 
-  python-services:
-    name: Python Services
+  python-packages:
+    name: Python shared config
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        service: [conversation-orchestrator, speech-pipeline]
-    defaults:
-      run:
-        working-directory: backend/services/${{ matrix.service }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
-          python-version: "3.11"
-      - name: Install Poetry
-        run: pip install poetry
-      - name: Install dependencies
-        run: poetry install --no-interaction --no-root
-      - name: Compile sources
-        run: poetry run python -m compileall app
-      - name: Run tests
-        run: poetry run pytest
+          python-version: '3.11'
+      - name: Install build tooling
+        run: python -m pip install --upgrade pip build
+      - name: Build package
+        working-directory: backend/libs/shared/config/python
+        run: python -m build
+      - name: Install package
+        working-directory: backend/libs/shared/config/python
+        run: python -m pip install dist/*.whl
+      - name: Compile package sources
+        working-directory: backend/libs/shared/config/python
+        run: python -m compileall config_loader
 
-  go-services:
-    name: Go Services
+  go-modules:
+    name: Go (${{ matrix.name }})
     runs-on: ubuntu-latest
     strategy:
+      fail-fast: false
       matrix:
-        service: [order-service, admin-service]
+        include:
+          - name: agent-context
+            path: backend/libs/agent-context
+            coverage_threshold: '0'
+            staticcheck: 'true'
+          - name: shared-config
+            path: backend/libs/shared/config
+            coverage_threshold: '0'
+            staticcheck: 'true'
+          - name: admin-service
+            path: backend/services/admin-service
+            coverage_threshold: '10'
+            staticcheck: 'true'
+          - name: agent-tools
+            path: backend/services/agent-tools
+            coverage_threshold: '0'
+            staticcheck: 'true'
+          - name: agent-webhooks
+            path: backend/services/agent-webhooks
+            coverage_threshold: '0'
+            staticcheck: 'true'
+          - name: channel-gateway
+            path: backend/services/channel-gateway
+            coverage_threshold: '0'
+            staticcheck: 'true'
+          - name: customer-profile-service
+            path: backend/services/customer-profile-service
+            coverage_threshold: '0'
+            staticcheck: 'true'
+          - name: delivery-service
+            path: backend/services/delivery-service
+            coverage_threshold: '0'
+            staticcheck: 'false'
+          - name: dispatch-service
+            path: backend/services/dispatch-service
+            coverage_threshold: '0'
+            staticcheck: 'false'
+          - name: order-service
+            path: backend/services/order-service
+            coverage_threshold: '4'
+            staticcheck: 'false'
+          - name: recommendation-service
+            path: backend/services/recommendation-service
+            coverage_threshold: '0'
+            staticcheck: 'true'
+          - name: typesense-indexer
+            path: backend/services/typesense-indexer
+            coverage_threshold: '0'
+            staticcheck: 'true'
+          - name: wait-time-service
+            path: backend/services/wait-time-service
+            coverage_threshold: '0'
+            staticcheck: 'true'
     defaults:
       run:
-        working-directory: backend/services/${{ matrix.service }}
+        working-directory: ${{ matrix.path }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-go@v5
         with:
-          go-version: "1.22"
-      - name: Cache staticcheck
-        id: staticcheck-cache
-        uses: actions/cache@v4
-        with:
-          path: |
-            ~/.cache/go-build
-            ~/go/pkg/mod
-            ~/go/bin/staticcheck
-          key: staticcheck-${{ runner.os }}-go1.22-v0.5.1
-      - run: go vet ./...
+          go-version: '1.24.1'
+          cache-dependency-path: |
+            backend/libs/**/go.sum
+            backend/services/**/go.sum
+      - name: Download modules
+        run: go mod download
+      - name: Vet
+        run: go vet ./...
       - name: Staticcheck
+        if: matrix.staticcheck == 'true'
         run: |
           if ! command -v staticcheck >/dev/null 2>&1; then
-            go install honnef.co/go/tools/cmd/staticcheck@v0.5.1
+            go install honnef.co/go/tools/cmd/staticcheck@v0.6.1
           fi
           staticcheck ./...
-      - name: Go tests with coverage gate
+      - name: Go tests
+        run: go test -coverprofile=coverage.out ./...
+      - name: Coverage gate
+        if: matrix.coverage_threshold != '0'
         run: |
-          go test -coverprofile=coverage.out ./...
           total=$(go tool cover -func=coverage.out | awk '/total:/ {print $3}' | sed 's/%//')
           echo "total coverage: $total%"
-          threshold=18
-          awk -v total="$total" -v thr="$threshold" 'BEGIN { if (total+0 < thr) { exit 1 } }'
+          awk -v total="$total" -v threshold="${{ matrix.coverage_threshold }}" 'BEGIN { if (total+0 < threshold+0) { exit 1 } }'

@@ -97,7 +97,7 @@ class _OrderRefundSheetState extends State<_OrderRefundSheet> {
           ],
           const SizedBox(height: 12),
           DropdownButtonFormField<String>(
-            value: _reason,
+            initialValue: _reason,
             decoration: const InputDecoration(labelText: 'Reason'),
             items: const [
               DropdownMenuItem(
@@ -173,7 +173,8 @@ class _OrderRefundSheetState extends State<_OrderRefundSheet> {
 
   int? _parseAmountCents(String value) {
     if (value.isEmpty) return null;
-    final normalized = value.replaceAll(',', '.').replaceAll(RegExp(r'[^0-9.]'), '');
+    final normalized =
+        value.replaceAll(',', '.').replaceAll(RegExp(r'[^0-9.]'), '');
     final amount = double.tryParse(normalized);
     if (amount == null || amount <= 0) return null;
     return (amount * 100).round();

@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 import os
+from importlib import resources
 from functools import lru_cache
 from pathlib import Path
 from typing import Any, Dict, Mapping, MutableMapping
@@ -11,7 +12,8 @@ ConfigDefinition = Dict[str, Any]
 ServiceSchema = Dict[str, ConfigDefinition]
 ConfigSchema = Dict[str, ServiceSchema]
 
-_SCHEMA_PATH = Path(__file__).resolve().parents[2] / "schema" / "schema.json"
+_REPO_SCHEMA_PATH = Path(__file__).resolve().parents[2] / "schema" / "schema.json"
+_PACKAGE_SCHEMA_PATH = "schema.json"
 
 
 class ConfigurationError(ValueError):
@@ -20,9 +22,17 @@ class ConfigurationError(ValueError):
 
 @lru_cache(maxsize=1)
 def _load_schema() -> ConfigSchema:
-    if not _SCHEMA_PATH.exists():
-        raise FileNotFoundError(f"Configuration schema not found at {_SCHEMA_PATH}")
-    with _SCHEMA_PATH.open("r", encoding="utf-8") as handle:
+    try:
+        schema = resources.files("config_loader").joinpath(_PACKAGE_SCHEMA_PATH)
+        if schema.is_file():
+            with schema.open("r", encoding="utf-8") as handle:
+                return json.load(handle)
+    except (FileNotFoundError, ModuleNotFoundError):
+        pass
+
+    if not _REPO_SCHEMA_PATH.exists():
+        raise FileNotFoundError(f"Configuration schema not found at {_REPO_SCHEMA_PATH}")
+    with _REPO_SCHEMA_PATH.open("r", encoding="utf-8") as handle:
         return json.load(handle)
 
 

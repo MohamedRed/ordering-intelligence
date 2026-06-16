@@ -6,7 +6,6 @@ import '../app/business_app.dart';
 import '../fcm_token_manager.dart';
 import '../firebase_messaging_setup.dart';
 import '../notification_service.dart';
-import '../providers/app_providers.dart';
 import '../providers/highlight_provider.dart';
 import '../providers/offline_queue.dart';
 import 'ci_semantics.dart';
@@ -36,8 +35,9 @@ Future<void> bootstrapBusinessApp() async {
 
 String _resolveStoreId() {
   final base = Uri.base;
-  String? storeId = (base.queryParameters['storeId'] ?? base.queryParameters['store_id'])
-      ?.trim();
+  String? storeId =
+      (base.queryParameters['storeId'] ?? base.queryParameters['store_id'])
+          ?.trim();
   if (storeId == null || storeId.isEmpty) {
     final frag = base.fragment; // e.g. "/orders?storeId=..."
     final qIndex = frag.indexOf('?');

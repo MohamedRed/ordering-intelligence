@@ -22,10 +22,26 @@ const envList = (parsedArgs.values.envs ?? "dev,staging,prod")
 
 const validServices = new Set([
   "order_service",
-  "admin_service"
+  "menu_ingestion",
+  "notification_service",
+  "payments_service",
+  "onboarding_service",
+  "agent_webhooks",
+  "channel_gateway",
+  "channel_comms",
+  "customer_profile",
+  "recommendation",
+  "wait_time_service",
+  "typesense_indexer",
+  "dispatch_service",
+  "delivery_service",
+  "agent_tools",
+  "admin_service",
+  "agent_customization"
 ]);
 
 const validKeys = new Set([
+  "image",
   "min_scale",
   "max_scale",
   "container_concurrency",
@@ -159,6 +175,10 @@ async function lintEnvironment(envName) {
 
     if ("memory" in config) {
       assertString(config.memory, "memory", service, envName, /^\d+(Mi|Gi)$/);
+    }
+
+    if ("image" in config) {
+      assertString(config.image, "image", service, envName, /^\S+$/);
     }
 
     if ("startup_cpu_boost" in config && typeof config.startup_cpu_boost !== "boolean") {

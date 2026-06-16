@@ -30,9 +30,10 @@ class ConsumerApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    const enableGlass = true; // disable if channel requires flatter UI
     const blurSigma = 8.0; // lighter blur for mobile performance
-    final cardShape = RoundedRectangleBorder(borderRadius: BorderRadius.circular(20));
+    final cardShape = RoundedRectangleBorder(
+      borderRadius: BorderRadius.circular(20),
+    );
     return ShadApp.custom(
       themeMode: ThemeMode.system,
       theme: ShadThemeData(
@@ -79,7 +80,6 @@ class ConsumerApp extends StatelessWidget {
           home: const SessionGate(),
           builder: (context, child) => ShadAppBuilder(child: child!),
         );
-        if (!enableGlass) return themedApp;
         return GlassBackdrop(blurSigma: blurSigma, child: themedApp);
       },
     );

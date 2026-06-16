@@ -141,18 +141,23 @@ async function analyzeOriginalViaVertex(fileUri: string, mimeType: string): Prom
     const token = await auth.getAccessToken();
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), Number(process.env.GEN_TIMEOUT_MS ?? 120_000));
-    const res = await fetch(url, {
-      method: 'POST',
-      headers: {
-        Authorization: `Bearer ${token}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(body),
-      signal: controller.signal,
-    });
-    clearTimeout(timeout);
+    let res: any;
+    let resText = '';
+    try {
+      res = await fetch(url, {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(body),
+        signal: controller.signal,
+      });
+      resText = await res.text();
+    } finally {
+      clearTimeout(timeout);
+    }
     const contentType = res.headers.get('content-type') || '';
-    const resText = await res.text();
     if (!res.ok || !contentType.includes('application/json')) {
       console.error('analyze-original fetch failed', {
         status: res.status,

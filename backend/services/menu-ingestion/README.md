@@ -1,12 +1,12 @@
 # Menu Ingestion Service (GCP)
 
-Turns menu photos/PDFs into structured items with OCR + Vertex AI, with human review.
+Turns menu page photos into structured items with Vertex Gemini image analysis, with human review.
 
 ## Flow
 - `POST /ingest/start` → returns signed URLs for uploads + jobId.
-- Client uploads images/PDF pages to signed URLs.
+- Client uploads menu page images to signed URLs.
 - `POST /ingest/submit` with `jobId` → publishes Pub/Sub task.
-- `/tasks/process` (Pub/Sub push) downloads files from GCS, runs Vision OCR, maps to menu items via Vertex Gemini, stores draft in Firestore.
+- `/tasks/process` (Pub/Sub push) downloads files from GCS, maps menu images to structured items via Vertex Gemini, and stores a draft in Firestore.
 - `GET /ingest/:jobId` → job status.
 - `POST /ingest/:jobId/approve` → writes approved items to `restaurants/{restaurantId}/menus/*` in Firestore.
 
@@ -18,8 +18,7 @@ Google OIDC ID tokens when `ALLOW_GOOGLE_ID_TOKENS=true`.
 - **Storage bucket** for uploads (env: `MENU_BUCKET` or `STORAGE_BUCKET_MENUS`).
 - **Pub/Sub topic** for processing (env: `MENU_INGEST_TOPIC` or `PUBSUB_TOPIC_MENU_INGEST`).
 - **Firestore** (native mode) collections: `menus_ingest`, `menus_drafts`, `restaurants/{id}/menus`.
-- **Vision API** for OCR.
-- **Vertex AI** (Gemini 1.5 Flash) for schema mapping.
+- **Vertex AI** Gemini models for schema mapping and optional item/composite image generation.
 
 ## Required env vars
 ```
@@ -35,7 +34,7 @@ GOOGLE_ID_TOKEN_ALLOWED_EMAILS=menu-ingestion@PROJECT_ID.iam.gserviceaccount.com
 RENDER_TIMEOUT_MS=60000   # optional; defaults to 60s per image generation
 ```
 
-- Image generation uses Vertex AI via the service account (no API key). Ensure the service account has `roles/aiplatform.user`.
+- Image analysis and generation use Vertex AI via the service account (no API key). Ensure the service account has `roles/aiplatform.user`.
 - Staging and production must set explicit CORS origins; wildcard origins are rejected at startup.
 - Pub/Sub push subscriptions and Cloud Scheduler jobs should set their OIDC audience to `GOOGLE_ID_TOKEN_AUDIENCES`.
 
@@ -59,6 +58,5 @@ gcloud run deploy menu-ingestion \
 Configure Pub/Sub push subscription to hit `/tasks/process` with an OIDC token.
 
 ## Notes
-- OCR is capped to first 400 lines for prompt size; adjust in `buildLlmPrompt` if needed.
 - Price sanity: 0.5–200 enforced. Unknown items or missing names will fail validation.
-- All drafts remain in `menus_drafts` with raw OCR lines for audit.
+- All drafts remain in `menus_drafts` with extracted items, generated image references, and review metadata for audit.

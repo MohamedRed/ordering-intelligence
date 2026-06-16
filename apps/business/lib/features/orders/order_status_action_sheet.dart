@@ -253,7 +253,7 @@ class _OrderStatusActionSheetState extends State<_OrderStatusActionSheet> {
       children: [
         if (_templates.isNotEmpty)
           DropdownButtonFormField<String?>(
-            value: _selectedTemplateId,
+            initialValue: _selectedTemplateId,
             decoration: const InputDecoration(
               labelText: 'Template',
               border: OutlineInputBorder(),

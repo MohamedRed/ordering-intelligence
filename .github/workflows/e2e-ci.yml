@@ -1,7 +1,32 @@
 name: E2E Dry Run
 
 on:
+  push:
+    branches:
+      - main
+      - before-release
+      - 'codex/**'
+    paths:
+      - '.github/workflows/e2e-ci.yml'
+      - 'tests/e2e/**'
+      - 'backend/services/voice-agent-worker/**'
+      - 'infrastructure/twilio/**'
+      - 'infra/voice-agents/**'
+  pull_request:
+    paths:
+      - '.github/workflows/e2e-ci.yml'
+      - 'tests/e2e/**'
+      - 'backend/services/voice-agent-worker/**'
+      - 'infrastructure/twilio/**'
+      - 'infra/voice-agents/**'
   workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: e2e-dry-run-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   synthetic-call:
@@ -11,9 +36,14 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '20'
+          cache: npm
+          cache-dependency-path: tests/e2e/package-lock.json
       - name: Install deps
         working-directory: tests/e2e
-        run: npm install
+        run: npm ci
+      - name: Compile scripts
+        working-directory: tests/e2e
+        run: npm run build
       - name: Dry-run synthetic call
         working-directory: tests/e2e
         run: npm test -- --dry-run

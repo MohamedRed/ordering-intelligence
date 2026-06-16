@@ -13,3 +13,6 @@ requires-python = ">=3.11"
 [tool.setuptools]
 packages = ["config_loader"]
 include-package-data = true
+
+[tool.setuptools.package-data]
+config_loader = ["schema.json"]

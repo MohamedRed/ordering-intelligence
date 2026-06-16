@@ -1,4 +1,4 @@
-// ignore_for_file: avoid_web_libraries_in_flutter
+// ignore_for_file: avoid_web_libraries_in_flutter, deprecated_member_use
 import 'dart:async';
 import 'dart:html' as html;
 import 'dart:typed_data';
@@ -19,13 +19,15 @@ class _WebRecorder implements AudioRecorder {
 
   @override
   Future<List<AudioInputDevice>> listInputs() async {
-    final devices = await html.window.navigator.mediaDevices?.enumerateDevices();
+    final devices =
+        await html.window.navigator.mediaDevices?.enumerateDevices();
     if (devices == null) return const [];
     final inputs = devices
         .where((d) => d.kind == 'audioinput')
         .map((d) => AudioInputDevice(
               id: d.deviceId ?? '',
-              label: (d.label ?? '').isNotEmpty ? d.label! : 'Default microphone',
+              label:
+                  (d.label ?? '').isNotEmpty ? d.label! : 'Default microphone',
             ))
         .toList();
     if (inputs.isEmpty) {
@@ -43,9 +45,7 @@ class _WebRecorder implements AudioRecorder {
               'deviceId': {'exact': deviceId}
             }
           }
-        : {
-            'audio': true
-          };
+        : {'audio': true};
     _stream = await html.window.navigator.mediaDevices!
         .getUserMedia(constraints as Map<String, dynamic>);
     _chunks.clear();

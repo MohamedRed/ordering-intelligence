@@ -31,7 +31,6 @@ class DriverApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    const enableGlass = true; // flip to false on low-end devices if needed
     final cardShape = RoundedRectangleBorder(
       borderRadius: BorderRadius.circular(20),
     );
@@ -79,7 +78,6 @@ class DriverApp extends StatelessWidget {
           builder: (context, child) => ShadAppBuilder(child: child!),
           home: const DriverHomeGate(),
         );
-        if (!enableGlass) return themedApp;
         return GlassBackdrop(child: themedApp);
       },
     );

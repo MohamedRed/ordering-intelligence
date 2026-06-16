@@ -18,6 +18,12 @@ import {
 } from './delivery_partner_stripe.js';
 import { registerDeliveryPartnerComplianceRoutes } from './delivery_partner_compliance.js';
 import { registerMerchantStripeEmbedRoutes } from './merchant_stripe_embed.js';
+import {
+  maskPhone,
+  normalizePhoneNumberKey,
+  phoneRouteDocIdFromElevenLabsPhoneNumberId,
+  phoneRouteDocIdFromToNumber,
+} from './phone_routes.js';
 
 const app = express();
 const upload = multer({ storage: multer.memoryStorage() });
@@ -70,31 +76,6 @@ const ELEVENLABS_TEMPLATE_FAST_FOOD_AGENT_ID = process.env.ELEVENLABS_TEMPLATE_F
 const ELEVENLABS_TEMPLATE_AUTO_PARTS_AGENT_ID = process.env.ELEVENLABS_TEMPLATE_AUTO_PARTS_AGENT_ID || '';
 const ELEVENLABS_TEMPLATE_GAS_STATION_AGENT_ID =
   process.env.ELEVENLABS_TEMPLATE_GAS_STATION_AGENT_ID || '';
-
-function maskPhone(p: string | undefined): string {
-  if (!p) return '';
-  const clean = String(p);
-  if (clean.length <= 6) return clean;
-  return `${clean.slice(0, 3)}…${clean.slice(-3)}`;
-}
-
-function normalizePhoneNumberKey(p: string | undefined): string {
-  if (!p) return '';
-  // Keep digits and leading '+', strip common formatting.
-  const trimmed = String(p).trim();
-  const cleaned = trimmed.replace(/[^\d+]/g, '');
-  return cleaned;
-}
-
-function phoneRouteDocIdFromToNumber(toNumber: string): string {
-  const n = normalizePhoneNumberKey(toNumber);
-  const withoutPlus = n.startsWith('+') ? n.slice(1) : n;
-  return `to_${withoutPlus}`;
-}
-
-function phoneRouteDocIdFromElevenLabsPhoneNumberId(id: string): string {
-  return `elpn_${String(id).trim()}`;
-}
 
 async function upsertPhoneNumberRoute(params: {
   onboardingSessionId: string;

@@ -1,6 +1,6 @@
 import type { JobContext } from '@livekit/agents';
 import { ServerOptions, defineAgent } from '@livekit/agents';
-import { RoomServiceClient } from 'livekit-server-sdk';
+import { DataPacket_Kind, RoomServiceClient } from 'livekit-server-sdk';
 
 import { resolveAgentName } from '../constants';
 import { buildRuntimeContext } from './config';
@@ -17,8 +17,10 @@ defineAgent({
   entry: async (ctx: JobContext) => {
     const runtime = buildRuntimeContext(ctx);
     const orderServiceUrl = resolveOrderServiceUrl(runtime.environment);
-    const menuSnapshot = await maybeStartMenuUpdateListener(orderServiceUrl, runtime.voiceAgentConfig.storeId) ??
-      await fetchMenuSnapshot(orderServiceUrl);
+    const configuredStoreId =
+      typeof runtime.voiceAgentConfig.storeId === 'string' ? runtime.voiceAgentConfig.storeId : undefined;
+    const menuSnapshot = await maybeStartMenuUpdateListener(orderServiceUrl, configuredStoreId) ??
+      await fetchMenuSnapshot(orderServiceUrl, configuredStoreId);
 
     await ctx.connect();
     const participant = await ctx.waitForParticipant();
@@ -109,7 +111,7 @@ async function broadcastCheckout(ctx: JobContext, totalPrice: number, itemCount:
       }),
     );
 
-    await client.sendData(roomName, payload, { kind: 0 });
+    await client.sendData(roomName, payload, DataPacket_Kind.RELIABLE, {});
     console.log('voice-agent-worker:checkout_rpc', { roomName, totalPrice, itemCount });
   } catch (error) {
     console.warn('Failed to broadcast checkout payload', { error, roomName, totalPrice });

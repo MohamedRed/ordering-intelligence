@@ -544,7 +544,7 @@ class _StoreSettingsScreenState extends State<StoreSettingsScreen> {
               const SizedBox(width: 12),
               Expanded(
                 child: DropdownButtonFormField<String>(
-                  value: _readyEscalationChannel,
+                  initialValue: _readyEscalationChannel,
                   decoration: const InputDecoration(
                     labelText: 'Channel',
                     border: OutlineInputBorder(),
@@ -634,7 +634,7 @@ class _StoreSettingsScreenState extends State<StoreSettingsScreen> {
               style: Theme.of(context).textTheme.titleMedium),
           const SizedBox(height: 10),
           DropdownButtonFormField<String>(
-            value: _defaultChannelByStatus[status] ?? 'none',
+            initialValue: _defaultChannelByStatus[status] ?? 'none',
             decoration: const InputDecoration(
               labelText: 'Default channel',
               border: OutlineInputBorder(),
@@ -648,7 +648,7 @@ class _StoreSettingsScreenState extends State<StoreSettingsScreen> {
           ),
           const SizedBox(height: 10),
           DropdownButtonFormField<String>(
-            value: defaultTemplateId,
+            initialValue: defaultTemplateId,
             decoration: const InputDecoration(
               labelText: 'Default template',
               border: OutlineInputBorder(),
@@ -699,7 +699,7 @@ class _StoreSettingsScreenState extends State<StoreSettingsScreen> {
               style: Theme.of(context).textTheme.titleMedium),
           const SizedBox(height: 10),
           DropdownButtonFormField<String>(
-            value: _deliveryDefaultChannelByStatus[status] ?? 'none',
+            initialValue: _deliveryDefaultChannelByStatus[status] ?? 'none',
             decoration: const InputDecoration(
               labelText: 'Default channel',
               border: OutlineInputBorder(),
@@ -713,7 +713,7 @@ class _StoreSettingsScreenState extends State<StoreSettingsScreen> {
           ),
           const SizedBox(height: 10),
           DropdownButtonFormField<String>(
-            value: defaultTemplateId,
+            initialValue: defaultTemplateId,
             decoration: const InputDecoration(
               labelText: 'Default template',
               border: OutlineInputBorder(),

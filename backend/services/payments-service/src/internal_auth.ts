@@ -4,6 +4,10 @@ import { PaymentsConfig } from "./config";
 
 const oidcVerifier = new OAuth2Client();
 
+type InternalTokenPayload = {
+  email?: string;
+};
+
 const parseAllowedEmails = (value?: string): string[] => {
   if (!value) return [];
   return value
@@ -36,8 +40,8 @@ export async function requireInternalAuth(
 
   try {
     const ticket = await oidcVerifier.verifyIdToken({ idToken: token, audience });
-    const payload = ticket.getPayload() ?? {};
-    const email = String(payload.email || "").trim();
+    const payload = (ticket.getPayload() ?? {}) as InternalTokenPayload;
+    const email = String(payload.email ?? "").trim();
     if (!email) {
       res.status(401).json({ error: "unauthorized" });
       return false;

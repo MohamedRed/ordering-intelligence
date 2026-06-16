@@ -84,7 +84,12 @@ export function createToolContext(
       }
 
       const itemName = resolved?.name ?? name ?? itemId!;
-      const itemPrice = typeof price === 'number' ? price : resolved?.price;
+      const itemPrice =
+        typeof price === 'number'
+          ? price
+          : typeof resolved?.priceCents === 'number'
+            ? resolved.priceCents / 100
+            : undefined;
       const finalDetails = { ...(details ?? {}), size: size ?? resolved?.sizes?.[0] };
 
       if (!resolved && menu) {

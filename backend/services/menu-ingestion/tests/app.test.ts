@@ -1,7 +1,7 @@
 import { jest } from '@jest/globals';
 import express, { type Express } from 'express';
 import supertest from 'supertest';
-import { ingestRouter } from '../src/routes/ingest';
+type IngestRouter = typeof import('../src/routes/ingest').ingestRouter;
 
 process.env.MENU_BUCKET = 'test-bucket';
 process.env.MENU_INGEST_TOPIC = 'test-topic';
@@ -92,6 +92,18 @@ const setupMocks = async () => {
 
 let app: Express;
 let requestAgent: any;
+let ingestRouter: IngestRouter;
+
+beforeAll(async () => {
+  await setupMocks();
+  const [importedApp, importedIngest] = await Promise.all([
+    import('../src/app'),
+    import('../src/routes/ingest'),
+  ]);
+  app = importedApp.default;
+  requestAgent = supertest(app as any);
+  ingestRouter = importedIngest.ingestRouter;
+});
 
 const resetDoc = () => {
   docExists = false;
@@ -100,13 +112,6 @@ const resetDoc = () => {
 };
 
 describe('app routers', () => {
-  beforeAll(async () => {
-    await setupMocks();
-    const importedApp = await import('../src/app');
-    app = importedApp.default;
-    requestAgent = supertest(app as any);
-  });
-
   beforeEach(() => {
     resetDoc();
   });

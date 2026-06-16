@@ -23,6 +23,22 @@ jest.mock('@google-cloud/storage', () => ({
   },
 }));
 
+jest.mock('@google-cloud/firestore', () => ({
+  Firestore: class Firestore {
+    collection() {
+      return { doc: () => ({}) };
+    }
+  },
+}));
+
+jest.mock('google-auth-library', () => ({
+  GoogleAuth: class GoogleAuth {
+    getAccessToken() {
+      return Promise.resolve('token');
+    }
+  },
+}));
+
 const renderImageMock = jest.fn() as jest.MockedFunction<RenderImageFn>;
 const geminiJsonMock = jest.fn() as jest.MockedFunction<GeminiJsonFn>;
 

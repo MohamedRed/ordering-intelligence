@@ -1,4 +1,4 @@
-// ignore_for_file: avoid_web_libraries_in_flutter
+// ignore_for_file: avoid_web_libraries_in_flutter, deprecated_member_use
 import 'dart:html' as html;
 
 import 'package:consumer_core/consumer_core.dart';
@@ -16,15 +16,14 @@ import '../telegram/telegram_webapp.dart';
 import '../telegram/telegram_webapp_links.dart';
 
 class WebMiniAppPlatform extends MiniAppPlatform {
-  WebMiniAppPlatform({
-    ChannelGatewayApi? api,
-    PaymentsAdapter? paymentsAdapter,
-  })  : _api = api ??
-            ChannelGatewayApi(
-              baseUrl: resolveApiBase(),
-              webappPathPrefix: resolveWebAppPathPrefix(),
-            ),
-        _paymentsAdapter = paymentsAdapter ?? WebPaymentsAdapter();
+  WebMiniAppPlatform({ChannelGatewayApi? api, PaymentsAdapter? paymentsAdapter})
+    : _api =
+          api ??
+          ChannelGatewayApi(
+            baseUrl: resolveApiBase(),
+            webappPathPrefix: resolveWebAppPathPrefix(),
+          ),
+      _paymentsAdapter = paymentsAdapter ?? WebPaymentsAdapter();
 
   final ChannelGatewayApi _api;
   final PaymentsAdapter _paymentsAdapter;
@@ -76,14 +75,16 @@ class WebMiniAppPlatform extends MiniAppPlatform {
       if (accessToken.isEmpty && auth.code.trim().isEmpty) {
         throw Exception('Discord authorization failed.');
       }
-      return _api.startDiscordSession(
-        code: auth.code,
-        redirectUri: auth.redirectUri,
-        accessToken: accessToken,
-        storeId: context.storeId,
-        locale: context.locale,
-        startGroupOrder: context.startGroupOrder,
-      ).timeout(const Duration(seconds: 12));
+      return _api
+          .startDiscordSession(
+            code: auth.code,
+            redirectUri: auth.redirectUri,
+            accessToken: accessToken,
+            storeId: context.storeId,
+            locale: context.locale,
+            startGroupOrder: context.startGroupOrder,
+          )
+          .timeout(const Duration(seconds: 12));
     }
     if (platform == _MiniAppPlatformType.snapchat) {
       final clientId = resolveSnapchatClientId();
@@ -311,7 +312,8 @@ class WebMiniAppPlatform extends MiniAppPlatform {
     final params = uri.queryParameters;
     final platform = params['platform']?.toLowerCase().trim();
     final host = uri.host.toLowerCase();
-    final isDiscord = platform == 'discord' ||
+    final isDiscord =
+        platform == 'discord' ||
         params.containsKey('frame_id') ||
         params.containsKey('frameId') ||
         host.endsWith('discordsays.com');

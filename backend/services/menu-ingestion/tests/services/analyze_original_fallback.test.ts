@@ -26,6 +26,22 @@ jest.mock('@google-cloud/storage', () => ({
   },
 }));
 
+jest.mock('@google-cloud/firestore', () => ({
+  Firestore: class Firestore {
+    collection() {
+      return { doc: () => ({}) };
+    }
+  },
+}));
+
+jest.mock('google-auth-library', () => ({
+  GoogleAuth: class GoogleAuth {
+    getAccessToken() {
+      return Promise.resolve('token');
+    }
+  },
+}));
+
 const fetchMock = jest.fn();
 (global as any).fetch = fetchMock;
 

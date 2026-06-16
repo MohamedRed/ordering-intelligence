@@ -1,6 +1,6 @@
 import "dotenv/config";
 
-import express, { Request, Response } from "express";
+import express, { NextFunction, Request, Response } from "express";
 import fs from "fs";
 import admin from "firebase-admin";
 import { Firestore } from "@google-cloud/firestore";
@@ -888,10 +888,6 @@ function resolveTemplateFromComms(
   return null;
 }
 
-function resolveDefaultTemplate(status: string, store: StoreDoc | null, templateId?: string): StoreOrderCommsTemplate | null {
-  return resolveTemplateFromComms(status, store?.order_comms ?? null, templateId);
-}
-
 function defaultMessageForStatus(status: string): string {
   switch (status) {
     case "confirmed":
@@ -1480,7 +1476,7 @@ async function sendEmailNotification(payload: NotifyRequest): Promise<void> {
   );
 }
 
-async function verifyFirebaseAdmin(req: Request, res: Response, next: Function) {
+async function verifyFirebaseAdmin(req: Request, res: Response, next: NextFunction) {
   try {
     const authHeader = req.header("Authorization");
     if (!authHeader || !authHeader.startsWith("Bearer ")) {
@@ -1498,7 +1494,7 @@ async function verifyFirebaseAdmin(req: Request, res: Response, next: Function) 
   }
 }
 
-async function verifyUser(req: Request, res: Response, next: Function) {
+async function verifyUser(req: Request, res: Response, next: NextFunction) {
   try {
     const authHeader = req.header("Authorization");
     if (!authHeader || !authHeader.startsWith("Bearer ")) {

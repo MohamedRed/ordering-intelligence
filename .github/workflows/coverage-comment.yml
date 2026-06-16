@@ -1,7 +1,25 @@
 name: Coverage Summary
 
 on:
+  pull_request:
+    paths:
+      - '.github/workflows/coverage-comment.yml'
+      - 'backend/services/menu-ingestion/**'
+      - 'backend/services/notification-service/**'
+      - 'backend/services/voice-agent-worker/**'
+      - 'backend/services/order-service/**'
+      - 'backend/services/admin-service/**'
+      - 'apps/admin/**'
+      - 'apps/business/**'
   workflow_dispatch:
+
+permissions:
+  contents: read
+  pull-requests: write
+
+concurrency:
+  group: coverage-summary-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   coverage:
@@ -12,16 +30,29 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: "20"
-          cache: "npm"
+          cache: npm
+          cache-dependency-path: |
+            backend/services/menu-ingestion/package-lock.json
+            backend/services/notification-service/package-lock.json
+            backend/services/voice-agent-worker/package-lock.json
       - name: Install c8 for parsing
         run: npm install -g c8
       - name: Install lcov
         run: sudo apt-get update && sudo apt-get install -y lcov
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.24.1'
+          cache-dependency-path: |
+            backend/services/order-service/go.sum
+            backend/services/admin-service/go.sum
       - name: Set up Flutter
         uses: subosito/flutter-action@v2
         with:
-          flutter-version: "3.24.2"
-          channel: "stable"
+          flutter-version: '3.38.5'
+          channel: stable
+          cache: true
+          pub-cache-key: flutter-pub-${{ runner.os }}-${{ hashFiles('apps/**/pubspec.lock') }}
 
       - name: Node deps (menu-ingestion)
         working-directory: backend/services/menu-ingestion
@@ -79,8 +110,10 @@ jobs:
           echo "pct=$pct" >> $GITHUB_OUTPUT
       - name: Extract Go coverage
         run: |
-          go test -coverprofile=backend/services/order-service/cmd/order-service/coverage.out ./backend/services/order-service/cmd/order-service || true
-          go test -coverprofile=backend/services/admin-service/cmd/admin-service/coverage.out ./backend/services/admin-service/cmd/admin-service || true
+          cd backend/services/order-service
+          go test -coverprofile=cmd/order-service/coverage.out ./cmd/order-service
+          cd ../../../backend/services/admin-service
+          go test -coverprofile=cmd/admin-service/coverage.out ./cmd/admin-service
       - name: Summarize coverage
         id: summary
         run: |
@@ -108,6 +141,7 @@ jobs:
           echo "admin_fl=$ADMIN_FL" >> $GITHUB_OUTPUT
           echo "business_fl=$BUSINESS_FL" >> $GITHUB_OUTPUT
       - name: Post PR comment
+        if: github.event_name == 'pull_request'
         uses: marocchino/sticky-pull-request-comment@v2
         with:
           message: |

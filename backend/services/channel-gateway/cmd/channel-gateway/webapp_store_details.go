@@ -41,15 +41,5 @@ func handleWebAppStoreDetails(
 		return
 	}
 
-	writeJSON(w, http.StatusOK, webAppStoreDetailsResponse{
-		StoreID:                meta.StoreID,
-		StoreName:              meta.StoreName,
-		TenantID:               meta.TenantID,
-		BusinessType:           meta.BusinessType,
-		LogoURL:                meta.LogoURL,
-		Currency:               meta.Currency,
-		FuelDefaultPrepayCents: meta.FuelDefaultPrepayCents,
-		DeliveryEnabled:        meta.DeliveryEnabled,
-		DeliveryFleetMode:      meta.DeliveryFleetMode,
-	})
+	writeJSON(w, http.StatusOK, webAppStoreDetailsResponse(meta))
 }

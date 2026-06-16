@@ -483,10 +483,9 @@ module "menu_ingestion_sa" {
     "roles/logging.logWriter",
     "roles/monitoring.metricWriter",
     "roles/cloudtrace.agent",
-    "roles/storage.objectAdmin",
     "roles/pubsub.publisher",
     "roles/aiplatform.user",
-    "roles/editor"
+    "roles/datastore.user"
   ]
 }
 

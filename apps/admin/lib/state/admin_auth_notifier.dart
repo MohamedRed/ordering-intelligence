@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 
 class AdminAuthNotifier extends ChangeNotifier {
   final FirebaseAuth _auth;
+  final bool _testingMode;
   StreamSubscription<User?>? _sub;
 
   bool _isAuthenticated = false;
@@ -19,13 +20,22 @@ class AdminAuthNotifier extends ChangeNotifier {
   bool get loading => _loading;
 
   AdminAuthNotifier({FirebaseAuth? auth})
-      : _auth = auth ?? FirebaseAuth.instance {
+      : _auth = auth ?? FirebaseAuth.instance,
+        _testingMode = false {
     _sub = _auth.authStateChanges().listen((user) {
       _isAuthenticated = user != null;
       _email = user?.email;
       _loading = false;
       notifyListeners();
     });
+  }
+
+  @visibleForTesting
+  AdminAuthNotifier.testing({bool isAuthenticated = false})
+      : _auth = _TestingFirebaseAuth(),
+        _testingMode = true {
+    _isAuthenticated = isAuthenticated;
+    _loading = false;
   }
 
   @override
@@ -39,6 +49,12 @@ class AdminAuthNotifier extends ChangeNotifier {
     notifyListeners();
     try {
       await _auth.signInWithEmailAndPassword(email: email, password: password);
+      if (_testingMode) {
+        _email = email;
+        _isAuthenticated = true;
+        _loading = false;
+        notifyListeners();
+      }
     } on FirebaseAuthException catch (e) {
       if (e.code == 'user-not-found') {
         _error = 'No admin user found for that email.';
@@ -59,4 +75,28 @@ class AdminAuthNotifier extends ChangeNotifier {
     _isAuthenticated = false;
     notifyListeners();
   }
+}
+
+class _TestingFirebaseAuth implements FirebaseAuth {
+  @override
+  Stream<User?> authStateChanges() => const Stream<User?>.empty();
+
+  @override
+  Future<UserCredential> signInWithEmailAndPassword({
+    required String email,
+    required String password,
+  }) async {
+    return _TestingUserCredential();
+  }
+
+  @override
+  Future<void> signOut() async {}
+
+  @override
+  dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
+}
+
+class _TestingUserCredential implements UserCredential {
+  @override
+  dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
 }

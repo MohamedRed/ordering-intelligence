@@ -1,20 +1,44 @@
-// This is a basic Flutter widget test.
-//
-// To perform an interaction with a widget in your test, use the WidgetTester
-// utility in the flutter_test package. For example, you can send tap and scroll
-// gestures. You can also use WidgetTester to find child widgets in the widget
-// tree, read text, and verify that the values of widget properties are correct.
-
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:admin_app/main.dart';
+import 'package:admin_app/features/dashboard/dashboard_screen.dart';
+import 'package:admin_app/models/summary.dart';
+import 'package:admin_app/providers/ingestion_badge_provider.dart';
+import 'package:admin_app/providers/notification_metrics_provider.dart';
+import 'package:admin_app/providers/summary_provider.dart';
+
+import 'test_harness.dart';
 
 void main() {
-  testWidgets('Counter increments smoke test', (WidgetTester tester) async {
-    // Build our app and trigger a frame.
-    await tester.pumpWidget(const AdminApp());
+  testWidgets('admin dashboard shell renders', (WidgetTester tester) async {
+    await tester.pumpWidget(
+      adminTestApp(
+        const DashboardScreen(),
+        overrides: [
+          orderSummaryProvider.overrideWith((ref) async => OrderSummary(
+                total: 1,
+                statusCounts: const {},
+                last24hCounts: const {},
+              )),
+          notificationMetricsProvider.overrideWith(
+            (ref) async => const NotificationMetrics(
+              pushSent: 0,
+              smsSent: 0,
+              emailSent: 0,
+              pushFailed: 0,
+              smsFailed: 0,
+              emailFailed: 0,
+            ),
+          ),
+          ingestionBadgeProvider.overrideWith(
+            (ref) async => const IngestionCounts(backlog: 0, dlq: 0),
+          ),
+        ],
+      ),
+    );
 
-    // Verify app title renders the dashboard screen.
+    await tester.pumpAndSettle();
+
     expect(find.text('Operator Dashboard'), findsOneWidget);
+    expect(find.text('Orders (total)'), findsOneWidget);
   });
 }

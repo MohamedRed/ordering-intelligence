@@ -1,4 +1,4 @@
-import { PubSub } from '@google-cloud/pubsub';
+import { PubSub, type Message } from '@google-cloud/pubsub';
 import { fetchMenuSnapshot, type MenuSnapshot } from './menu';
 
 const menuPubsubClient = process.env.MENU_UPDATES_TOPIC ? new PubSub() : undefined;
@@ -17,7 +17,8 @@ export async function maybeStartMenuUpdateListener(orderServiceUrl?: string, sto
   }
 
   const subscription = menuPubsubClient.subscription(subName, { flowControl: { maxMessages: 1 } });
-  subscription.on('message', async (msg) => {
+  subscription.on('message', async (msg: Message) => {
+    let activeRefreshKey: string | undefined;
     try {
       const data = JSON.parse(msg.data.toString()) as { storeId?: string };
       const targetStore = data.storeId ?? storeId;
@@ -25,12 +26,12 @@ export async function maybeStartMenuUpdateListener(orderServiceUrl?: string, sto
         msg.ack();
         return;
       }
-      const key = `${orderServiceUrl}-${targetStore}`;
-      if (menuRefreshMutex[key]) {
+      activeRefreshKey = `${orderServiceUrl}-${targetStore}`;
+      if (menuRefreshMutex[activeRefreshKey]) {
         msg.ack();
         return;
       }
-      menuRefreshMutex[key] = true;
+      menuRefreshMutex[activeRefreshKey] = true;
       const refreshed = await fetchMenuSnapshot(orderServiceUrl, targetStore);
       if (refreshed) {
         console.log('voice-agent-worker:menu_refreshed', { storeId: targetStore, updated: refreshed.updated });
@@ -40,12 +41,13 @@ export async function maybeStartMenuUpdateListener(orderServiceUrl?: string, sto
       console.warn('voice-agent-worker:menu_update_parse_error', e);
       msg.nack();
     } finally {
-      const key = `${orderServiceUrl}-${storeId}`;
-      menuRefreshMutex[key] = false;
+      if (activeRefreshKey) {
+        menuRefreshMutex[activeRefreshKey] = false;
+      }
     }
   });
 
-  subscription.on('error', (err) => {
+  subscription.on('error', (err: Error) => {
     console.warn('voice-agent-worker:menu_update_listener_error', err);
   });
 

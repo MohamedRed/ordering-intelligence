@@ -47,8 +47,10 @@ class MarketplaceComplianceCard extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('Compliance documents',
-                style: Theme.of(context).textTheme.titleMedium),
+            Text(
+              'Compliance documents',
+              style: Theme.of(context).textTheme.titleMedium,
+            ),
             const SizedBox(height: 6),
             Text(
               'Required for France: transport capacity + vehicle docs for motorized vehicles.',
@@ -57,14 +59,16 @@ class MarketplaceComplianceCard extends StatelessWidget {
             const SizedBox(height: 12),
             if (compliance == null) ...[
               DropdownButtonFormField<String>(
-                value: _vehicleLabels.containsKey(selectedVehicleType)
+                initialValue: _vehicleLabels.containsKey(selectedVehicleType)
                     ? selectedVehicleType
                     : null,
                 items: _vehicleLabels.entries
-                    .map((entry) => DropdownMenuItem<String>(
-                          value: entry.key,
-                          child: Text(entry.value),
-                        ))
+                    .map(
+                      (entry) => DropdownMenuItem<String>(
+                        value: entry.key,
+                        child: Text(entry.value),
+                      ),
+                    )
                     .toList(),
                 onChanged: busy
                     ? null
@@ -82,7 +86,9 @@ class MarketplaceComplianceCard extends StatelessWidget {
                 child: const Text('Start compliance'),
               ),
             ] else ...[
-              Text('Vehicle: ${_vehicleLabels[compliance.vehicleType] ?? compliance.vehicleType}'),
+              Text(
+                'Vehicle: ${_vehicleLabels[compliance.vehicleType] ?? compliance.vehicleType}',
+              ),
               const SizedBox(height: 6),
               Text('Status: ${compliance.status}'),
               const SizedBox(height: 8),
@@ -99,10 +105,15 @@ class MarketplaceComplianceCard extends StatelessWidget {
     );
   }
 
-  Widget _buildDocList(BuildContext context, DeliveryPartnerCompliance compliance) {
+  Widget _buildDocList(
+    BuildContext context,
+    DeliveryPartnerCompliance compliance,
+  ) {
     final requiredDocs = compliance.requiredDocs;
     if (requiredDocs.isEmpty) {
-      return const Text('No additional documents required for this vehicle type.');
+      return const Text(
+        'No additional documents required for this vehicle type.',
+      );
     }
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,

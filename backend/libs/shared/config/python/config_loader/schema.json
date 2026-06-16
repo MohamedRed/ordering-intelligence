@@ -1,0 +1,810 @@
+{
+  "order-service": {
+    "PORT": {
+      "type": "number",
+      "default": 8082,
+      "description": "HTTP port for order service."
+    },
+    "ENVIRONMENT": {
+      "type": "string",
+      "default": "development",
+      "description": "Deployment environment identifier."
+    },
+    "FIRESTORE_PROJECT_ID": {
+      "type": "string",
+      "required": true,
+      "description": "Firestore project identifier."
+    },
+    "GOOGLE_APPLICATION_CREDENTIALS": {
+      "type": "string",
+      "required": false,
+      "description": "Path to service account JSON for Firestore access."
+    },
+    "PUBSUB_TOPIC_ORDERS": {
+      "type": "string",
+      "required": true,
+      "description": "Pub/Sub topic for order events."
+    }
+  },
+  "wait-time-service": {
+    "PORT": {
+      "type": "number",
+      "default": 8080,
+      "description": "HTTP port for wait-time service."
+    },
+    "ENVIRONMENT": {
+      "type": "string",
+      "default": "development",
+      "description": "Deployment environment identifier."
+    },
+    "FIRESTORE_PROJECT_ID": {
+      "type": "string",
+      "required": true,
+      "description": "Firestore project identifier."
+    },
+    "GOOGLE_APPLICATION_CREDENTIALS": {
+      "type": "string",
+      "required": false,
+      "description": "Path to service account JSON for Firestore access."
+    },
+    "MIN_SAMPLES_FOR_MEDIAN": {
+      "type": "number",
+      "required": false,
+      "default": 10,
+      "description": "Minimum samples required before using median ETA."
+    },
+    "MAX_SAMPLES_HISTORY": {
+      "type": "number",
+      "required": false,
+      "default": 50,
+      "description": "Maximum sample history stored per daypart/day."
+    }
+  },
+  "notification-service": {
+    "PORT": {
+      "type": "number",
+      "default": 8084,
+      "description": "HTTP port for notification service."
+    },
+    "ENVIRONMENT": {
+      "type": "string",
+      "default": "development",
+      "description": "Deployment environment identifier."
+    },
+    "FIREBASE_PROJECT_ID": {
+      "type": "string",
+      "required": true,
+      "description": "Firebase project ID."
+    },
+    "FIREBASE_SERVICE_ACCOUNT": {
+      "type": "string",
+      "required": false,
+      "default": "",
+      "description": "JSON string or file path for Firebase service account. If empty, defaults to application credentials."
+    },
+    "TWILIO_ACCOUNT_SID": {
+      "type": "string",
+      "required": false,
+      "description": "Twilio account SID for SMS delivery."
+    },
+    "TWILIO_AUTH_TOKEN": {
+      "type": "string",
+      "required": false,
+      "sensitive": true,
+      "description": "Twilio auth token for SMS."
+    },
+    "TWILIO_MESSAGING_NUMBER": {
+      "type": "string",
+      "required": false,
+      "description": "Fallback Twilio number used as SMS from number."
+    },
+    "SENDGRID_API_KEY": {
+      "type": "string",
+      "required": false,
+      "sensitive": true,
+      "description": "SendGrid API key for email."
+    },
+    "SENDGRID_FROM_EMAIL": {
+      "type": "string",
+      "required": false,
+      "description": "From email address for SendGrid messages."
+    },
+    "OPS_PHONE": {
+      "type": "string",
+      "required": false,
+      "description": "Ops phone number used for internal alert SMS."
+    },
+    "OPS_EMAIL": {
+      "type": "string",
+      "required": false,
+      "description": "Ops email used for internal alert emails."
+    },
+    "CUSTOMER_PROFILE_SERVICE_URL": {
+      "type": "string",
+      "required": false,
+      "description": "Base URL for customer-profile-service (Cloud Run)."
+    },
+    "ORDERS_EVENTS_OIDC_AUDIENCE": {
+      "type": "string",
+      "required": false,
+      "description": "Expected OIDC audience for Pub/Sub push to /events/orders."
+    },
+    "DISPATCH_EVENTS_OIDC_AUDIENCE": {
+      "type": "string",
+      "required": false,
+      "description": "Expected OIDC audience for Pub/Sub push to /events/dispatch."
+    },
+    "DELIVERIES_EVENTS_OIDC_AUDIENCE": {
+      "type": "string",
+      "required": false,
+      "description": "Expected OIDC audience for Pub/Sub push to /events/deliveries."
+    },
+    "ELEVENLABS_API_KEY": {
+      "type": "string",
+      "required": false,
+      "sensitive": true,
+      "description": "ElevenLabs API key (xi-api-key) for outbound calling."
+    },
+    "ELEVENLABS_API_BASE_URL": {
+      "type": "string",
+      "required": false,
+      "default": "https://api.elevenlabs.io",
+      "description": "ElevenLabs API base URL."
+    },
+    "NOTIFICATION_SERVICE_URL": {
+      "type": "string",
+      "required": false,
+      "description": "Public URL of notification-service (used as Cloud Tasks target)."
+    },
+    "DISPATCH_SERVICE_URL": {
+      "type": "string",
+      "required": false,
+      "description": "Public URL of dispatch-service (used as Cloud Tasks target)."
+    },
+    "CLOUD_TASKS_PROJECT_ID": {
+      "type": "string",
+      "required": false,
+      "description": "GCP project ID for Cloud Tasks queue."
+    },
+    "CLOUD_TASKS_LOCATION": {
+      "type": "string",
+      "required": false,
+      "description": "Cloud Tasks queue location/region."
+    },
+    "CLOUD_TASKS_READY_ESCALATION_QUEUE": {
+      "type": "string",
+      "required": false,
+      "description": "Cloud Tasks queue ID for ready escalation."
+    },
+    "CLOUD_TASKS_ASSIGNMENT_QUEUE": {
+      "type": "string",
+      "required": false,
+      "description": "Cloud Tasks queue ID for dispatch assignment expiry."
+    },
+    "CLOUD_TASKS_OIDC_SERVICE_ACCOUNT_EMAIL": {
+      "type": "string",
+      "required": false,
+      "description": "Service account email used to mint OIDC tokens for Cloud Tasks callbacks."
+    },
+    "CLOUD_TASKS_OIDC_AUDIENCE": {
+      "type": "string",
+      "required": false,
+      "description": "Expected OIDC audience for Cloud Tasks callbacks."
+    },
+    "ALERT_TOPIC": {
+      "type": "string",
+      "required": false,
+      "description": "Pub/Sub topic for alert fan-out."
+    }
+  },
+  "payments-service": {
+    "PORT": {
+      "type": "number",
+      "default": 8095,
+      "description": "HTTP port for payments service."
+    },
+    "ENVIRONMENT": {
+      "type": "string",
+      "default": "development",
+      "description": "Deployment environment identifier."
+    },
+    "FIREBASE_PROJECT_ID": {
+      "type": "string",
+      "required": true,
+      "description": "Firebase project ID."
+    },
+    "STRIPE_SECRET_KEY": {
+      "type": "string",
+      "required": true,
+      "sensitive": true,
+      "description": "Stripe secret key."
+    },
+    "STRIPE_PUBLISHABLE_KEY": {
+      "type": "string",
+      "required": false,
+      "description": "Stripe publishable key for client apps."
+    },
+    "STRIPE_WEBHOOK_SECRET": {
+      "type": "string",
+      "required": false,
+      "sensitive": true,
+      "description": "Stripe webhook signing secret."
+    },
+    "ORDER_SERVICE_URL": {
+      "type": "string",
+      "required": true,
+      "description": "Order service base URL (Cloud Run URL)."
+    },
+    "NOTIFICATION_SERVICE_URL": {
+      "type": "string",
+      "required": false,
+      "description": "Notification service base URL (Cloud Run URL)."
+    }
+  },
+  "admin-service": {
+    "PORT": {
+      "type": "number",
+      "default": 8085,
+      "description": "HTTP port for admin service."
+    },
+    "ENVIRONMENT": {
+      "type": "string",
+      "default": "development",
+      "description": "Deployment environment identifier."
+    },
+    "FIRESTORE_PROJECT_ID": {
+      "type": "string",
+      "required": true,
+      "description": "Firestore project identifier."
+    },
+    "FIREBASE_PROJECT_ID": {
+      "type": "string",
+      "required": true,
+      "description": "Firebase project for auth validation."
+    },
+    "GOOGLE_APPLICATION_CREDENTIALS": {
+      "type": "string",
+      "required": false,
+      "description": "Path to service account JSON for Firestore access."
+    }
+  },
+  "agent-webhooks": {
+    "PORT": {
+      "type": "number",
+      "default": 8086,
+      "description": "HTTP port for agent-webhooks service."
+    },
+    "ENVIRONMENT": {
+      "type": "string",
+      "default": "development",
+      "description": "Deployment environment identifier."
+    },
+    "FIRESTORE_PROJECT_ID": {
+      "type": "string",
+      "required": true,
+      "description": "Firestore project identifier."
+    },
+    "GOOGLE_APPLICATION_CREDENTIALS": {
+      "type": "string",
+      "required": false,
+      "description": "Path to service account JSON for Firestore access."
+    },
+    "ELEVENLABS_CONVERSATION_INIT_SECRET": {
+      "type": "string",
+      "required": false,
+      "sensitive": true,
+      "description": "Shared secret used to authenticate ElevenLabs conversation-init webhook requests."
+    },
+    "AGENT_WEBHOOK_SECRET": {
+      "type": "string",
+      "required": false,
+      "sensitive": true,
+      "description": "Optional alternate env var for the same webhook secret (fallback)."
+    },
+    "CUSTOMER_PROFILE_SERVICE_URL": {
+      "type": "string",
+      "required": false,
+      "description": "Base URL for customer-profile-service (Cloud Run URL; used as ID token audience)."
+    },
+    "RECOMMENDATION_SERVICE_URL": {
+      "type": "string",
+      "required": false,
+      "description": "Base URL for recommendation-service (Cloud Run URL; used as ID token audience)."
+    }
+  },
+  "customer-profile-service": {
+    "PORT": {
+      "type": "number",
+      "default": 8080,
+      "description": "HTTP port for customer-profile-service."
+    },
+    "ENVIRONMENT": {
+      "type": "string",
+      "default": "development",
+      "description": "Deployment environment identifier."
+    },
+    "FIRESTORE_PROJECT_ID": {
+      "type": "string",
+      "required": true,
+      "description": "Firestore project identifier."
+    },
+    "GOOGLE_APPLICATION_CREDENTIALS": {
+      "type": "string",
+      "required": false,
+      "description": "Path to service account JSON for Firestore access."
+    }
+  },
+  "recommendation-service": {
+    "PORT": {
+      "type": "number",
+      "default": 8080,
+      "description": "HTTP port for recommendation-service."
+    },
+    "ENVIRONMENT": {
+      "type": "string",
+      "default": "development",
+      "description": "Deployment environment identifier."
+    },
+    "FIRESTORE_PROJECT_ID": {
+      "type": "string",
+      "required": true,
+      "description": "Firestore project identifier."
+    },
+    "GOOGLE_APPLICATION_CREDENTIALS": {
+      "type": "string",
+      "required": false,
+      "description": "Path to service account JSON for Firestore access."
+    }
+  },
+  "agent-tools": {
+    "PORT": {
+      "type": "number",
+      "default": 8087,
+      "description": "HTTP port for agent-tools service."
+    },
+    "ENVIRONMENT": {
+      "type": "string",
+      "default": "development",
+      "description": "Deployment environment identifier."
+    },
+    "ORDER_SERVICE_URL": {
+      "type": "string",
+      "required": true,
+      "description": "Base URL for the internal order-service Cloud Run URL (used as ID token audience)."
+    },
+    "WAIT_TIME_SERVICE_URL": {
+      "type": "string",
+      "required": false,
+      "description": "Base URL for the internal wait-time-service Cloud Run URL (used as ID token audience)."
+    },
+    "DISPATCH_SERVICE_URL": {
+      "type": "string",
+      "required": false,
+      "description": "Base URL for the internal dispatch-service Cloud Run URL (used as ID token audience)."
+    },
+    "DELIVERY_SERVICE_URL": {
+      "type": "string",
+      "required": false,
+      "description": "Base URL for the internal delivery-service Cloud Run URL (used as ID token audience)."
+    },
+    "OAUTH_CLIENT_ID": {
+      "type": "string",
+      "required": true,
+      "description": "OAuth2 client id used by ElevenLabs workspace auth connection."
+    },
+    "OAUTH_CLIENT_SECRET": {
+      "type": "string",
+      "required": true,
+      "sensitive": true,
+      "description": "OAuth2 client secret used by ElevenLabs workspace auth connection."
+    },
+    "JWT_SIGNING_SECRET": {
+      "type": "string",
+      "required": true,
+      "sensitive": true,
+      "description": "HMAC secret used to sign short-lived access tokens issued by /oauth/token."
+    },
+    "JWT_ISSUER": {
+      "type": "string",
+      "required": false,
+      "default": "ordering-intelligence",
+      "description": "Issuer claim for access tokens."
+    },
+    "JWT_AUDIENCE": {
+      "type": "string",
+      "required": false,
+      "default": "agent-tools",
+      "description": "Audience claim for access tokens."
+    },
+    "TOKEN_TTL_SECONDS": {
+      "type": "number",
+      "required": false,
+      "default": 900,
+      "description": "Access token TTL in seconds (min 60)."
+    }
+  },
+  "dispatch-service": {
+    "PORT": {
+      "type": "number",
+      "default": 8080,
+      "description": "HTTP port for dispatch service."
+    },
+    "ENVIRONMENT": {
+      "type": "string",
+      "default": "development",
+      "description": "Deployment environment identifier."
+    },
+    "FIRESTORE_PROJECT_ID": {
+      "type": "string",
+      "required": true,
+      "description": "Firestore project identifier."
+    },
+    "GOOGLE_APPLICATION_CREDENTIALS": {
+      "type": "string",
+      "required": false,
+      "description": "Path to service account JSON for Firestore access."
+    },
+    "REQUIRE_AUTH": {
+      "type": "string",
+      "required": false,
+      "default": "true",
+      "description": "Whether Firebase/internal auth is required for /v1 endpoints."
+    },
+    "INTERNAL_AUTH_AUDIENCE": {
+      "type": "string",
+      "required": false,
+      "description": "Expected audience for internal Google OIDC ID tokens (Cloud Run URL)."
+    },
+    "INTERNAL_ALLOWED_EMAILS": {
+      "type": "string",
+      "required": false,
+      "description": "Comma-separated allowlist for internal Google OIDC ID tokens."
+    },
+    "ORDER_SERVICE_URL": {
+      "type": "string",
+      "required": true,
+      "description": "Base URL for the internal order-service Cloud Run URL (used as ID token audience)."
+    },
+    "DISPATCH_EVENTS_TOPIC": {
+      "type": "string",
+      "required": false,
+      "default": "dispatch-events",
+      "description": "Pub/Sub topic to publish dispatch lifecycle events."
+    },
+    "RADAR_API_KEY": {
+      "type": "string",
+      "required": false,
+      "sensitive": true,
+      "description": "Radar API key for owned-fleet routing/ETA."
+    },
+    "ASSIGNMENT_TTL_SECONDS": {
+      "type": "number",
+      "required": false,
+      "default": 30,
+      "description": "How long a driver has to accept/decline an assignment request."
+    },
+    "TOP_K_CANDIDATES": {
+      "type": "number",
+      "required": false,
+      "default": 5,
+      "description": "Number of best candidate drivers to consider (v1 uses distance per driver)."
+    }
+  },
+  "delivery-service": {
+    "PORT": {
+      "type": "number",
+      "default": 8080,
+      "description": "HTTP port for delivery service."
+    },
+    "ENVIRONMENT": {
+      "type": "string",
+      "default": "development",
+      "description": "Deployment environment identifier."
+    },
+    "FIRESTORE_PROJECT_ID": {
+      "type": "string",
+      "required": true,
+      "description": "Firestore project identifier."
+    },
+    "GOOGLE_APPLICATION_CREDENTIALS": {
+      "type": "string",
+      "required": false,
+      "description": "Path to service account JSON for Firestore access."
+    },
+    "REQUIRE_AUTH": {
+      "type": "string",
+      "required": false,
+      "default": "true",
+      "description": "Whether Firebase/internal auth is required for /v1 endpoints."
+    },
+    "INTERNAL_AUTH_AUDIENCE": {
+      "type": "string",
+      "required": false,
+      "description": "Expected audience for internal Google OIDC ID tokens (Cloud Run URL)."
+    },
+    "INTERNAL_ALLOWED_EMAILS": {
+      "type": "string",
+      "required": false,
+      "description": "Comma-separated allowlist for internal Google OIDC ID tokens."
+    },
+    "ORDER_SERVICE_URL": {
+      "type": "string",
+      "required": true,
+      "description": "Base URL for the internal order-service Cloud Run URL (used as ID token audience)."
+    },
+    "DISPATCH_SERVICE_URL": {
+      "type": "string",
+      "required": false,
+      "description": "Base URL for the internal dispatch-service Cloud Run URL (owned-fleet quotes)."
+    },
+    "ORDERS_EVENTS_OIDC_AUDIENCE": {
+      "type": "string",
+      "required": false,
+      "description": "OIDC audience for Pub/Sub push subscription on orders-events."
+    },
+    "DELIVERIES_EVENTS_TOPIC": {
+      "type": "string",
+      "required": false,
+      "default": "deliveries-events",
+      "description": "Pub/Sub topic to publish delivery lifecycle events."
+    },
+    "PROVIDER_MODE": {
+      "type": "string",
+      "required": false,
+      "default": "mock",
+      "description": "Delivery provider mode (mock for non-production)."
+    },
+    "UBER_DIRECT_API_KEY": {
+      "type": "string",
+      "required": false,
+      "sensitive": true,
+      "description": "Uber Direct API key."
+    },
+    "UBER_DIRECT_CLIENT_ID": {
+      "type": "string",
+      "required": false,
+      "sensitive": true,
+      "description": "Uber Direct OAuth client id."
+    },
+    "UBER_DIRECT_CLIENT_SECRET": {
+      "type": "string",
+      "required": false,
+      "sensitive": true,
+      "description": "Uber Direct OAuth client secret."
+    },
+    "UBER_DIRECT_CUSTOMER_ID": {
+      "type": "string",
+      "required": false,
+      "description": "Uber Direct customer id used in API paths."
+    },
+    "UBER_DIRECT_ACCESS_TOKEN": {
+      "type": "string",
+      "required": false,
+      "sensitive": true,
+      "description": "Optional pre-generated Uber Direct access token."
+    },
+    "UBER_DIRECT_AUTH_URL": {
+      "type": "string",
+      "required": false,
+      "description": "Uber Direct OAuth token URL."
+    },
+    "UBER_DIRECT_API_BASE_URL": {
+      "type": "string",
+      "required": false,
+      "description": "Uber Direct API base URL."
+    },
+    "STUART_API_KEY": {
+      "type": "string",
+      "required": false,
+      "sensitive": true,
+      "description": "Stuart API key."
+    },
+    "STUART_CLIENT_ID": {
+      "type": "string",
+      "required": false,
+      "sensitive": true,
+      "description": "Stuart OAuth client id."
+    },
+    "STUART_CLIENT_SECRET": {
+      "type": "string",
+      "required": false,
+      "sensitive": true,
+      "description": "Stuart OAuth client secret."
+    },
+    "STUART_ACCESS_TOKEN": {
+      "type": "string",
+      "required": false,
+      "sensitive": true,
+      "description": "Optional pre-generated Stuart access token."
+    },
+    "STUART_API_BASE_URL": {
+      "type": "string",
+      "required": false,
+      "description": "Stuart API base URL."
+    }
+  },
+  "channel-gateway": {
+    "PORT": {
+      "type": "number",
+      "default": 8090,
+      "description": "HTTP port for channel gateway service."
+    },
+    "ENVIRONMENT": {
+      "type": "string",
+      "default": "development",
+      "description": "Deployment environment identifier."
+    },
+    "FIRESTORE_PROJECT_ID": {
+      "type": "string",
+      "required": true,
+      "description": "Firestore project identifier."
+    },
+    "GOOGLE_APPLICATION_CREDENTIALS": {
+      "type": "string",
+      "required": false,
+      "description": "Path to service account JSON for Firestore access."
+    },
+    "ELEVENLABS_API_KEY": {
+      "type": "string",
+      "required": false,
+      "sensitive": true,
+      "description": "ElevenLabs API key for conversation WebSocket signed URLs."
+    },
+    "ELEVENLABS_API_BASE_URL": {
+      "type": "string",
+      "required": false,
+      "default": "https://api.elevenlabs.io",
+      "description": "ElevenLabs API base URL."
+    },
+    "ELEVENLABS_DEFAULT_AGENT_ID": {
+      "type": "string",
+      "required": false,
+      "description": "Fallback ElevenLabs agent id if no per-route agent id is set."
+    },
+    "TELEGRAM_BOT_TOKEN": {
+      "type": "string",
+      "required": false,
+      "sensitive": true,
+      "description": "Telegram bot token for inbound/outbound messaging."
+    },
+    "TELEGRAM_WEBHOOK_SECRET": {
+      "type": "string",
+      "required": false,
+      "sensitive": true,
+      "description": "Telegram webhook secret token for validation."
+    },
+    "TELEGRAM_WEBAPP_URL": {
+      "type": "string",
+      "required": false,
+      "description": "Base URL for the Telegram WebApp used by inline group order results."
+    },
+    "SESSION_IDLE_MINUTES": {
+      "type": "number",
+      "required": false,
+      "default": 20,
+      "description": "Idle timeout (minutes) before closing ElevenLabs WebSocket sessions."
+    },
+    "MOBILE_SESSION_SHARED_SECRET": {
+      "type": "string",
+      "required": false,
+      "sensitive": true,
+      "description": "Shared secret for validating mobile session start signatures."
+    },
+    "MOBILE_SESSION_MAX_SKEW_SECONDS": {
+      "type": "number",
+      "required": false,
+      "default": 300,
+      "description": "Maximum allowed clock skew (seconds) for mobile session signatures."
+    },
+    "FACEBOOK_APP_ID": {
+      "type": "string",
+      "required": false,
+      "description": "Facebook app id for consumer mobile auth."
+    },
+    "FACEBOOK_APP_SECRET": {
+      "type": "string",
+      "required": false,
+      "sensitive": true,
+      "description": "Facebook app secret used for token verification."
+    },
+    "FACEBOOK_GRAPH_BASE_URL": {
+      "type": "string",
+      "required": false,
+      "default": "https://graph.facebook.com",
+      "description": "Facebook Graph API base URL."
+    },
+    "TIKTOK_CLIENT_KEY": {
+      "type": "string",
+      "required": false,
+      "description": "TikTok client key for mobile auth."
+    },
+    "TIKTOK_CLIENT_SECRET": {
+      "type": "string",
+      "required": false,
+      "sensitive": true,
+      "description": "TikTok client secret for token verification."
+    },
+    "TIKTOK_API_BASE_URL": {
+      "type": "string",
+      "required": false,
+      "default": "https://open.tiktokapis.com",
+      "description": "TikTok Open API base URL."
+    },
+    "ORDER_SERVICE_URL": {
+      "type": "string",
+      "required": false,
+      "description": "Order service base URL for menu snapshots and order creation."
+    },
+    "PAYMENTS_SERVICE_URL": {
+      "type": "string",
+      "required": false,
+      "description": "Payments service base URL for group order checkout."
+    },
+    "TYPESENSE_HOST": {
+      "type": "string",
+      "required": false,
+      "description": "Typesense host for store search."
+    },
+    "TYPESENSE_SEARCH_API_KEY": {
+      "type": "string",
+      "required": false,
+      "sensitive": true,
+      "description": "Typesense search-only API key."
+    },
+    "TYPESENSE_COLLECTION": {
+      "type": "string",
+      "required": false,
+      "default": "stores",
+      "description": "Typesense collection name for store search."
+    },
+    "CORS_ORIGINS": {
+      "type": "string",
+      "required": false,
+      "description": "Comma-separated list of allowed CORS origins (or *)."
+    }
+  },
+  "channel-comms": {
+    "PORT": {
+      "type": "number",
+      "default": 8091,
+      "description": "HTTP port for channel comms service."
+    },
+    "ENVIRONMENT": {
+      "type": "string",
+      "default": "development",
+      "description": "Deployment environment identifier."
+    },
+    "TELEGRAM_BOT_TOKEN": {
+      "type": "string",
+      "required": false,
+      "sensitive": true,
+      "description": "Telegram bot token for outbound messaging."
+    },
+    "TELEGRAM_API_BASE_URL": {
+      "type": "string",
+      "required": false,
+      "description": "Telegram API base URL override (optional)."
+    }
+  },
+  "telephony-routing": {
+    "TELEPHONY_PROVIDER": {
+      "type": "string",
+      "enum": [
+        "us-livekit-pstn",
+        "sip-trunk"
+      ],
+      "default": "sip-trunk",
+      "description": "Select inbound provider per tenant/store: use LiveKit first-party PSTN numbers for US only (`us-livekit-pstn`), otherwise keep third-party SIP trunks (`sip-trunk`)."
+    },
+    "TELEPHONY_NUMBER": {
+      "type": "string",
+      "required": true,
+      "description": "E.164 phone number for the chosen provider. LiveKit US number when TELEPHONY_PROVIDER=us-livekit-pstn; carrier DID when TELEPHONY_PROVIDER=sip-trunk."
+    },
+    "TELEPHONY_DISPATCH_RULE_ID": {
+      "type": "string",
+      "required": true,
+      "description": "LiveKit SIP dispatch rule ID to route inbound calls to the correct agent/room, regardless of provider."
+    }
+  }
+}
