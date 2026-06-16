@@ -103,6 +103,16 @@ variable "cloud_run_overrides" {
   default = {}
 }
 
+variable "agent_customization_cors_origins" {
+  description = "Explicit browser origins allowed to call agent-customization. Wildcards are not allowed."
+  type        = list(string)
+
+  validation {
+    condition     = length(var.agent_customization_cors_origins) > 0 && !contains(var.agent_customization_cors_origins, "*")
+    error_message = "agent_customization_cors_origins must contain at least one explicit origin and cannot include '*'."
+  }
+}
+
 variable "agent_tools_gemini_model" {
   description = "Vertex AI Gemini model ID/path for agent-tools (leave empty to disable LLM script generation)."
   type        = string

@@ -4,6 +4,11 @@ billing_account = ""
 custom_domain_base = ""
 enable_cloud_dns = false
 
+agent_customization_cors_origins = [
+  "https://admin.example.com",
+  "https://business.example.com",
+]
+
 order_service_lb_hostname         = "order-service.liive.app"
 order_service_lb_certificate_mode = "MANAGED"
 order_service_lb_managed_domains  = ["order-service.liive.app"]

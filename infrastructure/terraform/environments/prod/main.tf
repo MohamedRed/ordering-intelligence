@@ -156,7 +156,7 @@ locals {
       env_overrides = {
         ENVIRONMENT             = var.environment_name
         FIRESTORE_PROJECT_ID    = var.project_id
-        CORS_ORIGINS            = "*"
+        CORS_ORIGINS            = join(",", var.agent_customization_cors_origins)
         ELEVENLABS_API_BASE_URL = "https://api.elevenlabs.io"
       }
       secret_env_overrides = {}
@@ -1303,7 +1303,7 @@ module "agent_customization_service" {
     ENVIRONMENT             = var.environment_name
     FIRESTORE_PROJECT_ID    = var.project_id
     ELEVENLABS_API_BASE_URL = "https://api.elevenlabs.io"
-    CORS_ORIGINS            = "*"
+    CORS_ORIGINS            = join(",", var.agent_customization_cors_origins)
   }, lookup(local.cloud_run_config.agent_customization, "env_overrides", {}))
   secret_env_vars = merge({
     ELEVENLABS_API_KEY = google_secret_manager_secret.elevenlabs_api_key.secret_id

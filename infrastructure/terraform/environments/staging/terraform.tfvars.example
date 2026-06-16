@@ -4,6 +4,11 @@ billing_account = ""
 custom_domain_base = ""
 enable_cloud_dns = false
 
+agent_customization_cors_origins = [
+  "https://staging-admin.example.com",
+  "https://staging-business.example.com",
+]
+
 # Optional Cloud Run tuning (per service)
 # cloud_run_overrides = {
 #   order_service = {

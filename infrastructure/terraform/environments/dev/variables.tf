@@ -110,6 +110,16 @@ variable "cloud_run_overrides" {
   default = {}
 }
 
+variable "agent_customization_cors_origins" {
+  description = "Explicit browser origins allowed to call agent-customization. Wildcards are not allowed."
+  type        = list(string)
+
+  validation {
+    condition     = length(var.agent_customization_cors_origins) > 0 && !contains(var.agent_customization_cors_origins, "*")
+    error_message = "agent_customization_cors_origins must contain at least one explicit origin and cannot include '*'."
+  }
+}
+
 # Dev-only toggle: ElevenLabs egress IP allowlist can be brittle if their outbound IPs change
 # or if the integration isn't actually coming from those IPs. When disabled, Cloud Armor
 # will default-allow but still apply rate limiting.
