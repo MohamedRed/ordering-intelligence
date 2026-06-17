@@ -12,22 +12,26 @@ on:
 jobs:
   smoke:
     runs-on: [self-hosted, linux, x64, liive-dev]
+    environment: ${{ inputs.environment == 'prod' && 'production' || inputs.environment }}
     steps:
       - uses: actions/checkout@v4
-      - name: Install LiveKit CLI
-        run: |
-          curl -sSL https://raw.githubusercontent.com/livekit/cli/main/install.sh | bash
-          echo "${HOME}/.livekit/bin" >> "$GITHUB_PATH"
-      - name: Run smoke (skip if secrets missing)
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install e2e dependencies
+        run: npm ci --prefix tests/e2e
+
+      - name: Run LiveKit SIP smoke
         env:
+          LIVEKIT_URL: ${{ secrets.LIVEKIT_URL }}
+          LIVEKIT_API_KEY: ${{ secrets.LIVEKIT_API_KEY }}
+          LIVEKIT_API_SECRET: ${{ secrets.LIVEKIT_API_SECRET }}
+          LIVEKIT_SMOKE_STRICT: '1'
+          LIVEKIT_SMOKE_RUN_CALL: 'true'
           ROOM_NAME: "ci-smoke-${{ inputs.environment }}"
           PARTICIPANT_NAME: "ci-smoke-${{ github.run_id }}"
           SIP_TRUNK: ${{ secrets.SIP_TRUNK_ID }}
           SIP_NUMBER: ${{ secrets.SIP_CALLER_NUMBER }}
-        run: |
-          if [ -z "$SIP_TRUNK" ] || [ -z "$SIP_NUMBER" ]; then
-            echo "SIP secrets missing; skipping smoke"
-            exit 0
-          fi
-          chmod +x backend/services/voice-agent-worker/scripts/livekit-smoke.sh
-          backend/services/voice-agent-worker/scripts/livekit-smoke.sh
+        run: tests/livekit_smoke.sh

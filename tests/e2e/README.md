@@ -25,6 +25,7 @@ These scenarios validate the ordering flow across LiveKit SIP ingress, the hoste
   - optional: `LIVEKIT_SIP_EXPECTED_NUMBERS`, `LIVEKIT_SIP_EXPECTED_PIN`, `LIVEKIT_SIP_HEALTH_DTMF`
 - SIPp scenarios under `tests/e2e/scripts/sipp/scenarios/` still provide load/stress validation when needed.
 - Workflow `.github/workflows/sip-health.yml` runs this script nightly for dev/staging/prod (see repo secrets list below).
+- Manual wrapper: `tests/livekit_smoke.sh` delegates to the same validator. By default it skips when LiveKit credentials are absent; set `LIVEKIT_SMOKE_STRICT=1` to fail on missing smoke-test configuration, and set `LIVEKIT_SMOKE_RUN_CALL=true` to place the outbound health call.
 
 ## Business App Regression
 - Flutter integration tests covering sign-in, drawer navigation, order list rendering using golden snapshots.

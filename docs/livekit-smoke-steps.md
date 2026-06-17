@@ -30,4 +30,4 @@
    - Set `ORDER_SERVICE_URL` and `STORE_ID` for the target environment.
    - If `menu-updates` Pub/Sub is available, set `MENU_UPDATES_SUBSCRIPTION` on the worker (pull sub on the `menu-updates` topic) so the agent refreshes menus automatically between smokes.
 
-Status: scripts still placeholder (`tests/livekit_smoke.sh`, `backend/services/voice-agent-worker/scripts/livekit-smoke.sh`).
+Status: `tests/livekit_smoke.sh` now delegates to the maintained `npm run --prefix tests/e2e sip:validate` flow. The voice-agent-worker script remains a low-level `lk sip participant create` helper for manual dashboard checks.
