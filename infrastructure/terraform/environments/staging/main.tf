@@ -1516,10 +1516,16 @@ module "payments_service" {
   startup_cpu_boost     = local.cloud_run_config.payments_service.startup_cpu_boost
   service_account       = module.payments_service_sa.email
   env_vars = merge({
-    ENVIRONMENT                   = var.environment_name
-    FIREBASE_PROJECT_ID           = var.project_id
-    ORDER_SERVICE_URL             = local.service_urls.order_service
-    NOTIFICATION_SERVICE_URL      = local.service_urls.notification_service
+    ENVIRONMENT              = var.environment_name
+    FIREBASE_PROJECT_ID      = var.project_id
+    ORDER_SERVICE_URL        = local.service_urls.order_service
+    NOTIFICATION_SERVICE_URL = local.service_urls.notification_service
+    INTERNAL_AUTH_AUDIENCE   = local.service_urls.payments_service
+    INTERNAL_ALLOWED_EMAILS = join(",", [
+      module.agent_tools_sa.email,
+      module.channel_gateway_sa.email,
+      module.order_service_sa.email,
+    ])
     STRIPE_WEBHOOK_ALLOWED_EVENTS = "checkout.session.completed,checkout.session.expired,payment_intent.succeeded,payment_intent.payment_failed,setup_intent.succeeded"
   }, lookup(local.cloud_run_config.payments_service, "env_overrides", {}))
   secret_env_vars = merge({
@@ -1788,6 +1794,16 @@ resource "google_cloud_run_service_iam_member" "menu_ingestion_public" {
   member   = "allUsers"
 
   depends_on = [module.menu_ingestion]
+}
+
+resource "google_cloud_run_service_iam_member" "payments_service_public" {
+  project  = var.project_id
+  location = var.region
+  service  = local.service_names.payments_service
+  role     = "roles/run.invoker"
+  member   = "allUsers"
+
+  depends_on = [module.payments_service]
 }
 
 resource "google_eventarc_trigger" "typesense_indexer_stores" {
@@ -2241,6 +2257,36 @@ resource "google_cloud_run_service_iam_member" "order_service_channel_gateway_in
   member   = "serviceAccount:${module.channel_gateway_sa.email}"
 
   depends_on = [module.order_service, module.channel_gateway_sa]
+}
+
+resource "google_cloud_run_service_iam_member" "payments_service_agent_tools_invoker" {
+  project  = var.project_id
+  location = var.region
+  service  = local.service_names.payments_service
+  role     = "roles/run.invoker"
+  member   = "serviceAccount:${module.agent_tools_sa.email}"
+
+  depends_on = [module.payments_service, module.agent_tools_sa]
+}
+
+resource "google_cloud_run_service_iam_member" "payments_service_channel_gateway_invoker" {
+  project  = var.project_id
+  location = var.region
+  service  = local.service_names.payments_service
+  role     = "roles/run.invoker"
+  member   = "serviceAccount:${module.channel_gateway_sa.email}"
+
+  depends_on = [module.payments_service, module.channel_gateway_sa]
+}
+
+resource "google_cloud_run_service_iam_member" "payments_service_order_service_invoker" {
+  project  = var.project_id
+  location = var.region
+  service  = local.service_names.payments_service
+  role     = "roles/run.invoker"
+  member   = "serviceAccount:${module.order_service_sa.email}"
+
+  depends_on = [module.payments_service, module.order_service_sa]
 }
 
 resource "google_cloud_run_service_iam_member" "channel_comms_orders_events_invoker" {

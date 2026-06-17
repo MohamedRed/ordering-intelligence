@@ -43,7 +43,7 @@ func completeFuelOrder(
 		if cfg.PaymentsServiceURL == "" {
 			return nil, errors.New("payments_service_not_configured")
 		}
-		if err := captureFuelPayment(ctx, cfg.PaymentsServiceURL, orderID, finalAmount); err != nil {
+		if err := captureFuelPayment(ctx, cfg, orderID, finalAmount); err != nil {
 			return nil, err
 		}
 	}

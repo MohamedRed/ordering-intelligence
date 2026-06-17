@@ -22,7 +22,7 @@ function parseCsv(value?: string): string[] {
     .filter(Boolean);
 }
 
-function isProductionLike(environment: string): boolean {
+export function isProductionLike(environment: string): boolean {
   return ["prod", "production", "staging"].includes(environment.trim().toLowerCase());
 }
 
@@ -67,6 +67,16 @@ export function getConfig(): PaymentsConfig {
   const port = Number(process.env.PORT || cfg.PORT || 8095);
   const environment = (process.env.ENVIRONMENT || cfg.ENVIRONMENT || "development").toString();
   const corsOrigins = (process.env.CORS_ORIGINS || cfg.CORS_ORIGINS || "").toString();
+  const internalAuthAudience = (process.env.INTERNAL_AUTH_AUDIENCE || cfg.INTERNAL_AUTH_AUDIENCE || "").toString();
+  const internalAllowedEmails = (process.env.INTERNAL_ALLOWED_EMAILS || cfg.INTERNAL_ALLOWED_EMAILS || "").toString();
+  if (isProductionLike(environment)) {
+    if (!internalAuthAudience.trim() || parseCsv(internalAllowedEmails).length === 0) {
+      throw new Error(
+        "INTERNAL_AUTH_AUDIENCE and INTERNAL_ALLOWED_EMAILS are required for payments-service in staging/production."
+      );
+    }
+  }
+
   return {
     PORT: Number.isNaN(port) ? 8095 : port,
     ENVIRONMENT: environment,
@@ -78,7 +88,7 @@ export function getConfig(): PaymentsConfig {
     STRIPE_WEBHOOK_ALLOWED_EVENTS: (process.env.STRIPE_WEBHOOK_ALLOWED_EVENTS || cfg.STRIPE_WEBHOOK_ALLOWED_EVENTS || "").toString(),
     ORDER_SERVICE_URL: (process.env.ORDER_SERVICE_URL || cfg.ORDER_SERVICE_URL || "").toString(),
     NOTIFICATION_SERVICE_URL: (process.env.NOTIFICATION_SERVICE_URL || cfg.NOTIFICATION_SERVICE_URL || "").toString(),
-    INTERNAL_AUTH_AUDIENCE: (process.env.INTERNAL_AUTH_AUDIENCE || cfg.INTERNAL_AUTH_AUDIENCE || "").toString(),
-    INTERNAL_ALLOWED_EMAILS: (process.env.INTERNAL_ALLOWED_EMAILS || cfg.INTERNAL_ALLOWED_EMAILS || "").toString()
+    INTERNAL_AUTH_AUDIENCE: internalAuthAudience,
+    INTERNAL_ALLOWED_EMAILS: internalAllowedEmails
   };
 }

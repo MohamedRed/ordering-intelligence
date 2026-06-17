@@ -1,4 +1,4 @@
-import { fetchJson, requestWithRetry } from './lib/payments_test_utils.mjs';
+import { fetchJson, paymentsAuthHeaders, requestWithRetry } from './lib/payments_test_utils.mjs';
 
 const baseUrl = process.env.PAYMENTS_SERVICE_BASE_URL;
 const suffix = (process.env.FIRESTORE_SUFFIX || 'ci').trim();
@@ -11,6 +11,7 @@ if (!baseUrl) {
 }
 
 const apiBase = baseUrl.replace(/\/$/, '');
+const authHeaders = paymentsAuthHeaders(apiBase);
 
 const run = async () => {
   const { data } = await requestWithRetry(
@@ -21,6 +22,7 @@ const run = async () => {
       {
         method: 'POST',
         headers: {
+          ...authHeaders,
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({ tenantId, customerName: 'CI Customer' })

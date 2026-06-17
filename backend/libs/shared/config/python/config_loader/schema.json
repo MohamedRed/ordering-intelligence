@@ -241,6 +241,11 @@
       "sensitive": true,
       "description": "Stripe webhook signing secret."
     },
+    "STRIPE_WEBHOOK_ALLOWED_EVENTS": {
+      "type": "string",
+      "required": false,
+      "description": "Comma-separated Stripe webhook event types accepted by payments-service."
+    },
     "ORDER_SERVICE_URL": {
       "type": "string",
       "required": true,
@@ -250,6 +255,16 @@
       "type": "string",
       "required": false,
       "description": "Notification service base URL (Cloud Run URL)."
+    },
+    "INTERNAL_AUTH_AUDIENCE": {
+      "type": "string",
+      "required": false,
+      "description": "Expected audience for internal Google OIDC ID tokens."
+    },
+    "INTERNAL_ALLOWED_EMAILS": {
+      "type": "string",
+      "required": false,
+      "description": "Comma-separated allowlist for internal Google OIDC ID token emails."
     }
   },
   "admin-service": {

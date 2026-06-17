@@ -1,6 +1,6 @@
 import { getIdentityToken } from './lib/gcloud_tokens.mjs';
 import { patchFirestoreDoc } from './lib/firestore_admin.mjs';
-import { assertOk, fetchJson, requestWithRetry } from './lib/payments_test_utils.mjs';
+import { assertOk, fetchJson, paymentsAuthHeaders, requestWithRetry } from './lib/payments_test_utils.mjs';
 
 const paymentsBaseUrl = process.env.PAYMENTS_SERVICE_BASE_URL;
 const orderBaseUrl = process.env.ORDER_SERVICE_BASE_URL;
@@ -25,6 +25,7 @@ if (!projectId) {
 
 const paymentsApi = paymentsBaseUrl.replace(/\/$/, '');
 const orderApi = orderBaseUrl.replace(/\/$/, '');
+const paymentsHeaders = paymentsAuthHeaders(paymentsApi);
 
 const run = async () => {
   const orderToken = getIdentityToken(orderApi);
@@ -69,6 +70,7 @@ const run = async () => {
     fetchJson(`${paymentsApi}/orders/${order.id}/payment-intent`, {
       method: 'POST',
       headers: {
+        ...paymentsHeaders,
         'Content-Type': 'application/json'
       },
       body: JSON.stringify({
@@ -101,6 +103,7 @@ const run = async () => {
     fetchJson(`${paymentsApi}/orders/${order.id}/refund`, {
       method: 'POST',
       headers: {
+        ...paymentsHeaders,
         'Content-Type': 'application/json'
       },
       body: JSON.stringify({ reason: 'requested_by_customer' })

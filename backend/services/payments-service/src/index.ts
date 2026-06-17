@@ -22,7 +22,7 @@ import { handleGroupOrderPaymentIntent } from "./handlers/group_order_payment_in
 import { handleGroupOrderOffSession } from "./handlers/group_order_off_session";
 import { handleGroupOrderRefund } from "./handlers/group_order_refund";
 import { handleWebhook, handleWebhookEvent } from "./handlers/webhook";
-import { requireInternalAuth } from "./internal_auth";
+import { requirePaymentsInternalAuth } from "./internal_auth";
 
 const config = getConfig();
 const firestore = initFirestore(config.FIREBASE_PROJECT_ID);
@@ -34,6 +34,8 @@ app.use(cors(buildCorsOptions(config.CORS_ORIGINS)));
 app.get("/healthz", (_req, res) => {
   res.status(200).json({ status: "ok", service: "payments-service", environment: config.ENVIRONMENT });
 });
+
+app.use(requirePaymentsInternalAuth(config));
 
 app.post("/group-orders/:groupOrderId/checkout", express.json(), (req, res) =>
   handleCheckout(req, res, firestore, stripe, config.NOTIFICATION_SERVICE_URL)
@@ -121,9 +123,6 @@ app.post("/webhooks/stripe", express.raw({ type: "application/json", limit: "1mb
 );
 
 app.post("/internal/test/stripe-webhook", express.json({ limit: "1mb" }), async (req, res) => {
-  if (!(await requireInternalAuth(req, res, config))) {
-    return;
-  }
   const event = req.body as any;
   if (!event || typeof event.type !== "string") {
     res.status(400).json({ error: "invalid_event" });

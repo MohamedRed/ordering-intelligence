@@ -1,4 +1,4 @@
-import { Request, Response } from "express";
+import { NextFunction, Request, RequestHandler, Response } from "express";
 import { OAuth2Client } from "google-auth-library";
 import { PaymentsConfig } from "./config";
 
@@ -8,13 +8,18 @@ type InternalTokenPayload = {
   email?: string;
 };
 
-const parseAllowedEmails = (value?: string): string[] => {
+export const parseAllowedEmails = (value?: string): string[] => {
   if (!value) return [];
   return value
     .split(",")
     .map((entry) => entry.trim())
     .filter((entry) => entry.length > 0);
 };
+
+export function isPublicPaymentsPath(pathname: string): boolean {
+  const normalized = pathname.replace(/\/+$/, "") || "/";
+  return normalized === "/healthz" || normalized === "/webhooks/stripe";
+}
 
 export async function requireInternalAuth(
   req: Request,
@@ -23,6 +28,11 @@ export async function requireInternalAuth(
 ): Promise<boolean> {
   const audience = (config.INTERNAL_AUTH_AUDIENCE || "").trim();
   if (!audience) {
+    res.status(403).json({ error: "internal_auth_not_configured" });
+    return false;
+  }
+  const allowedEmails = parseAllowedEmails(config.INTERNAL_ALLOWED_EMAILS);
+  if (allowedEmails.length === 0) {
     res.status(403).json({ error: "internal_auth_not_configured" });
     return false;
   }
@@ -46,17 +56,26 @@ export async function requireInternalAuth(
       res.status(401).json({ error: "unauthorized" });
       return false;
     }
-    const allowedEmails = parseAllowedEmails(config.INTERNAL_ALLOWED_EMAILS);
-    if (allowedEmails.length > 0) {
-      const allowed = allowedEmails.some((entry) => entry.toLowerCase() === email.toLowerCase());
-      if (!allowed) {
-        res.status(401).json({ error: "unauthorized" });
-        return false;
-      }
+    const allowed = allowedEmails.some((entry) => entry.toLowerCase() === email.toLowerCase());
+    if (!allowed) {
+      res.status(401).json({ error: "unauthorized" });
+      return false;
     }
     return true;
   } catch (err) {
     res.status(401).json({ error: "unauthorized" });
     return false;
   }
+}
+
+export function requirePaymentsInternalAuth(config: PaymentsConfig): RequestHandler {
+  return async (req: Request, res: Response, next: NextFunction) => {
+    if (req.method === "OPTIONS" || isPublicPaymentsPath(req.path)) {
+      next();
+      return;
+    }
+    if (await requireInternalAuth(req, res, config)) {
+      next();
+    }
+  };
 }

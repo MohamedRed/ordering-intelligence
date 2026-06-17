@@ -1,23 +1,21 @@
 package main
 
 import (
-	"bytes"
 	"context"
 	"encoding/json"
 	"io"
 	"net/http"
 	"strings"
-	"time"
 
 	cloudfirestore "cloud.google.com/go/firestore"
 )
 
 type groupOrderRefundRequest struct {
-	AmountCents  int64  `json:"amountCents,omitempty"`
-	Reason       string `json:"reason,omitempty"`
-	Note         string `json:"note,omitempty"`
-	RequestedBy  string `json:"requestedBy,omitempty"`
-	PaymentID    string `json:"paymentId,omitempty"`
+	AmountCents   int64  `json:"amountCents,omitempty"`
+	Reason        string `json:"reason,omitempty"`
+	Note          string `json:"note,omitempty"`
+	RequestedBy   string `json:"requestedBy,omitempty"`
+	PaymentID     string `json:"paymentId,omitempty"`
 	ParticipantID string `json:"participantId,omitempty"`
 }
 
@@ -62,12 +60,7 @@ func handleGroupOrderRefund(
 		return
 	}
 
-	body, _ := json.Marshal(payload)
-	endpoint := strings.TrimRight(cfg.PaymentsServiceURL, "/") + "/group-orders/" + groupOrderID + "/refund"
-	req, _ := http.NewRequestWithContext(ctx, http.MethodPost, endpoint, bytes.NewReader(body))
-	req.Header.Set("Content-Type", "application/json")
-	client := &http.Client{Timeout: 12 * time.Second}
-	resp, err := client.Do(req)
+	resp, err := doPaymentsJSONRequest(ctx, cfg, http.MethodPost, "/group-orders/"+groupOrderID+"/refund", payload)
 	if err != nil {
 		writeJSON(w, http.StatusBadGateway, map[string]string{"error": "payments_service_unavailable"})
 		return

@@ -1,27 +1,20 @@
 package main
 
 import (
-	"bytes"
 	"context"
-	"encoding/json"
 	"fmt"
 	"io"
 	"net/http"
-	"strings"
 )
 
 func captureFuelPayment(
 	ctx context.Context,
-	paymentsServiceURL string,
+	cfg *serviceConfig,
 	orderID string,
 	amountCents int64,
 ) error {
 	payload := map[string]any{"amountCents": amountCents}
-	body, _ := json.Marshal(payload)
-	endpoint := fmt.Sprintf("%s/orders/%s/capture", strings.TrimRight(paymentsServiceURL, "/"), orderID)
-	req, _ := http.NewRequestWithContext(ctx, http.MethodPost, endpoint, bytes.NewReader(body))
-	req.Header.Set("Content-Type", "application/json")
-	resp, err := http.DefaultClient.Do(req)
+	resp, err := doPaymentsJSONRequest(ctx, cfg, http.MethodPost, fmt.Sprintf("/orders/%s/capture", orderID), payload)
 	if err != nil {
 		return err
 	}

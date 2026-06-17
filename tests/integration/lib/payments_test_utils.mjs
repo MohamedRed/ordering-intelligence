@@ -1,3 +1,5 @@
+import { getIdentityToken } from './gcloud_tokens.mjs';
+
 const DEFAULT_TIMEOUT_MS = 20000;
 const RETRYABLE_STATUSES = new Set([500, 502, 503, 504]);
 
@@ -34,6 +36,11 @@ export const assertOk = (label, res, data, text) => {
     const payload = data ? JSON.stringify(data) : text || 'no body';
     throw new Error(`${label} failed: ${res.status} ${payload}`);
   }
+};
+
+export const paymentsAuthHeaders = (baseUrl) => {
+  const audience = String(baseUrl || '').replace(/\/$/, '');
+  return { Authorization: `Bearer ${getIdentityToken(audience)}` };
 };
 
 export const isServiceHealthy = async (baseUrl, timeoutMs = 5000) => {

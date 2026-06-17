@@ -1,8 +1,45 @@
 const assert = require("node:assert/strict");
 const test = require("node:test");
 
-const { resolveCorsOrigins } = require("../dist/config");
+const { getConfig, resolveCorsOrigins } = require("../dist/config");
 const { buildCorsOptions } = require("../dist/cors");
+
+const CONFIG_ENV_KEYS = [
+  "PORT",
+  "ENVIRONMENT",
+  "CORS_ORIGINS",
+  "FIREBASE_PROJECT_ID",
+  "STRIPE_SECRET_KEY",
+  "STRIPE_PUBLISHABLE_KEY",
+  "STRIPE_WEBHOOK_SECRET",
+  "STRIPE_WEBHOOK_ALLOWED_EVENTS",
+  "ORDER_SERVICE_URL",
+  "NOTIFICATION_SERVICE_URL",
+  "INTERNAL_AUTH_AUDIENCE",
+  "INTERNAL_ALLOWED_EMAILS"
+];
+
+function withConfigEnv(overrides, fn) {
+  const previous = new Map(CONFIG_ENV_KEYS.map((key) => [key, process.env[key]]));
+  for (const key of CONFIG_ENV_KEYS) {
+    delete process.env[key];
+  }
+  for (const [key, value] of Object.entries(overrides)) {
+    process.env[key] = value;
+  }
+  try {
+    return fn();
+  } finally {
+    for (const key of CONFIG_ENV_KEYS) {
+      const value = previous.get(key);
+      if (value === undefined) {
+        delete process.env[key];
+      } else {
+        process.env[key] = value;
+      }
+    }
+  }
+}
 
 test("resolveCorsOrigins requires explicit origins", () => {
   assert.throws(
@@ -40,6 +77,24 @@ test("resolveCorsOrigins rejects paths and non-http origins", () => {
   assert.throws(
     () => resolveCorsOrigins("file://checkout.example.com", "development"),
     /Only http and https origins are supported/
+  );
+});
+
+test("getConfig requires internal auth settings in production-like environments", () => {
+  withConfigEnv(
+    {
+      ENVIRONMENT: "staging",
+      CORS_ORIGINS: "https://checkout.example.com",
+      FIREBASE_PROJECT_ID: "ordering-intelligence-test",
+      STRIPE_SECRET_KEY: "sk_test_123",
+      ORDER_SERVICE_URL: "https://orders.example.com"
+    },
+    () => {
+      assert.throws(
+        () => getConfig(),
+        /INTERNAL_AUTH_AUDIENCE and INTERNAL_ALLOWED_EMAILS are required/
+      );
+    }
   );
 });
 

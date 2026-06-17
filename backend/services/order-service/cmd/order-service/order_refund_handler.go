@@ -1,14 +1,12 @@
 package main
 
 import (
-	"bytes"
 	"context"
 	"encoding/json"
 	"io"
 	"log"
 	"net/http"
 	"strings"
-	"time"
 
 	cloudfirestore "cloud.google.com/go/firestore"
 )
@@ -60,12 +58,7 @@ func handleOrderRefund(
 		return
 	}
 
-	body, _ := json.Marshal(payload)
-	endpoint := strings.TrimRight(cfg.PaymentsServiceURL, "/") + "/orders/" + orderID + "/refund"
-	req, _ := http.NewRequestWithContext(ctx, http.MethodPost, endpoint, bytes.NewReader(body))
-	req.Header.Set("Content-Type", "application/json")
-	client := &http.Client{Timeout: 12 * time.Second}
-	resp, err := client.Do(req)
+	resp, err := doPaymentsJSONRequest(ctx, cfg, http.MethodPost, "/orders/"+orderID+"/refund", payload)
 	if err != nil {
 		writeJSON(w, http.StatusBadGateway, map[string]string{"error": "payments_service_unavailable"})
 		return

@@ -1591,6 +1591,8 @@ module "payments_service" {
     INTERNAL_AUTH_AUDIENCE   = local.service_urls.payments_service
     INTERNAL_ALLOWED_EMAILS = join(",", [
       module.agent_tools_sa.email,
+      module.channel_gateway_sa.email,
+      module.order_service_sa.email,
       module.github_ci_sa.email,
     ])
     STRIPE_WEBHOOK_ALLOWED_EVENTS = "checkout.session.completed,checkout.session.expired,payment_intent.succeeded,payment_intent.payment_failed,setup_intent.succeeded"
@@ -2385,6 +2387,16 @@ resource "google_cloud_run_service_iam_member" "order_service_channel_gateway_in
   depends_on = [module.order_service, module.channel_gateway_sa]
 }
 
+resource "google_cloud_run_service_iam_member" "payments_service_agent_tools_invoker" {
+  project  = var.project_id
+  location = var.region
+  service  = local.service_names.payments_service
+  role     = "roles/run.invoker"
+  member   = "serviceAccount:${module.agent_tools_sa.email}"
+
+  depends_on = [module.payments_service, module.agent_tools_sa]
+}
+
 resource "google_cloud_run_service_iam_member" "payments_service_channel_gateway_invoker" {
   project  = var.project_id
   location = var.region
@@ -2393,6 +2405,16 @@ resource "google_cloud_run_service_iam_member" "payments_service_channel_gateway
   member   = "serviceAccount:${module.channel_gateway_sa.email}"
 
   depends_on = [module.payments_service, module.channel_gateway_sa]
+}
+
+resource "google_cloud_run_service_iam_member" "payments_service_order_service_invoker" {
+  project  = var.project_id
+  location = var.region
+  service  = local.service_names.payments_service
+  role     = "roles/run.invoker"
+  member   = "serviceAccount:${module.order_service_sa.email}"
+
+  depends_on = [module.payments_service, module.order_service_sa]
 }
 
 resource "google_cloud_run_service_iam_member" "payments_service_public" {
