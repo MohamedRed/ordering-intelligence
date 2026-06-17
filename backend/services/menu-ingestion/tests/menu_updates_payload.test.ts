@@ -4,7 +4,7 @@ import { ingestRouter } from '../src/routes/ingest';
 import { testRouter } from '../src/routes/test';
 
 function makeHarness() {
-  const publishMessage = jest.fn(async () => undefined);
+  const publishMessage = jest.fn(async (_message: { json: Record<string, unknown> }) => undefined);
   const batchWrites: any[] = [];
   const draft = {
     jobId: 'job-1',
@@ -84,5 +84,24 @@ describe('menu update Pub/Sub payloads', () => {
         storeId: 'store-1',
       }),
     });
+  });
+
+  it('omits jobId from internal smoke-test menu updates when it is not provided', async () => {
+    const { app, publishMessage } = makeHarness();
+
+    await supertest(app)
+      .post('/internal/test/menu-update')
+      .send({ storeId: 'store-1' })
+      .expect(200);
+
+    const call = publishMessage.mock.calls[0]?.[0] as { json: Record<string, unknown> } | undefined;
+    expect(call).toBeDefined();
+    const payload = call?.json;
+    expect(payload).toMatchObject({
+      source: 'internal_test',
+      status: 'completed',
+      storeId: 'store-1',
+    });
+    expect(payload).not.toHaveProperty('jobId');
   });
 });

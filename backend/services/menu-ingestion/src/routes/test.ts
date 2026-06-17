@@ -63,14 +63,16 @@ export const testRouter = (ctx: AppContext) => {
       await ctx.firestore.collection('menus').doc(storeId).set(menuRecord, { merge: true });
 
       if (ctx.menuUpdatesTopic) {
+        const updatePayload: Record<string, unknown> = {
+          storeId,
+          updatedAt: new Date().toISOString(),
+          status: 'completed',
+          source,
+        };
+        if (jobId) updatePayload.jobId = jobId;
+
         await ctx.pubsub.topic(ctx.menuUpdatesTopic).publishMessage({
-          json: {
-            storeId,
-            updatedAt: new Date().toISOString(),
-            jobId: jobId || undefined,
-            status: 'completed',
-            source,
-          },
+          json: updatePayload,
         });
       }
 
