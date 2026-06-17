@@ -10,6 +10,7 @@ import { slugifyName } from '../utils.js';
 import type { MenuItem } from '../types.js';
 import { enqueueAgentJob, waitForAgentJob } from './agent_queue.js';
 import { fetchGradio } from './gradio_client.js';
+import { resolveMenuObjectMimeType } from './menu_object_mime.js';
 import {
   failWorkflowNode,
   finishWorkflowNode,
@@ -30,6 +31,7 @@ export async function analyzeMenuFromOriginal(
   for (const object of files) {
     page += 1;
     const fileUri = `gs://${BUCKET}/${object}`;
+    const mimeType = resolveMenuObjectMimeType(object);
     const nodeId = jobId ? `analysis_p${page}` : undefined;
     if (jobId && nodeId) {
       await startWorkflowNode(jobId, {
@@ -43,7 +45,7 @@ export async function analyzeMenuFromOriginal(
         seq: 1000 + page,
       });
     }
-    let parsed = await analyzeOriginalViaVertex(fileUri, 'image/jpeg');
+    let parsed = await analyzeOriginalViaVertex(fileUri, mimeType);
     if ((!parsed || !parsed.length) && AGENT_ANALYSIS_URL) {
       parsed = await analyzeOriginalViaAgent(fileUri);
     }

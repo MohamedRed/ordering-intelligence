@@ -68,4 +68,19 @@ describe('analyzeOriginalViaVertex fallback', () => {
     expect(waitForAgentJobMock).toHaveBeenCalledWith('doc-x', 'analysis');
     expect(res).toEqual([{ id: '1', name: 'Burger', available: true }]);
   });
+
+  it('uses the upload MIME type for Vertex and queued analysis jobs', async () => {
+    await analyzeMenuFromOriginal(['foo.png']);
+
+    const fetchBody = JSON.parse(String(fetchMock.mock.calls[0]?.[1]?.body ?? '{}'));
+    expect(fetchBody.contents[0].parts[1].fileData.mimeType).toBe('image/png');
+    expect(enqueueAgentJobMock).toHaveBeenCalledWith(
+      'analysis',
+      expect.any(String),
+      'gs://test-bucket/foo.png',
+      'image/png',
+      expect.any(String),
+      expect.any(String),
+    );
+  });
 });

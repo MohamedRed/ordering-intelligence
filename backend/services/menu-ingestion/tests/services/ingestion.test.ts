@@ -71,6 +71,17 @@ describe('generation service', () => {
     expect(saveMock.mock.calls[0][0]).toBeInstanceOf(Buffer);
   });
 
+  it('passes source upload MIME type into composite generation', async () => {
+    renderImageMock.mockResolvedValue('Zmlu' as any);
+
+    await generateComposites(['foo.png'], 'job1');
+
+    expect(renderImageMock).toHaveBeenCalledWith(expect.objectContaining({
+      mimeType: 'image/png',
+      fileUri: 'gs://test-bucket/foo.png',
+    }));
+  });
+
   it('throws when no composites are generated (composite required)', async () => {
     renderImageMock.mockResolvedValue(undefined as any);
     await expect(generateComposites(['foo.jpg'], 'job1')).rejects.toThrow('no composites generated');

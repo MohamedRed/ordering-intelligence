@@ -11,6 +11,7 @@ import { ordinal } from '../utils.js';
 import { geminiJson, renderImage } from './generation.js';
 import { fetchGradio } from './gradio_client.js';
 import type { ExtractedItems, GeneratedComposite, GeminiItemImage } from './ingestion_types.js';
+import { resolveMenuObjectMimeType } from './menu_object_mime.js';
 import { withTimeout } from './storage_timeout.js';
 import {
   failWorkflowNode,
@@ -51,9 +52,10 @@ export async function generateComposites(
         seq: 2000 + page,
       });
 
+      const mimeType = resolveMenuObjectMimeType(object);
       let b64 = await renderImage({
         prompt,
-        mimeType: 'image/jpeg',
+        mimeType,
         fileUri: `gs://${BUCKET}/${object}`,
         modelId: COMPOSITE_MODEL,
         label: `composite-${jobId}-p${page}`,
@@ -111,11 +113,7 @@ export async function extractItemsFromComposites(
   for (const object of files) {
     page += 1;
     try {
-      const mime = object.toLowerCase().endsWith('.png')
-        ? 'image/png'
-        : object.toLowerCase().match(/\.jpe?g$/)
-          ? 'image/jpeg'
-          : 'image/png';
+      const mime = resolveMenuObjectMimeType(object);
       const countPrompt =
         'How many individual cards/items are in this composite image? Return strict JSON like { "count": 12 } with no other text.';
       const countNodeId = `count_p${page}`;
