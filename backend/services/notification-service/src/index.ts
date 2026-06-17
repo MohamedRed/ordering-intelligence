@@ -15,6 +15,7 @@ import cors from "cors";
 import axios from "axios";
 import { GoogleAuth } from "google-auth-library";
 import { buildNotificationCorsOptions, resolveNotificationCorsOrigins } from "./cors_policy";
+import { startElevenLabsOutboundCall } from "./elevenlabs_outbound";
 import { requireFirebaseAdmin, requireFirebaseUser } from "./firebase_auth";
 import { initializeFirebaseApp } from "./firebase_init";
 import { requireGoogleOidc, requireGoogleOidcRequest } from "./internal_auth";
@@ -868,13 +869,13 @@ async function triggerCustomerComms(params: {
   }
 
   if (notifyMode === "call") {
-    await startElevenLabsOutboundCall({
+    await startElevenLabsOutboundCall(axios, config, {
       store,
       toNumber: to,
       note: message,
       tenantId,
       storeId: params.storeId
-    });
+    }, notificationsDryRun);
   }
 }
 
@@ -898,60 +899,4 @@ async function resolveCustomerContact(params: { tenantId: string; callerId: stri
     console.warn(JSON.stringify({ level: "warn", event: "customer_profile_lookup_failed", message: (err as Error).message }));
     return { phoneE164: callerId, customerName: "" };
   }
-}
-
-async function startElevenLabsOutboundCall(params: {
-  store: StoreDoc | null;
-  toNumber: string;
-  note: string;
-  tenantId: string;
-  storeId: string;
-}): Promise<void> {
-  if (notificationsDryRun) {
-    console.log(
-      JSON.stringify({
-        level: "info",
-        event: "elevenlabs_outbound_call_dry_run",
-        to: params.toNumber,
-        storeId: params.storeId
-      })
-    );
-    return;
-  }
-  const apiKey = String(config.ELEVENLABS_API_KEY ?? "").trim();
-  if (!apiKey) {
-    console.warn(JSON.stringify({ level: "warn", event: "elevenlabs_api_key_missing" }));
-    return;
-  }
-  const base = String(config.ELEVENLABS_API_BASE_URL ?? "https://api.elevenlabs.io").replace(/\/+$/, "");
-  const agentId = String(params.store?.elevenlabs_agent_id ?? "").trim() || String(params.store?.elevenlabs_agent_template_id ?? "").trim();
-  const phoneNumberId = String(params.store?.elevenlabs_phone_number_id ?? "").trim();
-  if (!agentId || !phoneNumberId) {
-    console.warn(JSON.stringify({ level: "warn", event: "elevenlabs_store_not_configured", storeId: params.storeId }));
-    return;
-  }
-
-  await axios.post(
-    `${base}/v1/convai/twilio/outbound-call`,
-    {
-      agent_id: agentId,
-      agent_phone_number_id: phoneNumberId,
-      to_number: params.toNumber,
-      conversation_initiation_client_data: {
-        dynamic_variables: {
-          tenantId: params.tenantId,
-          storeId: params.storeId,
-          note: params.note
-        }
-      }
-    },
-    {
-      headers: {
-        "xi-api-key": apiKey,
-        "Content-Type": "application/json"
-      },
-      timeout: 15_000
-    }
-  );
-  console.log(JSON.stringify({ level: "info", event: "elevenlabs_outbound_call_started", to: params.toNumber, storeId: params.storeId }));
 }
