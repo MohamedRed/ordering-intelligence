@@ -3,7 +3,6 @@ package main
 import (
 	"context"
 	"crypto/sha256"
-	"encoding/base64"
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
@@ -136,85 +135,7 @@ func main() {
 	})
 
 	// Pub/Sub push endpoint for orders-events.
-	r.Post("/tasks/orders-events", func(w http.ResponseWriter, r *http.Request) {
-		var env pubsubPushEnvelope
-		if err := json.NewDecoder(r.Body).Decode(&env); err != nil {
-			writeJSON(w, http.StatusBadRequest, map[string]string{"error": "invalid_pubsub_envelope"})
-			return
-		}
-		raw, err := base64.StdEncoding.DecodeString(env.Message.Data)
-		if err != nil {
-			writeJSON(w, http.StatusBadRequest, map[string]string{"error": "invalid_base64"})
-			return
-		}
-		var evt orderEvent
-		if err := json.Unmarshal(raw, &evt); err != nil {
-			writeJSON(w, http.StatusBadRequest, map[string]string{"error": "invalid_event_json"})
-			return
-		}
-		evt.CustomerID = strings.TrimSpace(evt.CustomerID)
-		evt.StoreID = strings.TrimSpace(evt.StoreID)
-		if evt.CustomerID == "" || evt.StoreID == "" {
-			writeJSON(w, http.StatusOK, map[string]string{"status": "ignored_missing_identity"})
-			return
-		}
-		hasFuel := evt.Fuel != nil && strings.EqualFold(strings.TrimSpace(evt.BusinessType), "gas_station")
-		if len(evt.Items) == 0 && !hasFuel {
-			writeJSON(w, http.StatusOK, map[string]string{"status": "ignored_no_items"})
-			return
-		}
-
-		var templateID string
-		var title string
-		var items []orderItem
-		var fuel *fuelOrder
-		if len(evt.Items) > 0 {
-			templateID = orderTemplateID(evt.Items)
-			title = templateTitle(evt.Items)
-			items = evt.Items
-		} else if hasFuel {
-			templateID = fuelTemplateID(*evt.Fuel)
-			title = fuelTemplateTitle(*evt.Fuel)
-			fuel = evt.Fuel
-		}
-
-		docID := reordersDocID(evt.CustomerID, evt.StoreID)
-		now := time.Now().UTC()
-		ctx, cancel := context.WithTimeout(r.Context(), 3*time.Second)
-		defer cancel()
-
-		err = fs.RunTransaction(ctx, func(ctx context.Context, tx *cloudfirestore.Transaction) error {
-			ref := fs.Collection(reordersCollection).Doc(docID)
-			snap, err := tx.Get(ref)
-			var existing reorderDoc
-			if err == nil && snap.Exists() {
-				_ = snap.DataTo(&existing)
-			}
-
-			// Update last-3-distinct list.
-			next := upsertLastDistinct(existing.TopReorders, reorderTemplate{
-				OrderTemplateID: templateID,
-				Title:           title,
-				Items:           items,
-				Fuel:            fuel,
-				LastOrderedAt:   evt.CreatedAt,
-			})
-
-			payload := map[string]any{
-				"storeId":     evt.StoreID,
-				"customerId":  evt.CustomerID,
-				"topReorders": next,
-				"updatedAt":   now,
-			}
-			return tx.Set(ref, payload, cloudfirestore.MergeAll)
-		})
-		if err != nil {
-			log.Printf("failed updating reorders doc=%s err=%v", docID, err)
-			writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "update_failed"})
-			return
-		}
-		writeJSON(w, http.StatusOK, map[string]string{"status": "ok"})
-	})
+	r.Post("/tasks/orders-events", handleOrdersEvents(fs))
 
 	log.Printf("recommendation-service listening on :%s", cfg.Port)
 	log.Fatal(http.ListenAndServe(":"+cfg.Port, r))

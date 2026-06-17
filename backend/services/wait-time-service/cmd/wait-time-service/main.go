@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"log"
@@ -243,15 +242,10 @@ func handleOrdersEvents(
 	cfg *serviceConfig,
 	cache *storeMetaCache,
 ) {
-	var env pubsubPushEnvelope
-	if err := json.NewDecoder(r.Body).Decode(&env); err != nil {
-		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "invalid_pubsub_envelope"})
-		return
-	}
-
-	raw, err := base64.StdEncoding.DecodeString(strings.TrimSpace(env.Message.Data))
+	raw, messageID, reason, err := decodePubSubPushData(r.Body)
 	if err != nil {
-		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "invalid_base64"})
+		log.Printf("skipping malformed wait time orders Pub/Sub event reason=%s err=%v", reason, err)
+		writeJSON(w, http.StatusOK, map[string]string{"status": "ignored_invalid_pubsub", "reason": reason})
 		return
 	}
 
@@ -271,7 +265,8 @@ func handleOrdersEvents(
 		order = *env2.Order
 	} else {
 		if err := json.Unmarshal(raw, &order); err != nil {
-			writeJSON(w, http.StatusBadRequest, map[string]string{"error": "invalid_event_json"})
+			log.Printf("skipping malformed wait time order event payload reason=%s err=%v", pubsubDecodeInvalidPayload, err)
+			writeJSON(w, http.StatusOK, map[string]string{"status": "ignored_invalid_pubsub", "reason": pubsubDecodeInvalidPayload})
 			return
 		}
 	}
@@ -402,7 +397,7 @@ func handleOrdersEvents(
 			"createdAt":       order.CreatedAt,
 			"readyAt":         *order.ReadyAt,
 			"ingestedAt":      now,
-			"pubsubMessageId": strings.TrimSpace(env.Message.MessageID),
+			"pubsubMessageId": messageID,
 		}, cloudfirestore.MergeAll); err != nil {
 			return err
 		}

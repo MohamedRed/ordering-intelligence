@@ -2,8 +2,6 @@ package main
 
 import (
 	"context"
-	"encoding/base64"
-	"encoding/json"
 	"log"
 	"net/http"
 	"strings"
@@ -14,19 +12,10 @@ import (
 
 func handleOrdersEvents(fs *cloudfirestore.Client) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		var env pubsubPushEnvelope
-		if err := json.NewDecoder(r.Body).Decode(&env); err != nil {
-			writeJSON(w, http.StatusBadRequest, map[string]string{"error": "invalid_pubsub_envelope"})
-			return
-		}
-		raw, err := base64.StdEncoding.DecodeString(env.Message.Data)
-		if err != nil {
-			writeJSON(w, http.StatusBadRequest, map[string]string{"error": "invalid_base64"})
-			return
-		}
 		var evt orderEvent
-		if err := json.Unmarshal(raw, &evt); err != nil {
-			writeJSON(w, http.StatusBadRequest, map[string]string{"error": "invalid_event_json"})
+		if reason, err := decodePubSubPushJSON(r.Body, &evt); err != nil {
+			log.Printf("skipping malformed customer profile orders Pub/Sub event reason=%s err=%v", reason, err)
+			writeJSON(w, http.StatusOK, map[string]string{"status": "ignored_invalid_pubsub", "reason": reason})
 			return
 		}
 		evt.CustomerID = strings.TrimSpace(evt.CustomerID)
