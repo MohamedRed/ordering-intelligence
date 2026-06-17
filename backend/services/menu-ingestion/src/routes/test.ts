@@ -68,6 +68,7 @@ export const testRouter = (ctx: AppContext) => {
             storeId,
             updatedAt: new Date().toISOString(),
             jobId: jobId || undefined,
+            status: 'completed',
             source,
           },
         });

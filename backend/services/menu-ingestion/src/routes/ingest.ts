@@ -177,6 +177,7 @@ export function ingestRouter(ctx: AppContext) {
             storeId: draft.restaurantId,
             updatedAt: orderServiceMenu.updatedAt,
             jobId,
+            status: 'completed',
             source: 'menu-ingestion',
           },
         });
