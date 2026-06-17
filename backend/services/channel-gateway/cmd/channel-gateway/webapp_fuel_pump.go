@@ -4,10 +4,8 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
-	"fmt"
 	"io"
 	"net/http"
-	"net/url"
 	"strings"
 	"time"
 
@@ -87,7 +85,7 @@ func updateOrderFuelPump(
 	pumpNumber string,
 ) ([]byte, int, error) {
 	body, _ := json.Marshal(map[string]string{"pumpNumber": pumpNumber})
-	endpoint := fmt.Sprintf("%s/orders/%s/fuel", strings.TrimRight(cfg.OrderServiceURL, "/"), url.PathEscape(strings.TrimSpace(orderID)))
+	endpoint := serviceURL(cfg.OrderServiceURL, "orders", orderID, "fuel")
 	req, _ := http.NewRequestWithContext(ctx, http.MethodPatch, endpoint, bytes.NewReader(body))
 	req.Header.Set("Content-Type", "application/json")
 	resp, err := client.Do(req)

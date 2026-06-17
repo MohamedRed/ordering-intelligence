@@ -33,7 +33,7 @@ func createOrderCheckout(
 		payload["currency"] = currency
 	}
 	body, _ := json.Marshal(payload)
-	endpoint := fmt.Sprintf("%s/orders/%s/checkout", strings.TrimRight(cfg.PaymentsServiceURL, "/"), orderID)
+	endpoint := serviceURL(cfg.PaymentsServiceURL, "orders", orderID, "checkout")
 	req, _ := http.NewRequestWithContext(ctx, http.MethodPost, endpoint, bytes.NewReader(body))
 	req.Header.Set("Content-Type", "application/json")
 	resp, err := client.Do(req)
@@ -63,15 +63,15 @@ func createOrderPreauthCheckout(
 	amountCents int64,
 ) (orderCheckoutResponse, error) {
 	payload := map[string]any{
-		"successUrl": successURL,
-		"cancelUrl":  cancelURL,
+		"successUrl":  successURL,
+		"cancelUrl":   cancelURL,
 		"amountCents": amountCents,
 	}
 	if strings.TrimSpace(currency) != "" {
 		payload["currency"] = currency
 	}
 	body, _ := json.Marshal(payload)
-	endpoint := fmt.Sprintf("%s/orders/%s/preauth", strings.TrimRight(cfg.PaymentsServiceURL, "/"), orderID)
+	endpoint := serviceURL(cfg.PaymentsServiceURL, "orders", orderID, "preauth")
 	req, _ := http.NewRequestWithContext(ctx, http.MethodPost, endpoint, bytes.NewReader(body))
 	req.Header.Set("Content-Type", "application/json")
 	resp, err := client.Do(req)

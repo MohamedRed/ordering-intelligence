@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
-	"fmt"
 	"io"
 	"net/http"
 	"strings"
@@ -90,11 +89,7 @@ func handleMobileGroupOrderPaymentIntent(
 		requestPayload["savePaymentMethod"] = *payload.SavePaymentMethod
 	}
 	body, _ := json.Marshal(requestPayload)
-	endpoint := fmt.Sprintf(
-		"%s/group-orders/%s/payment-intent",
-		strings.TrimRight(cfg.PaymentsServiceURL, "/"),
-		groupOrderID,
-	)
+	endpoint := serviceURL(cfg.PaymentsServiceURL, "group-orders", groupOrderID, "payment-intent")
 	req, _ := http.NewRequestWithContext(ctx, http.MethodPost, endpoint, bytes.NewReader(body))
 	req.Header.Set("Content-Type", "application/json")
 	resp, err := paymentsHTTPClient.Do(req)
@@ -186,11 +181,7 @@ func handleMobileGroupOrderPayDefault(
 		requestPayload["currency"] = strings.TrimSpace(payload.Currency)
 	}
 	body, _ := json.Marshal(requestPayload)
-	endpoint := fmt.Sprintf(
-		"%s/group-orders/%s/off-session",
-		strings.TrimRight(cfg.PaymentsServiceURL, "/"),
-		groupOrderID,
-	)
+	endpoint := serviceURL(cfg.PaymentsServiceURL, "group-orders", groupOrderID, "off-session")
 	req, _ := http.NewRequestWithContext(ctx, http.MethodPost, endpoint, bytes.NewReader(body))
 	req.Header.Set("Content-Type", "application/json")
 	resp, err := paymentsHTTPClient.Do(req)

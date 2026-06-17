@@ -8,7 +8,6 @@ import (
 	"fmt"
 	"io"
 	"net/http"
-	"net/url"
 	"strings"
 )
 
@@ -46,11 +45,7 @@ func updateOrderChannelContact(
 		Locale:      strings.TrimSpace(contact.Locale),
 	}
 	body, _ := json.Marshal(payload)
-	endpoint := fmt.Sprintf(
-		"%s/orders/%s/channel-contact",
-		strings.TrimRight(cfg.OrderServiceURL, "/"),
-		url.PathEscape(strings.TrimSpace(orderID)),
-	)
+	endpoint := serviceURL(cfg.OrderServiceURL, "orders", orderID, "channel-contact")
 	req, _ := http.NewRequestWithContext(ctx, http.MethodPatch, endpoint, bytes.NewReader(body))
 	req.Header.Set("Content-Type", "application/json")
 	resp, err := orderHTTPClient.Do(req)

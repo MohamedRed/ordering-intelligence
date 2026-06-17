@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"fmt"
 	"net/http"
 	"strings"
 	"time"
@@ -27,7 +26,7 @@ func handleWebAppGroupOrderLookup(
 	}
 	ctx, cancel := context.WithTimeout(r.Context(), 6*time.Second)
 	defer cancel()
-	endpoint := fmt.Sprintf("%s/group_orders/join/%s", strings.TrimRight(cfg.OrderServiceURL, "/"), joinCode)
+	endpoint := serviceURL(cfg.OrderServiceURL, "group_orders", "join", joinCode)
 	if err := proxyJSON(ctx, orderHTTPClient, http.MethodGet, endpoint, nil, w); err != nil {
 		writeJSON(w, http.StatusBadGateway, map[string]string{"error": "order_service_unavailable"})
 	}
@@ -50,7 +49,7 @@ func handleWebAppGroupOrderGet(
 	}
 	ctx, cancel := context.WithTimeout(r.Context(), 6*time.Second)
 	defer cancel()
-	endpoint := fmt.Sprintf("%s/group_orders/%s", strings.TrimRight(cfg.OrderServiceURL, "/"), groupID)
+	endpoint := serviceURL(cfg.OrderServiceURL, "group_orders", groupID)
 	if err := proxyJSON(ctx, orderHTTPClient, http.MethodGet, endpoint, nil, w); err != nil {
 		writeJSON(w, http.StatusBadGateway, map[string]string{"error": "order_service_unavailable"})
 	}

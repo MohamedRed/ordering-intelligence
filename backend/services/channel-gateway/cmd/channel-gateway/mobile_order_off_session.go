@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
-	"fmt"
 	"io"
 	"net/http"
 	"strings"
@@ -93,11 +92,7 @@ func handleMobileOrderPayDefault(
 		requestPayload["currency"] = strings.TrimSpace(payload.Currency)
 	}
 	body, _ := json.Marshal(requestPayload)
-	endpoint := fmt.Sprintf(
-		"%s/orders/%s/off-session",
-		strings.TrimRight(cfg.PaymentsServiceURL, "/"),
-		orderID,
-	)
+	endpoint := serviceURL(cfg.PaymentsServiceURL, "orders", orderID, "off-session")
 	req, _ := http.NewRequestWithContext(ctx, http.MethodPost, endpoint, bytes.NewReader(body))
 	req.Header.Set("Content-Type", "application/json")
 	resp, err := paymentsHTTPClient.Do(req)

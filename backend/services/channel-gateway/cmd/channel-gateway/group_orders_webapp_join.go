@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
-	"fmt"
 	"net/http"
 	"strings"
 	"time"
@@ -66,7 +65,7 @@ func handleWebAppGroupOrderJoin(
 		DisplayName:   payload.DisplayName,
 		InviteID:      payload.InviteID,
 	}
-	endpoint := fmt.Sprintf("%s/group_orders/%s/join", strings.TrimRight(cfg.OrderServiceURL, "/"), groupID)
+	endpoint := serviceURL(cfg.OrderServiceURL, "group_orders", groupID, "join")
 	if err := proxyJSON(ctx, orderHTTPClient, http.MethodPost, endpoint, joinPayload, w); err != nil {
 		writeJSON(w, http.StatusBadGateway, map[string]string{"error": "order_service_unavailable"})
 	}

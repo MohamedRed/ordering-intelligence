@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
-	"fmt"
 	"io"
 	"net/http"
 	"strings"
@@ -98,7 +97,7 @@ func handleMobileOrderPaymentIntent(
 	}
 
 	body, _ := json.Marshal(requestPayload)
-	endpoint := fmt.Sprintf("%s/orders/%s/payment-intent", strings.TrimRight(cfg.PaymentsServiceURL, "/"), orderID)
+	endpoint := serviceURL(cfg.PaymentsServiceURL, "orders", orderID, "payment-intent")
 	req, _ := http.NewRequestWithContext(ctx, http.MethodPost, endpoint, bytes.NewReader(body))
 	req.Header.Set("Content-Type", "application/json")
 	resp, err := paymentsHTTPClient.Do(req)

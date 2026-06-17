@@ -4,9 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
-	"fmt"
 	"net/http"
-	"net/url"
 	"strings"
 )
 
@@ -65,7 +63,7 @@ func fetchWebAppOrder(
 	if baseURL == "" {
 		return webAppOrderSnapshot{}, errWebAppOrderLookupFailed
 	}
-	endpoint := fmt.Sprintf("%s/orders/%s", strings.TrimRight(baseURL, "/"), url.PathEscape(orderID))
+	endpoint := serviceURL(baseURL, "orders", orderID)
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, endpoint, nil)
 	if err != nil {
 		return webAppOrderSnapshot{}, errWebAppOrderLookupFailed

@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
-	"fmt"
 	"net/http"
 	"strings"
 	"time"
@@ -54,7 +53,7 @@ func handleWebAppGroupOrderLock(
 		writeWebAppGroupOrderAccessError(w, err)
 		return
 	}
-	endpoint := fmt.Sprintf("%s/group_orders/%s/lock", strings.TrimRight(cfg.OrderServiceURL, "/"), groupID)
+	endpoint := serviceURL(cfg.OrderServiceURL, "group_orders", groupID, "lock")
 	lockPayload := map[string]int64{
 		"taxCents":      payload.TaxCents,
 		"feeCents":      payload.FeeCents,

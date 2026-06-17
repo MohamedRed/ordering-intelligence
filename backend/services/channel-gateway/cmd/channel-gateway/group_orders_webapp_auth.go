@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
-	"fmt"
 	"net/http"
 	"strings"
 )
@@ -102,7 +101,7 @@ func fetchWebAppGroupOrder(
 	if baseURL == "" {
 		return webAppGroupOrderSnapshot{}, errWebAppGroupOrderLookupFailed
 	}
-	endpoint := fmt.Sprintf("%s/group_orders/%s", strings.TrimRight(baseURL, "/"), groupID)
+	endpoint := serviceURL(baseURL, "group_orders", groupID)
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, endpoint, nil)
 	if err != nil {
 		return webAppGroupOrderSnapshot{}, errWebAppGroupOrderLookupFailed

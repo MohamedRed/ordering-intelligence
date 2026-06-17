@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
-	"fmt"
 	"net/http"
 	"strings"
 	"time"
@@ -66,7 +65,7 @@ func handleWebAppGroupOrderCheckout(
 		writeWebAppGroupOrderAccessError(w, err)
 		return
 	}
-	endpoint := fmt.Sprintf("%s/group-orders/%s/checkout", strings.TrimRight(cfg.PaymentsServiceURL, "/"), groupID)
+	endpoint := serviceURL(cfg.PaymentsServiceURL, "group-orders", groupID, "checkout")
 	checkoutPayload := map[string]string{
 		"successUrl": payload.SuccessURL,
 		"cancelUrl":  payload.CancelURL,
