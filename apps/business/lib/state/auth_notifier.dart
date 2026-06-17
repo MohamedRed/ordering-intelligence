@@ -2,16 +2,33 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
+typedef AuthSignIn = Future<void> Function({
+  required String email,
+  required String password,
+});
+
+typedef AuthSignOut = Future<void> Function();
+
 class AuthNotifier extends ChangeNotifier {
-  AuthNotifier() {
-    _sub = FirebaseAuth.instance.authStateChanges().listen((user) {
-      _isAuthenticated = user != null;
-      _userName = user?.email;
-      notifyListeners();
+  AuthNotifier({
+    FirebaseAuth? firebaseAuth,
+    Stream<User?>? authStateChanges,
+    AuthSignIn? signIn,
+    AuthSignOut? signOut,
+  })  : _firebaseAuth = firebaseAuth ??
+            (authStateChanges == null ? FirebaseAuth.instance : null),
+        _signIn = signIn,
+        _signOut = signOut {
+    final auth = _firebaseAuth;
+    _sub = (authStateChanges ?? auth!.authStateChanges()).listen((user) {
+      _setAuthState(isAuthenticated: user != null, userName: user?.email);
     });
   }
 
   late final StreamSubscription<User?> _sub;
+  final FirebaseAuth? _firebaseAuth;
+  final AuthSignIn? _signIn;
+  final AuthSignOut? _signOut;
   bool _isAuthenticated = false;
   String? _userName;
 
@@ -20,12 +37,31 @@ class AuthNotifier extends ChangeNotifier {
 
   Future<void> signInEmailPassword(
       {required String email, required String password}) async {
-    await FirebaseAuth.instance
+    final handler = _signIn;
+    if (handler != null) {
+      await handler(email: email, password: password);
+      _setAuthState(isAuthenticated: true, userName: email);
+      return;
+    }
+    await _firebaseAuth!
         .signInWithEmailAndPassword(email: email, password: password);
   }
 
   Future<void> signOut() async {
-    await FirebaseAuth.instance.signOut();
+    final handler = _signOut;
+    if (handler != null) {
+      await handler();
+      _setAuthState(isAuthenticated: false, userName: null);
+      return;
+    }
+    await _firebaseAuth!.signOut();
+  }
+
+  void _setAuthState(
+      {required bool isAuthenticated, required String? userName}) {
+    _isAuthenticated = isAuthenticated;
+    _userName = userName;
+    notifyListeners();
   }
 
   @override
