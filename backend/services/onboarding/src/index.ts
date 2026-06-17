@@ -9,7 +9,6 @@ import { initializeApp, applicationDefault, getApps } from 'firebase-admin/app';
 import { getAuth } from 'firebase-admin/auth';
 import { OAuth2Client } from 'google-auth-library';
 import twilio from 'twilio';
-import { v4 as uuidv4 } from 'uuid';
 import Stripe from 'stripe';
 import { VertexAI } from '@google-cloud/vertexai';
 import fetch from 'node-fetch';
@@ -32,6 +31,7 @@ import { registerMenuFlyerSessionRoutes } from './menu_flyer_session_routes.js';
 import { registerMenuFlyerUploadRoutes } from './menu_flyer_upload.js';
 import { registerIngestPubSubRoutes } from './ingest_pubsub_routes.js';
 import { registerMenuIngestionRoutes } from './menu_ingestion_routes.js';
+import { registerSessionLifecycleRoutes } from './session_lifecycle_routes.js';
 import { registerSessionStatusRoutes } from './session_status_routes.js';
 import { registerVoiceNumberRoutes } from './voice_number_routes.js';
 import {
@@ -293,14 +293,6 @@ interface OnboardingSession {
   updated_at: FirebaseFirestore.Timestamp;
 }
 
-interface OnboardingTenantState {
-  active_session_id?: string;
-  last_session_id?: string;
-  store_id?: string;
-  created_at: FirebaseFirestore.Timestamp;
-  updated_at: FirebaseFirestore.Timestamp;
-}
-
 const storage = new Storage();
 const bucket = storage.bucket(BUCKET);
 
@@ -480,121 +472,19 @@ registerIngestPubSubRoutes({
   getSession,
   audit,
 });
+registerSessionLifecycleRoutes({
+  app,
+  sessions: SESSIONS,
+  tenants: TENANTS,
+  getSession,
+  audit,
+});
 
 app.get('/healthz', (_req, res) => {
   res.json({ status: 'ok' });
 });
 
-// Tenant onboarding state (resume support)
-app.get('/onboarding-tenants/:tenantId', async (req, res) => {
-  try {
-    const tenantId = (req.params.tenantId || '').trim();
-    if (!tenantId) return res.status(400).json({ error: 'tenant_id_required' });
-
-    const tenantSnap = await TENANTS.doc(tenantId).get();
-    if (!tenantSnap.exists) {
-      return res.status(404).json({ error: 'tenant_not_found' });
-    }
-    const tenantState = tenantSnap.data() as OnboardingTenantState;
-    const activeId = tenantState.active_session_id;
-    let session: any = null;
-    if (activeId) {
-      const s = await SESSIONS.doc(activeId).get();
-      if (s.exists) {
-        session = { session_id: activeId, ...(s.data() as OnboardingSession) };
-      }
-    }
-    res.json({
-      tenant_id: tenantId,
-      active_session_id: activeId ?? null,
-      last_session_id: tenantState.last_session_id ?? null,
-      store_id: tenantState.store_id ?? null,
-      session,
-    });
-  } catch (err: any) {
-    console.error('tenant status error', err);
-    res.status(500).json({ error: 'tenant_status_failed', message: err.message });
-  }
-});
-
-// 1) Start session
-app.post('/onboarding-sessions', async (req, res) => {
-  try {
-    const tenantId = (req.body?.tenant_id as string | undefined)?.trim();
-    const storeId = (req.body?.store_id as string | undefined)?.trim();
-
-    if (tenantId) {
-      const tenantDocRef = TENANTS.doc(tenantId);
-      const tenantSnap = await tenantDocRef.get();
-      const tenantState = (tenantSnap.exists ? (tenantSnap.data() as OnboardingTenantState) : null) ?? null;
-      const activeId = tenantState?.active_session_id;
-      if (activeId) {
-        const activeSnap = await SESSIONS.doc(activeId).get();
-        if (activeSnap.exists) {
-          const active = activeSnap.data() as OnboardingSession;
-          if (active.status !== 'ready' && active.status !== 'failed') {
-            return res.status(201).json({ session_id: activeId, reused: true });
-          }
-        }
-      }
-    }
-
-    const id = uuidv4();
-    const now = Timestamp.now();
-    const doc: OnboardingSession = {
-      status: 'collecting',
-      business: {},
-      flyers: [],
-      audit: [],
-      tenant: tenantId ? { tenant_id: tenantId, store_id: storeId } : undefined,
-      created_at: now,
-      updated_at: now,
-    };
-    await SESSIONS.doc(id).set(doc);
-    await audit(id, 'session_created', tenantId ? { tenant_id: tenantId, store_id: storeId } : undefined);
-
-    if (tenantId) {
-      const tenantDoc: OnboardingTenantState = {
-        active_session_id: id,
-        last_session_id: id,
-        store_id: storeId,
-        created_at: now,
-        updated_at: now,
-      };
-      await TENANTS.doc(tenantId).set(tenantDoc, { merge: true });
-    }
-
-    res.status(201).json({ session_id: id, reused: false });
-  } catch (err: any) {
-    console.error('create session error', err);
-    res.status(500).json({ error: 'session_create_failed', message: err.message });
-  }
-});
-
 // 2) Stripe endpoints (already defined below) are part of flow
-
-// 8) Notification preferences
-app.post('/onboarding-sessions/:id/notifications', async (req, res) => {
-  try {
-    const { id } = req.params;
-    const { device_tokens = [], webhook_url } = req.body || {};
-    const snap = await getSession(id, res);
-    if (!snap) return;
-    const ts = Timestamp.now();
-    await SESSIONS.doc(id).update({
-      notifications: {
-        device_tokens,
-        webhook_url,
-      },
-      updated_at: ts,
-    });
-    await audit(id, 'notifications_set', { device_tokens, webhook_url });
-    res.json({ ok: true });
-  } catch (err: any) {
-    console.error('notifications error', err);
-    res.status(500).json({ error: 'notifications_failed', message: err.message });
-  }
-});
 
 // 9) Finalize tenant (creates tenant/store drafts)
 app.post('/onboarding-sessions/:id/finalize', async (req, res) => {
