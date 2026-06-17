@@ -4,6 +4,7 @@ import type { Bucket } from '@google-cloud/storage';
 import type { PubSub } from '@google-cloud/pubsub';
 import { v4 as uuidv4 } from 'uuid';
 import { validateMenuFlyerCount } from './menu_ingestion_limits.js';
+import { resolveMenuFlyerMediaFromUrl } from './menu_flyer_media.js';
 
 type MenuIngestionSession = {
   flyers?: string[];
@@ -31,6 +32,17 @@ type RegisterMenuIngestionRoutesParams = {
 
 export type BucketObjectRef = { bucket?: string; key?: string };
 export type MenuPipelineMode = 'full' | 'menu_only';
+
+class MenuIngestionRouteError extends Error {
+  constructor(
+    public readonly statusCode: number,
+    public readonly code: string,
+    message: string,
+  ) {
+    super(message);
+    this.name = 'MenuIngestionRouteError';
+  }
+}
 
 export function registerMenuIngestionRoutes(params: RegisterMenuIngestionRoutesParams): void {
   params.app.post('/onboarding-sessions/:id/ingest-menu', async (req, res) => {
@@ -79,6 +91,9 @@ export function registerMenuIngestionRoutes(params: RegisterMenuIngestionRoutesP
       await params.audit(id, 'ingest_triggered', { jobId, restaurantId, fileCount: files.length });
       return res.json({ job_id: jobId });
     } catch (err: any) {
+      if (err instanceof MenuIngestionRouteError) {
+        return res.status(err.statusCode).json({ error: err.code, message: err.message });
+      }
       console.error('ingest-menu error', err);
       return res.status(500).json({ error: 'ingest_failed', message: err.message });
     }
@@ -205,10 +220,18 @@ async function copyFlyersToMenuRawPath(params: {
 }): Promise<string[]> {
   const files: string[] = [];
   for (let i = 0; i < params.flyers.length; i += 1) {
-    const dest = `menu-raw/${params.restaurantId}/${params.jobId}/page-${i + 1}.jpg`;
     const parsed = extractBucketKeyFromUrl(params.flyers[i]);
+    const media = resolveMenuFlyerMediaFromUrl(parsed.key ?? params.flyers[i]);
+    if (!media) {
+      throw new MenuIngestionRouteError(
+        400,
+        'unsupported_menu_flyer_type',
+        'Menu flyer URLs must point to JPEG, PNG, or WebP images.',
+      );
+    }
+    const dest = `menu-raw/${params.restaurantId}/${params.jobId}/page-${i + 1}.${media.extension}`;
     const buffer = await readFlyerBytes(params.bucket, params.bucketName, params.flyers[i], parsed);
-    await params.bucket.file(dest).save(buffer, { contentType: 'image/jpeg', resumable: false });
+    await params.bucket.file(dest).save(buffer, { contentType: media.contentType, resumable: false });
     files.push(dest);
   }
   return files;

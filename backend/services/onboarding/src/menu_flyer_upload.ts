@@ -1,6 +1,10 @@
 import express, { type Express, type Response } from 'express';
 import multer from 'multer';
 import { v4 as uuidv4 } from 'uuid';
+import {
+  isAllowedMenuFlyerContentType,
+  resolveMenuFlyerMediaFromFilename,
+} from './menu_flyer_media.js';
 
 type StorageFile = {
   save: (buffer: Buffer, options: Record<string, unknown>) => Promise<unknown>;
@@ -23,12 +27,6 @@ type RegisterMenuFlyerUploadRoutesParams = {
 
 export const MENU_FLYER_PREFIX = 'menu-flyers/';
 export const DEFAULT_MENU_FLYER_MAX_UPLOAD_BYTES = 10 * 1024 * 1024;
-
-const ALLOWED_TYPES: Record<string, string[]> = {
-  'image/jpeg': ['jpg', 'jpeg'],
-  'image/png': ['png'],
-  'image/webp': ['webp'],
-};
 
 class MenuFlyerUploadError extends Error {
   constructor(
@@ -56,10 +54,10 @@ export function validateMenuFlyerUploadFile(params: {
   mimetype?: string;
 }): { extension: string; contentType: string; safeName: string } {
   const safeName = sanitizeFilename(params.originalname);
-  const extension = extensionFromFilename(safeName);
+  const media = resolveMenuFlyerMediaFromFilename(safeName);
+  const extension = media?.extension ?? '';
   const contentType = (params.mimetype ?? '').toLowerCase();
-  const allowedExtensions = ALLOWED_TYPES[contentType];
-  if (!allowedExtensions || !allowedExtensions.includes(extension)) {
+  if (!extension || !isAllowedMenuFlyerContentType(contentType, extension)) {
     throw new MenuFlyerUploadError(
       415,
       'unsupported_menu_flyer_type',
@@ -198,11 +196,6 @@ async function resolveFlyerUrl(params: {
   }
   const baseUrl = params.publicBaseUrl?.replace(/\/$/, '') || `https://storage.googleapis.com/${params.bucket.name}`;
   return `${baseUrl}/${params.key}`;
-}
-
-function extensionFromFilename(filename: string): string {
-  const parts = filename.split('.');
-  return parts.length > 1 ? (parts.pop() ?? '').toLowerCase() : '';
 }
 
 function sanitizeFilename(filename: string): string {

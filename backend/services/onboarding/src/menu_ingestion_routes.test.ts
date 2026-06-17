@@ -107,7 +107,7 @@ describe('menu ingestion onboarding routes', () => {
 
   it('starts ingestion by copying flyers and publishing a menu job', async () => {
     const { app, audits, downloadedKeys, menuDocs, published, savedFiles, sessionUpdates } = makeRouteHarness({
-      flyers: ['https://storage.googleapis.com/menus-bucket/menu-flyers/menu.jpg'],
+      flyers: ['https://storage.googleapis.com/menus-bucket/menu-flyers/menu.png'],
       tenant: { store_id: 'store-123' },
     });
 
@@ -115,16 +115,16 @@ describe('menu ingestion onboarding routes', () => {
     const jobId = res.body.job_id;
 
     expect(jobId).toMatch(/[a-f0-9-]{36}/);
-    expect(downloadedKeys).toEqual(['menu-flyers/menu.jpg']);
+    expect(downloadedKeys).toEqual(['menu-flyers/menu.png']);
     expect(savedFiles).toHaveLength(1);
-    expect(savedFiles[0].key).toBe(`menu-raw/store-123/${jobId}/page-1.jpg`);
-    expect(savedFiles[0].options).toMatchObject({ contentType: 'image/jpeg', resumable: false });
+    expect(savedFiles[0].key).toBe(`menu-raw/store-123/${jobId}/page-1.png`);
+    expect(savedFiles[0].options).toMatchObject({ contentType: 'image/png', resumable: false });
     expect(menuDocs.get(`menus_ingest/${jobId}`).payload).toMatchObject({
       jobId,
       restaurantId: 'store-123',
       status: 'queued',
       pipelineMode: 'full',
-      files: [`menu-raw/store-123/${jobId}/page-1.jpg`],
+      files: [`menu-raw/store-123/${jobId}/page-1.png`],
     });
     expect(published).toEqual([{ topic: 'menu-ingest', message: { json: { jobId } } }]);
     expect(sessionUpdates[0].payload.ingestion).toEqual({
@@ -143,6 +143,19 @@ describe('menu ingestion onboarding routes', () => {
     const { app } = makeRouteHarness({ flyers: [] });
     const res = await request(app).post('/onboarding-sessions/session-1/ingest-menu').send({}).expect(400);
     expect(res.body.error).toBe('no_flyers');
+  });
+
+  it('rejects unsupported flyer file types before publishing ingestion', async () => {
+    const { app, published, savedFiles } = makeRouteHarness({
+      flyers: ['https://storage.googleapis.com/menus-bucket/menu-flyers/menu.pdf'],
+      tenant: { store_id: 'store-123' },
+    });
+
+    const res = await request(app).post('/onboarding-sessions/session-1/ingest-menu').send({}).expect(400);
+
+    expect(res.body.error).toBe('unsupported_menu_flyer_type');
+    expect(savedFiles).toHaveLength(0);
+    expect(published).toHaveLength(0);
   });
 
   it('resumes image enrichment and cancels existing jobs', async () => {
