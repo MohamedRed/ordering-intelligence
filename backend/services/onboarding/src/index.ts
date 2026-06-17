@@ -32,6 +32,7 @@ import { buildCorsOptions, resolveCorsOrigins } from './cors_policy.js';
 import { registerMenuFlyerSessionRoutes } from './menu_flyer_session_routes.js';
 import { registerMenuFlyerUploadRoutes } from './menu_flyer_upload.js';
 import { registerMenuIngestionRoutes } from './menu_ingestion_routes.js';
+import { registerSessionStatusRoutes } from './session_status_routes.js';
 import { registerVoiceNumberRoutes } from './voice_number_routes.js';
 import {
   createOnboardingAuthMiddleware,
@@ -468,6 +469,13 @@ registerAgentCreationRoutes({
   audit,
   resolveTemplateAgentId: resolveElevenLabsTemplateAgentId,
 });
+registerSessionStatusRoutes({
+  app,
+  firestore,
+  sessions: SESSIONS,
+  getSession,
+  audit,
+});
 
 app.get('/healthz', (_req, res) => {
   res.json({ status: 'ok' });
@@ -815,119 +823,6 @@ app.post('/onboarding-sessions/:id/finalize', async (req, res) => {
   } catch (err: any) {
     console.error('finalize error', err);
     res.status(500).json({ error: 'finalize_failed', message: err.message });
-  }
-});
-
-// 10) Status & audit
-app.get('/onboarding-sessions/:id/status', async (req, res) => {
-  const snap = await getSession(req.params.id, res);
-  if (!snap) return;
-  res.json({ status: snap.status, ingestion: snap.ingestion, stripe: snap.stripe, twilio: snap.twilio, agent: snap.agent });
-});
-
-app.get('/onboarding-sessions/:id/audit', async (req, res) => {
-  const snap = await getSession(req.params.id, res);
-  if (!snap) return;
-  res.json({ audit: snap.audit ?? [] });
-});
-
-// Sync ingestion status from menus_ingest collection (utility endpoint)
-app.post('/onboarding-sessions/:id/sync-ingest', async (req, res) => {
-  try {
-    const { id } = req.params;
-    const snap = await getSession(id, res);
-    if (!snap) return;
-    const jobIds = snap.ingestion?.job_ids || [];
-    if (!jobIds.length) return res.json({ status: 'not_started', progress: { percent: 0, stage: 'not_started' } });
-
-    const jobsSnap = await firestore.getAll(
-      ...jobIds.map((jid) => firestore.collection('menus_ingest').doc(jid)),
-    );
-    let status = snap.ingestion?.status || 'unknown';
-    let fastReady = !!snap.ingestion?.fast_ready;
-    let bestPercent = 0;
-    let bestStage: string | undefined;
-    for (const j of jobsSnap) {
-      if (!j.exists) continue;
-      const data = j.data() as any;
-      const pct = typeof data.progressPercent === 'number' ? data.progressPercent : undefined;
-      const stage = typeof data.progressStage === 'string' ? data.progressStage : undefined;
-      const readyKind = typeof data.readyKind === 'string' ? data.readyKind : undefined;
-      if (readyKind && ['menu_only', 'full'].includes(readyKind.toLowerCase())) {
-        fastReady = true;
-      }
-      if (pct != null && pct >= bestPercent) {
-        bestPercent = pct;
-        bestStage = stage;
-      }
-      // take the most critical status
-      if (data.status === 'canceled') { status = 'canceled'; break; }
-      if (data.status === 'error') { status = 'error'; break; }
-      if (data.status === 'processing') status = 'processing';
-      if (data.status === 'queued' && status !== 'processing') status = 'queued';
-      if (data.status === 'uploading' && status !== 'processing') status = 'queued';
-      if (data.status === 'ready') status = 'succeeded';
-      if (data.status === 'completed' || data.status === 'succeeded') status = 'succeeded';
-      if (data.status === 'ready' || data.status === 'completed' || data.status === 'succeeded') fastReady = true;
-    }
-
-    if (!bestStage) {
-      bestStage =
-        status === 'succeeded' ? 'done' :
-        status === 'processing' ? 'processing' :
-        status === 'queued' ? 'queued' :
-        status === 'canceled' ? 'canceled' :
-        status === 'error' ? 'error' :
-        status;
-    }
-    if (status === 'succeeded') bestPercent = 100;
-    if (status === 'error' && bestPercent < 100) bestPercent = 100;
-    if (status === 'canceled' && bestPercent < 100) bestPercent = 100;
-
-    const ts = Timestamp.now();
-    await SESSIONS.doc(id).update({ ingestion: { job_ids: jobIds, status, fast_ready: fastReady }, updated_at: ts });
-    await audit(id, 'ingest_synced', { status, fast_ready: fastReady });
-    res.json({ status, fast_ready: fastReady, progress: { percent: bestPercent, stage: bestStage } });
-  } catch (err: any) {
-    console.error('sync-ingest error', err);
-    res.status(500).json({ error: 'sync_ingest_failed', message: err.message });
-  }
-});
-
-// Fetch per-AI-call workflow nodes for the current ingestion job.
-// Useful for a DAG visualization in the admin UI.
-app.get('/onboarding-sessions/:id/ingest-workflow', async (req, res) => {
-  try {
-    const { id } = req.params;
-    const snap = await getSession(id, res);
-    if (!snap) return;
-    const jobIds = snap.ingestion?.job_ids || [];
-    if (!jobIds.length) return res.json({ job_id: null, nodes: [] });
-
-    const requested = (req.query.job_id as string | undefined)?.trim();
-    const jobId = (requested && jobIds.includes(requested) ? requested : jobIds[0]) as string;
-    const limitRaw = Number(req.query.limit ?? 600);
-    const limit = Number.isFinite(limitRaw) ? Math.max(1, Math.min(2000, limitRaw)) : 600;
-
-    const nodesSnap = await firestore
-      .collection('menus_ingest')
-      .doc(jobId)
-      .collection('workflow_nodes')
-      .limit(limit)
-      .get();
-    const nodes = nodesSnap.docs.map((d) => d.data());
-    nodes.sort((a: any, b: any) => {
-      const sa = typeof a.seq === 'number' ? a.seq : Number.MAX_SAFE_INTEGER;
-      const sb = typeof b.seq === 'number' ? b.seq : Number.MAX_SAFE_INTEGER;
-      if (sa !== sb) return sa - sb;
-      const ta = typeof a.startedAt === 'number' ? a.startedAt : 0;
-      const tb = typeof b.startedAt === 'number' ? b.startedAt : 0;
-      return ta - tb;
-    });
-    res.json({ job_id: jobId, nodes });
-  } catch (err: any) {
-    console.error('ingest-workflow error', err);
-    res.status(500).json({ error: 'ingest_workflow_failed', message: err.message });
   }
 });
 
