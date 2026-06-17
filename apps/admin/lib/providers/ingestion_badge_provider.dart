@@ -10,13 +10,14 @@ class IngestionCounts {
 }
 
 const _baseUrl = String.fromEnvironment('ADMIN_SERVICE_URL',
-    defaultValue: 'http://localhost:8085');
+    defaultValue: 'https://admin-service-230152279015.us-central1.run.app');
 
 class IngestionBadgeApi {
   final http.Client _client;
   final Future<String?> Function() _tokenSupplier;
 
-  IngestionBadgeApi({http.Client? client, Future<String?> Function()? tokenSupplier})
+  IngestionBadgeApi(
+      {http.Client? client, Future<String?> Function()? tokenSupplier})
       : _client = client ?? http.Client(),
         _tokenSupplier = tokenSupplier ?? _defaultTokenSupplier;
 

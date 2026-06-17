@@ -6,7 +6,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import '../models/alert.dart';
 
 const _baseUrl = String.fromEnvironment('NOTIFICATION_SERVICE_URL',
-    defaultValue: 'http://localhost:8084');
+    defaultValue: 'https://notification-service-f2qwyitacq-uc.a.run.app');
 
 class AlertApi {
   final http.Client _client;

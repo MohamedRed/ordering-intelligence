@@ -2,9 +2,11 @@ import 'package:consumer_core/consumer_core.dart';
 import 'package:consumer_ui/consumer_ui.dart';
 import 'package:flutter/widgets.dart';
 
+import '../app_config.dart';
+
 class WebMiniAppPlatform extends MiniAppPlatform {
   WebMiniAppPlatform({ChannelGatewayApi? api, PaymentsAdapter? paymentsAdapter})
-    : _api = api ?? ChannelGatewayApi(baseUrl: 'http://localhost'),
+    : _api = api ?? ChannelGatewayApi(baseUrl: resolveApiBase()),
       _paymentsAdapter = paymentsAdapter ?? _NoopPaymentsAdapter();
 
   final ChannelGatewayApi _api;
@@ -21,7 +23,7 @@ class WebMiniAppPlatform extends MiniAppPlatform {
 
   @override
   MiniAppLaunchContext resolveLaunchContext() {
-    return MiniAppLaunchContext(baseUri: Uri.parse('http://localhost'));
+    return MiniAppLaunchContext(baseUri: Uri.parse(resolveApiBase()));
   }
 
   @override

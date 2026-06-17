@@ -22,12 +22,13 @@ class NotificationMetrics {
 
 const _notificationUrl = String.fromEnvironment(
   'NOTIFICATION_SERVICE_URL',
-  defaultValue: 'http://localhost:8084',
+  defaultValue: 'https://notification-service-f2qwyitacq-uc.a.run.app',
 );
 
 class NotificationMetricsApi {
   final http.Client _client;
-  NotificationMetricsApi({http.Client? client}) : _client = client ?? http.Client();
+  NotificationMetricsApi({http.Client? client})
+      : _client = client ?? http.Client();
 
   Future<NotificationMetrics> fetchMetrics() async {
     final token = await _token();
@@ -65,7 +66,8 @@ class NotificationMetricsApi {
 final notificationMetricsApiProvider =
     Provider<NotificationMetricsApi>((ref) => NotificationMetricsApi());
 
-final notificationMetricsProvider = FutureProvider<NotificationMetrics>((ref) async {
+final notificationMetricsProvider =
+    FutureProvider<NotificationMetrics>((ref) async {
   final api = ref.watch(notificationMetricsApiProvider);
   return api.fetchMetrics();
 });

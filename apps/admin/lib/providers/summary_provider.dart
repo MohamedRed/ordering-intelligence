@@ -5,7 +5,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 
 import '../models/summary.dart';
 
-// Default to deployed dev service; override with --dart-define=ORDER_SERVICE_URL=http://localhost:8082 when running locally.
+// Default to deployed dev service; override ORDER_SERVICE_URL when running locally.
 const _orderServiceUrl = String.fromEnvironment(
   'ORDER_SERVICE_URL',
   defaultValue: 'https://order-service-230152279015.us-central1.run.app',

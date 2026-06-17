@@ -5,7 +5,10 @@ import 'package:firebase_auth/firebase_auth.dart';
 
 import '../models/order.dart';
 
-const _baseUrl = String.fromEnvironment('ORDER_SERVICE_URL', defaultValue: 'http://localhost:8082');
+const _baseUrl = String.fromEnvironment(
+  'ORDER_SERVICE_URL',
+  defaultValue: 'https://order-service-230152279015.us-central1.run.app',
+);
 
 class OrderDetailApi {
   final http.Client _client;
@@ -27,9 +30,11 @@ class OrderDetailApi {
   }
 }
 
-final orderDetailApiProvider = Provider<OrderDetailApi>((ref) => OrderDetailApi());
+final orderDetailApiProvider =
+    Provider<OrderDetailApi>((ref) => OrderDetailApi());
 
-final orderDetailProvider = FutureProvider.family<Order, String>((ref, orderId) async {
+final orderDetailProvider =
+    FutureProvider.family<Order, String>((ref, orderId) async {
   final api = ref.watch(orderDetailApiProvider);
   return api.fetchOrder(orderId);
 });
