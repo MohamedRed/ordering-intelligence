@@ -15,6 +15,7 @@ import axios from "axios";
 import { GoogleAuth } from "google-auth-library";
 import { buildNotificationCorsOptions, resolveNotificationCorsOrigins } from "./cors_policy";
 import { resolveCustomerContact } from "./customer_contact";
+import { shouldSendDeliveryComms } from "./delivery_comms_guardrails";
 import { startElevenLabsOutboundCall } from "./elevenlabs_outbound";
 import { requireFirebaseAdmin, requireFirebaseUser } from "./firebase_auth";
 import { initializeFirebaseApp } from "./firebase_init";
@@ -24,12 +25,9 @@ import { decodePubSubJson, logPubSubDecodeFailure } from "./pubsub_envelope";
 import { enqueueReadyEscalationTask } from "./ready_escalation_tasks";
 import {
   defaultMessageForStatus,
-  DELIVERY_COMMS_RATE_LIMIT_DEFAULT,
   normalizeDeliveryEvent,
   normalizeDispatchEvent,
-  resolveTemplateFromComms,
-  safeDocId,
-  toMillis
+  resolveTemplateFromComms
 } from "./comms_helpers";
 import type {
   DeliveryEvent,
@@ -41,7 +39,6 @@ import type {
   OrderEvent,
   OrdersEventEnvelope,
   PubSubPushEnvelope,
-  StoreDeliveryComms,
   StoreDoc,
   StoreOrderComms
 } from "./types";
@@ -442,7 +439,7 @@ app.post("/events/dispatch", async (req: Request, res: Response) => {
         return;
       }
       if (defaultChannel !== "none") {
-        const allowed = await shouldSendDeliveryComms({
+        const allowed = await shouldSendDeliveryComms(firestore, {
           storeId,
           orderId,
           eventKey: dispatchEventKey,
@@ -531,7 +528,7 @@ app.post("/events/deliveries", async (req: Request, res: Response) => {
       return;
     }
 
-    const allowed = await shouldSendDeliveryComms({
+    const allowed = await shouldSendDeliveryComms(firestore, {
       storeId,
       orderId,
       eventKey,
@@ -672,73 +669,6 @@ async function fetchStore(storeId: string): Promise<StoreDoc | null> {
   const snap = await firestore.collection("stores").doc(storeId).get();
   if (!snap.exists) return null;
   return snap.data() as StoreDoc;
-}
-
-async function shouldSendDeliveryComms(params: {
-  storeId: string;
-  orderId?: string;
-  eventKey: string;
-  comms?: StoreDeliveryComms | null;
-  eventVersion?: string;
-}): Promise<boolean> {
-  const orderId = String(params.orderId ?? "").trim();
-  const eventKey = String(params.eventKey ?? "").trim();
-  if (!orderId || !eventKey) return true;
-
-  const eventVersion = String(params.eventVersion ?? "v1").trim() || "v1";
-  const storeRef = firestore.collection("stores").doc(params.storeId);
-  const eventDocId = safeDocId(`${orderId}_${eventKey}_${eventVersion}`);
-  const eventRef = storeRef.collection("delivery_comms_events").doc(eventDocId);
-  const stateRef = storeRef.collection("delivery_comms_state").doc(orderId);
-  const limitRaw = Number(params.comms?.rate_limit_per_hour ?? DELIVERY_COMMS_RATE_LIMIT_DEFAULT);
-  const rateLimit = Number.isFinite(limitRaw) ? limitRaw : DELIVERY_COMMS_RATE_LIMIT_DEFAULT;
-  const windowMs = 60 * 60 * 1000;
-  const now = Date.now();
-
-  try {
-    return await firestore.runTransaction(async (tx) => {
-      const [eventSnap, stateSnap] = await Promise.all([tx.get(eventRef), tx.get(stateRef)]);
-      if (eventSnap.exists) return false;
-
-      let count = 0;
-      let windowStart = now;
-      if (stateSnap.exists) {
-        const data = stateSnap.data() ?? {};
-        const lastStart = toMillis((data as any).windowStart ?? (data as any).window_start);
-        const lastCount = Number((data as any).count ?? 0);
-        if (lastStart > 0 && now-lastStart < windowMs) {
-          count = Number.isFinite(lastCount) ? lastCount : 0;
-          windowStart = lastStart;
-        }
-      }
-
-      if (rateLimit > 0 && count >= rateLimit) {
-        return false;
-      }
-
-      tx.create(eventRef, {
-        storeId: params.storeId,
-        orderId,
-        eventKey,
-        eventVersion,
-        createdAt: new Date(now),
-      });
-      tx.set(
-        stateRef,
-        {
-          orderId,
-          count: count + 1,
-          windowStart: new Date(windowStart),
-          updatedAt: new Date(now),
-        },
-        { merge: true }
-      );
-      return true;
-    });
-  } catch (err) {
-    console.warn(JSON.stringify({ level: "warn", event: "delivery_comms_guardrails_failed", orderId, eventKey, message: (err as Error).message }));
-    return true;
-  }
 }
 
 async function handleOrderStatusComms(evt: OrderEvent): Promise<void> {
