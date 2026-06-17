@@ -7,7 +7,11 @@ import sgMail from "@sendgrid/mail";
 import twilio from "twilio";
 import { listAlerts, storeAlert } from "./alerts";
 import { getAuth } from "firebase-admin/auth";
-import { registerToken } from "./registerToken";
+import {
+  listDeviceTokensForCustomer,
+  listDeviceTokensForUser,
+  registerToken
+} from "./device_tokens";
 
 import { loadConfig } from "@ordering-intelligence/config";
 import cors from "cors";
@@ -386,7 +390,7 @@ app.post("/events/dispatch", async (req: Request, res: Response) => {
 
     // v1: notify driver of assignment requests via FCM push.
     if (kind === "assignment_request" && driverId) {
-      const tokens = await listDeviceTokensForUser({ userId: driverId, storeId });
+      const tokens = await listDeviceTokensForUser(firestore, { userId: driverId, storeId });
       if (tokens.length > 0) {
         const notifyRequest: NotifyRequest = {
           channel: ["push"],
@@ -406,7 +410,7 @@ app.post("/events/dispatch", async (req: Request, res: Response) => {
     }
 
     if ((kind === "marketplace_offer" || kind === "marketplace_prewarm") && driverId) {
-      const tokens = await listDeviceTokensForUser({ userId: driverId });
+      const tokens = await listDeviceTokensForUser(firestore, { userId: driverId });
       if (tokens.length > 0) {
         const offerId = String(raw?.payload?.offerId ?? raw?.offerId ?? "").trim();
         const notifyRequest: NotifyRequest = {
@@ -599,28 +603,6 @@ app.post("/device-tokens", verifyUser, async (req: Request, res: Response) => {
   }
 });
 
-async function listDeviceTokensForUser(params: { userId: string; storeId?: string }): Promise<string[]> {
-  const userId = params.userId.trim();
-  if (!userId) return [];
-  let q = firestore.collection("deviceTokens").where("userId", "==", userId);
-  if (params.storeId && params.storeId.trim()) {
-    q = q.where("storeId", "==", params.storeId.trim());
-  }
-  const snap = await q.get();
-  return snap.docs.map((d) => String(d.id)).filter((t) => t.trim().length > 0);
-}
-
-async function listDeviceTokensForCustomer(params: { customerId: string; storeId?: string }): Promise<string[]> {
-  const customerId = params.customerId.trim();
-  if (!customerId) return [];
-  let q = firestore.collection("deviceTokens").where("customerId", "==", customerId);
-  if (params.storeId && params.storeId.trim()) {
-    q = q.where("storeId", "==", params.storeId.trim());
-  }
-  const snap = await q.get();
-  return snap.docs.map((d) => String(d.id)).filter((t) => t.trim().length > 0);
-}
-
 app.post("/handoff", requireGoogleOidc(internalAuth), async (req: Request, res: Response) => {
   const callSid = req.body?.callSid;
   if (!callSid) {
@@ -770,7 +752,10 @@ async function triggerCustomerComms(params: {
 
   const pushCustomerId = String(customerId ?? "").trim();
   if (pushCustomerId) {
-    const tokens = await listDeviceTokensForCustomer({ customerId: pushCustomerId, storeId: params.storeId });
+    const tokens = await listDeviceTokensForCustomer(firestore, {
+      customerId: pushCustomerId,
+      storeId: params.storeId
+    });
     if (tokens.length > 0) {
       const notifyRequest: NotifyRequest = {
         channel: ["push"],
