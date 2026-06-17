@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"encoding/base64"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -2439,47 +2438,6 @@ func metricsHandler(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprintf(w, "order_status_updates_total %d\n", atomic.LoadUint64(&statusUpdateCounter))
 	fmt.Fprintf(w, "menu_cache_hits_total %d\n", atomic.LoadUint64(&menuCacheHits))
 	fmt.Fprintf(w, "menu_cache_misses_total %d\n", atomic.LoadUint64(&menuCacheMisses))
-}
-
-// menuUpdatesHandler processes Pub/Sub push payloads to invalidate/prime menu cache.
-func menuUpdatesHandler(ctx context.Context, firestoreClient *cloudfirestore.Client) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		var payload struct {
-			Message struct {
-				Data string `json:"data"`
-			} `json:"message"`
-		}
-		if err := json.NewDecoder(r.Body).Decode(&payload); err != nil {
-			writeJSON(w, http.StatusBadRequest, map[string]string{"error": "invalid_payload"})
-			return
-		}
-		if payload.Message.Data == "" {
-			writeJSON(w, http.StatusBadRequest, map[string]string{"error": "missing_data"})
-			return
-		}
-		dataBytes, err := base64.StdEncoding.DecodeString(payload.Message.Data)
-		if err != nil {
-			writeJSON(w, http.StatusBadRequest, map[string]string{"error": "bad_base64"})
-			return
-		}
-		var evt struct {
-			StoreID   string    `json:"storeId"`
-			UpdatedAt time.Time `json:"updatedAt"`
-			JobID     string    `json:"jobId"`
-			Source    string    `json:"source"`
-		}
-		if err := json.Unmarshal(dataBytes, &evt); err != nil || evt.StoreID == "" {
-			writeJSON(w, http.StatusBadRequest, map[string]string{"error": "invalid_event"})
-			return
-		}
-		log.Printf("menu-update event received store=%s source=%s updatedAt=%s job=%s", evt.StoreID, evt.Source, evt.UpdatedAt, evt.JobID)
-		invalidateMenuCache(evt.StoreID)
-		// Optionally pre-warm cache
-		if _, err := fetchMenuCached(ctx, firestoreClient, evt.StoreID); err != nil {
-			log.Printf("menu-update prefetch failed: %v", err)
-		}
-		w.WriteHeader(http.StatusNoContent)
-	}
 }
 
 func fetchMenuMap(ctx context.Context, client *cloudfirestore.Client, storeID string) (map[string]menuItem, error) {

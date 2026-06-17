@@ -2,7 +2,6 @@ package main
 
 import (
 	cloudfirestore "cloud.google.com/go/firestore"
-	"encoding/base64"
 	"errors"
 	"net/http"
 	"net/http/httptest"
@@ -78,68 +77,6 @@ func TestFetchMenuCachedHitMissAndTTL(t *testing.T) {
 			t.Fatalf("expected miss after expiry")
 		}
 	})
-}
-
-func TestMenuUpdatesHandlerInvalidatesCache(t *testing.T) {
-	menuCache = sync.Map{}
-	menuCache.Store("store-invalidate", cachedMenu{menu: &menuRecord{StoreID: "store-invalidate"}, expires: time.Now().Add(5 * time.Minute)})
-
-	withStubbedFetchMenu(t, func(ctx context.Context, client *firestore.Client, storeID string) (*menuRecord, error) {
-		return &menuRecord{StoreID: storeID}, nil
-	}, func() {
-		handler := menuUpdatesHandler(context.Background(), nil)
-		payload := base64.StdEncoding.EncodeToString([]byte(`{"storeId":"store-invalidate","updatedAt":"2024-01-01T00:00:00Z","jobId":"j1","source":"test"}`))
-		req := httptest.NewRequest(http.MethodPost, "/events/menu-updates", strings.NewReader(`{"message":{"data":"`+payload+`"}}`))
-		rr := httptest.NewRecorder()
-
-		handler(rr, req)
-
-		if rr.Code != http.StatusNoContent {
-			t.Fatalf("expected 204, got %d", rr.Code)
-		}
-		if v, ok := menuCache.Load("store-invalidate"); !ok {
-			t.Fatalf("cache entry should be refreshed")
-		} else {
-			cm := v.(cachedMenu)
-			if cm.menu.StoreID != "store-invalidate" {
-				t.Fatalf("unexpected store in cache")
-			}
-			if time.Until(cm.expires) <= 0 {
-				t.Fatalf("cache expiry not extended")
-			}
-		}
-	})
-}
-
-func TestMenuUpdatesHandlerRejectsBadPayload(t *testing.T) {
-	handler := menuUpdatesHandler(context.Background(), nil)
-	req := httptest.NewRequest(http.MethodPost, "/events/menu-updates", strings.NewReader(`{}`))
-	rr := httptest.NewRecorder()
-	handler(rr, req)
-	if rr.Code != http.StatusBadRequest {
-		t.Fatalf("expected 400 for missing data, got %d", rr.Code)
-	}
-}
-
-func TestMenuUpdatesHandlerBadBase64(t *testing.T) {
-	handler := menuUpdatesHandler(context.Background(), nil)
-	req := httptest.NewRequest(http.MethodPost, "/events/menu-updates", strings.NewReader(`{"message":{"data":"###"}}`))
-	rr := httptest.NewRecorder()
-	handler(rr, req)
-	if rr.Code != http.StatusBadRequest {
-		t.Fatalf("expected 400 for bad base64, got %d", rr.Code)
-	}
-}
-
-func TestMenuUpdatesHandlerInvalidEvent(t *testing.T) {
-	handler := menuUpdatesHandler(context.Background(), nil)
-	payload := base64.StdEncoding.EncodeToString([]byte(`{"invalid":true}`))
-	req := httptest.NewRequest(http.MethodPost, "/events/menu-updates", strings.NewReader(`{"message":{"data":"`+payload+`"}}`))
-	rr := httptest.NewRecorder()
-	handler(rr, req)
-	if rr.Code != http.StatusBadRequest {
-		t.Fatalf("expected 400 for invalid event, got %d", rr.Code)
-	}
 }
 
 func TestMetricsHandlerOutputsCounters(t *testing.T) {
