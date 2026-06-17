@@ -8,7 +8,6 @@ import { PubSub } from '@google-cloud/pubsub';
 import { initializeApp, applicationDefault, getApps } from 'firebase-admin/app';
 import { getAuth } from 'firebase-admin/auth';
 import { OAuth2Client } from 'google-auth-library';
-import bodyParser from 'body-parser';
 import twilio from 'twilio';
 import { v4 as uuidv4 } from 'uuid';
 import Stripe from 'stripe';
@@ -31,6 +30,7 @@ import {
 import { buildCorsOptions, resolveCorsOrigins } from './cors_policy.js';
 import { registerMenuFlyerSessionRoutes } from './menu_flyer_session_routes.js';
 import { registerMenuFlyerUploadRoutes } from './menu_flyer_upload.js';
+import { registerIngestPubSubRoutes } from './ingest_pubsub_routes.js';
 import { registerMenuIngestionRoutes } from './menu_ingestion_routes.js';
 import { registerSessionStatusRoutes } from './session_status_routes.js';
 import { registerVoiceNumberRoutes } from './voice_number_routes.js';
@@ -367,8 +367,6 @@ registerMenuFlyerUploadRoutes({
   publicBaseUrl: PUBLIC_BASE_URL,
   makePublic: MAKE_PUBLIC,
 });
-// Dedicated raw parser for Pub/Sub push (accept any content-type)
-const pubsubRaw = bodyParser.raw({ type: '*/*' });
 
 // Utility: audit log append
 const audit = async (id: string, event: string, data?: any) => {
@@ -476,6 +474,12 @@ registerSessionStatusRoutes({
   getSession,
   audit,
 });
+registerIngestPubSubRoutes({
+  app,
+  sessions: SESSIONS,
+  getSession,
+  audit,
+});
 
 app.get('/healthz', (_req, res) => {
   res.json({ status: 'ok' });
@@ -568,86 +572,6 @@ app.post('/onboarding-sessions', async (req, res) => {
 });
 
 // 2) Stripe endpoints (already defined below) are part of flow
-
-// Pub/Sub push handler for ingestion completion events
-// Expects message.data base64 JSON: { session_id?, job_id?, status }
-const handleIngestPubSub = async (req: express.Request, res: express.Response) => {
-  try {
-    let body: any = (req as any).body;
-    if (Buffer.isBuffer(body)) {
-      try {
-        body = JSON.parse(body.toString('utf8'));
-      } catch {
-        body = undefined;
-      }
-    } else if (typeof body === 'string') {
-      try {
-        body = JSON.parse(body);
-      } catch {
-        body = undefined;
-      }
-    }
-    const msg: any = body?.message;
-    if (!msg?.data) return res.status(400).json({ error: 'invalid_message' });
-
-    const decoded = JSON.parse(Buffer.from(msg.data, 'base64').toString('utf8'));
-    const jobId = decoded.job_id || decoded.jobId;
-    const status = decoded.status as string | undefined;
-    let sessionId = decoded.session_id as string | undefined;
-
-    console.log('ingest-pubsub received', { jobId, status, sessionId });
-
-    if (!status) return res.status(400).json({ error: 'status_required' });
-
-    // If session_id missing, try lookup by job id
-    if (!sessionId && jobId) {
-      const snap = await SESSIONS.where('ingestion.job_ids', 'array-contains', jobId).limit(1).get();
-      if (!snap.empty) sessionId = snap.docs[0].id;
-    }
-    if (!sessionId) return res.status(400).json({ error: 'session_id_not_found' });
-
-    const snap = await getSession(sessionId, res);
-    if (!snap) return;
-
-    const ts = Timestamp.now();
-    const normalized =
-      status === 'completed' || status === 'succeeded' ? 'succeeded' :
-      status === 'partial_ok' ? 'partial_ok' :
-      status === 'error' || status === 'failed' ? 'error' :
-      status;
-
-    const updates: any = {
-      ingestion: {
-        job_ids: snap.ingestion?.job_ids ?? (jobId ? [jobId] : []),
-        status: normalized,
-      },
-      updated_at: ts,
-    };
-    // Optionally advance overall session status when ingestion completes
-    if (normalized === 'succeeded' && snap.status === 'ingesting') {
-      updates.status = 'ready';
-    }
-
-    await SESSIONS.doc(sessionId).update(updates);
-    await audit(sessionId, 'ingest_pubsub', { job_id: jobId, status: normalized });
-    res.status(204).send();
-  } catch (err: any) {
-    console.error('ingest-pubsub error', err);
-    res.status(500).json({ error: 'ingest_pubsub_failed', message: err.message });
-  }
-};
-
-// Accept Pub/Sub push on both /ingest-pubsub and /
-app.all(['/ingest-pubsub', '/'], (req, res) => {
-  if (req.method !== 'POST') return res.status(405).send('Method Not Allowed');
-  pubsubRaw(req, res, (err) => {
-    if (err) {
-      console.error('ingest-pubsub parse error', err);
-      return res.status(400).json({ error: 'invalid_json', message: err.message });
-    }
-    return handleIngestPubSub(req, res);
-  });
-});
 
 // 8) Notification preferences
 app.post('/onboarding-sessions/:id/notifications', async (req, res) => {
