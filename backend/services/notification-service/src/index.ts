@@ -1,7 +1,6 @@
 import "dotenv/config";
 
-import express, { NextFunction, Request, Response } from "express";
-import fs from "fs";
+import express, { Request, Response } from "express";
 import admin from "firebase-admin";
 import { Firestore } from "@google-cloud/firestore";
 import sgMail from "@sendgrid/mail";
@@ -16,6 +15,8 @@ import cors from "cors";
 import axios from "axios";
 import { GoogleAuth } from "google-auth-library";
 import { buildNotificationCorsOptions, resolveNotificationCorsOrigins } from "./cors_policy";
+import { requireFirebaseAdmin, requireFirebaseUser } from "./firebase_auth";
+import { initializeFirebaseApp } from "./firebase_init";
 import { requireGoogleOidc, requireGoogleOidcRequest } from "./internal_auth";
 import {
   defaultMessageForStatus,
@@ -53,14 +54,15 @@ app.use(cors(buildNotificationCorsOptions(notificationCorsOrigins)));
 
 const port = Number(process.env.PORT || config.PORT || 8080);
 
-initializeFirebase(config.FIREBASE_SERVICE_ACCOUNT);
+initializeFirebaseApp(config);
 
 const firestore = new Firestore({
   projectId: config.FIREBASE_PROJECT_ID || undefined
 });
 
-// Initialise firebase-admin for token verification (already initialized above)
 const firebaseAuth = getAuth();
+const verifyFirebaseAdmin = requireFirebaseAdmin(firebaseAuth);
+const verifyUser = requireFirebaseUser(firebaseAuth);
 
 const messaging = admin.messaging();
 
@@ -670,38 +672,6 @@ if (process.env.NODE_ENV !== "test") {
   });
 }
 
-function initializeFirebase(serviceAccount: string): void {
-  if (admin.apps.length > 0) {
-    return;
-  }
-
-  try {
-    if (!serviceAccount || serviceAccount.trim() === "") {
-      // Fall back to application default credentials (workload identity).
-      admin.initializeApp({
-        projectId: config.FIREBASE_PROJECT_ID
-      });
-    } else {
-      const credentials = parseServiceAccount(serviceAccount);
-      admin.initializeApp({
-        credential: admin.credential.cert(credentials as admin.ServiceAccount),
-        projectId: config.FIREBASE_PROJECT_ID
-      });
-    }
-  } catch (error) {
-    console.error("Failed to initialise Firebase", error);
-    throw error;
-  }
-}
-
-function parseServiceAccount(value: string): object {
-  if (value.trim().startsWith("{")) {
-    return JSON.parse(value);
-  }
-  const fileContents = fs.readFileSync(value, "utf-8");
-  return JSON.parse(fileContents);
-}
-
 async function fetchStore(storeId: string): Promise<StoreDoc | null> {
   const snap = await firestore.collection("stores").doc(storeId).get();
   if (!snap.exists) return null;
@@ -1213,38 +1183,4 @@ async function sendEmailNotification(payload: NotifyRequest): Promise<void> {
       title: payload.payload.title
     })
   );
-}
-
-async function verifyFirebaseAdmin(req: Request, res: Response, next: NextFunction) {
-  try {
-    const authHeader = req.header("Authorization");
-    if (!authHeader || !authHeader.startsWith("Bearer ")) {
-      return res.status(401).json({ error: "missing_auth" });
-    }
-    const token = authHeader.replace("Bearer ", "");
-    const decoded = await firebaseAuth.verifyIdToken(token);
-    if (decoded.role && decoded.role !== "admin") {
-      return res.status(403).json({ error: "forbidden" });
-    }
-    return next();
-  } catch (err) {
-    console.error("auth failed", err);
-    return res.status(401).json({ error: "unauthorized" });
-  }
-}
-
-async function verifyUser(req: Request, res: Response, next: NextFunction) {
-  try {
-    const authHeader = req.header("Authorization");
-    if (!authHeader || !authHeader.startsWith("Bearer ")) {
-      return res.status(401).json({ error: "missing_auth" });
-    }
-    const token = authHeader.replace("Bearer ", "");
-    const decoded = await firebaseAuth.verifyIdToken(token);
-    (req as any).uid = decoded.uid;
-    return next();
-  } catch (err) {
-    console.error("auth failed", err);
-    return res.status(401).json({ error: "unauthorized" });
-  }
 }
