@@ -31,6 +31,7 @@ import { buildCorsOptions, resolveCorsOrigins } from './cors_policy.js';
 import { registerMenuFlyerSessionRoutes } from './menu_flyer_session_routes.js';
 import { registerMenuFlyerUploadRoutes } from './menu_flyer_upload.js';
 import { registerMenuIngestionRoutes } from './menu_ingestion_routes.js';
+import { registerVoiceNumberRoutes } from './voice_number_routes.js';
 import {
   createOnboardingAuthMiddleware,
   resolveOnboardingAuthPolicy,
@@ -444,6 +445,20 @@ registerBusinessProfileRoutes({
   getSession,
   audit,
 });
+registerVoiceNumberRoutes({
+  app,
+  sessions: SESSIONS,
+  twilioClient,
+  twilioNumberPool: TWILIO_NUMBER_POOL,
+  twilioAllowPurchase: TWILIO_ALLOW_PURCHASE,
+  elevenLabsEnabled: Boolean(ELEVENLABS_API_KEY && TWILIO_ACCOUNT_SID && TWILIO_AUTH_TOKEN),
+  resolveTemplateAgentId: resolveElevenLabsTemplateAgentId,
+  importElevenLabsPhoneNumber: ensureElevenLabsPhoneNumberImported,
+  upsertPhoneNumberRoute,
+  maskPhone,
+  getSession,
+  audit,
+});
 
 app.get('/healthz', (_req, res) => {
   res.json({ status: 'ok' });
@@ -536,118 +551,6 @@ app.post('/onboarding-sessions', async (req, res) => {
 });
 
 // 2) Stripe endpoints (already defined below) are part of flow
-
-// 3) Voice number provisioning
-app.post('/onboarding-sessions/:id/voice-number', async (req, res) => {
-  try {
-    const { id } = req.params;
-    const snap = await getSession(id, res);
-    if (!snap) return;
-
-    if (!twilioClient) return res.status(500).json({ error: 'twilio_not_configured' });
-    let number = req.body?.number as string | undefined;
-    let twilioSid: string | undefined;
-
-    if (!number) {
-      // If a pool is provided, pick first; otherwise attempt to buy a new number (US).
-      if (TWILIO_NUMBER_POOL.length > 0) {
-        number = TWILIO_NUMBER_POOL[0];
-      } else {
-        if (!TWILIO_ALLOW_PURCHASE) {
-          return res.status(400).json({ error: 'no_pool_and_purchase_disabled' });
-        }
-        const search = await twilioClient.availablePhoneNumbers('US').local.list({ areaCode: 415, limit: 1 });
-        if (!search.length) return res.status(500).json({ error: 'no_numbers_available' });
-        const purchased = await twilioClient.incomingPhoneNumbers.create({ phoneNumber: search[0].phoneNumber });
-        number = purchased.phoneNumber;
-        twilioSid = purchased.sid;
-        const ts = Timestamp.now();
-        await SESSIONS.doc(id).update({
-          twilio: { number, sid: purchased.sid, status: 'assigned' },
-          updated_at: ts,
-        });
-        await audit(id, 'twilio_assigned', { number, sid: purchased.sid, source: 'purchased' });
-        // continue below to optionally import into ElevenLabs
-      }
-    }
-
-    // For pool or provided number, try to look up SID
-    if (!twilioSid) {
-      const lookup = await twilioClient.incomingPhoneNumbers.list({ phoneNumber: number, limit: 1 });
-      twilioSid = lookup[0]?.sid;
-    }
-    const ts = Timestamp.now();
-    await SESSIONS.doc(id).update({ twilio: { number, sid: twilioSid, status: 'assigned' }, updated_at: ts });
-    await audit(id, 'twilio_assigned', {
-      number,
-      sid: twilioSid,
-      source: twilioSid ? 'existing' : 'pool_without_sid',
-    });
-
-    // Optional: import the phone number into ElevenLabs and assign the template agent.
-    // This enables ElevenLabs Twilio integration to route calls on this number to the selected agent.
-    let elevenlabs_phone_number_id: string | undefined;
-    if (ELEVENLABS_API_KEY && TWILIO_ACCOUNT_SID && TWILIO_AUTH_TOKEN) {
-      try {
-        const businessType = ((snap.business?.type || '').trim() || 'fast_food').toLowerCase();
-        const agentId =
-          (snap.agent?.template_agent_id || '').trim() || resolveElevenLabsTemplateAgentId(businessType);
-        if (agentId) {
-          const label = `${(snap.business?.name || 'Business').slice(0, 40)} (${businessType})`;
-          elevenlabs_phone_number_id = await ensureElevenLabsPhoneNumberImported({
-            phoneNumber: number,
-            label,
-            agentId,
-          });
-          await SESSIONS.doc(id).update({
-            twilio: {
-              number,
-              sid: twilioSid,
-              status: 'assigned',
-              elevenlabs_phone_number_id,
-            },
-            updated_at: Timestamp.now(),
-          });
-          await audit(id, 'elevenlabs_phone_number_imported', {
-            phone_number_id: elevenlabs_phone_number_id,
-            phone_number: maskPhone(number),
-            agent_id: agentId,
-          });
-        }
-      } catch (err: any) {
-        console.error('elevenlabs phone import failed', err?.message ?? err);
-        await audit(id, 'elevenlabs_phone_number_import_failed', { message: err?.message ?? String(err) });
-      }
-    }
-
-    // Durable routing mapping: written immediately on assignment so webhook routing doesn't depend on onboarding state.
-    try {
-      await upsertPhoneNumberRoute({
-        onboardingSessionId: id,
-        toNumber: number,
-        elevenlabsPhoneNumberId: elevenlabs_phone_number_id,
-        twilioSid,
-        tenantId: snap.tenant?.tenant_id || '',
-        storeId: snap.tenant?.store_id || '',
-        businessType: snap.business?.type || '',
-        routeStatus: snap.status || 'active',
-        source: 'onboarding_voice_number',
-      });
-      await audit(id, 'phone_number_route_upserted', {
-        to_number: maskPhone(number),
-        phone_number_id: elevenlabs_phone_number_id || null,
-      });
-    } catch (err: any) {
-      console.error('phone_number_routes upsert failed', err?.message ?? err);
-      await audit(id, 'phone_number_route_upsert_failed', { message: err?.message ?? String(err) });
-    }
-
-    res.json({ number, sid: twilioSid, elevenlabs_phone_number_id });
-  } catch (err: any) {
-    console.error('voice-number error', err);
-    res.status(500).json({ error: 'voice_number_failed', message: err.message });
-  }
-});
 
 // 7) Create ElevenLabs agent (duplicate a template based on business type)
 app.post('/onboarding-sessions/:id/create-agent', async (req, res) => {
