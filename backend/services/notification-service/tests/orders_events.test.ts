@@ -128,6 +128,7 @@ describe("/events/orders", () => {
     process.env.SENDGRID_API_KEY = "sg_key";
     process.env.OPS_PHONE = "+15550009999";
     process.env.OPS_EMAIL = "ops@example.com";
+    process.env.CUSTOMER_PROFILE_SERVICE_URL = "https://customer-profile.example.com";
     process.env.CLOUD_TASKS_PROJECT_ID = "demo";
     process.env.CLOUD_TASKS_LOCATION = "us-central1";
     process.env.CLOUD_TASKS_READY_ESCALATION_QUEUE = "ready-escalation";
@@ -220,11 +221,15 @@ describe("/events/orders", () => {
     expect(res.status).toBe(204);
     expect(twilioMessagesCreate).toHaveBeenCalledWith(
       expect.objectContaining({
-        to: "+15551230000",
+        to: "+15551234567",
         from: "+15550001111",
         body: "Your order is ready for pickup."
       })
     );
+    expect(idTokenClientRequest).toHaveBeenCalledWith({
+      method: "GET",
+      url: "https://customer-profile.example.com/v1/customers/contact?tenantId=tenant-1&callerId=%2B15551230000"
+    });
   });
 
   it("enqueues ready escalation task when enabled", async () => {
@@ -283,6 +288,7 @@ describe("/tasks/ready-escalation", () => {
     process.env.TWILIO_MESSAGING_NUMBER = "+15550000000";
     process.env.ELEVENLABS_API_KEY = "el_key";
     process.env.ELEVENLABS_API_BASE_URL = "https://api.elevenlabs.io";
+    process.env.CUSTOMER_PROFILE_SERVICE_URL = "https://customer-profile.example.com";
     process.env.CLOUD_TASKS_OIDC_AUDIENCE = notificationAudience;
     process.env.CLOUD_TASKS_OIDC_ALLOWED_EMAILS = tasksCallerEmail;
     process.env.NODE_ENV = "test";
@@ -331,7 +337,7 @@ describe("/tasks/ready-escalation", () => {
       expect.objectContaining({
         agent_id: "agent_123",
         agent_phone_number_id: "pn_123",
-        to_number: "+15551230000"
+        to_number: "+15551234567"
       }),
       expect.any(Object)
     );

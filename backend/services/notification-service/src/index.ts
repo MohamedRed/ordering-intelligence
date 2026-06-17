@@ -15,6 +15,7 @@ import cors from "cors";
 import axios from "axios";
 import { GoogleAuth } from "google-auth-library";
 import { buildNotificationCorsOptions, resolveNotificationCorsOrigins } from "./cors_policy";
+import { resolveCustomerContact } from "./customer_contact";
 import { startElevenLabsOutboundCall } from "./elevenlabs_outbound";
 import { requireFirebaseAdmin, requireFirebaseUser } from "./firebase_auth";
 import { initializeFirebaseApp } from "./firebase_init";
@@ -826,7 +827,7 @@ async function triggerCustomerComms(params: {
   const { store, status, notifyMode, note, templateId, tenantId, customerId, callerId, orderId, comms } = params;
   if (notifyMode === "none") return;
 
-  const contact = await resolveCustomerContact({ tenantId, callerId });
+  const contact = await resolveCustomerContact(googleAuth, config, { tenantId, callerId });
   const to = String(contact?.phoneE164 ?? "").trim();
   if (!to) {
     console.warn(JSON.stringify({ level: "warn", event: "customer_contact_missing", tenantId, callerId }));
@@ -876,27 +877,5 @@ async function triggerCustomerComms(params: {
       tenantId,
       storeId: params.storeId
     }, notificationsDryRun);
-  }
-}
-
-async function resolveCustomerContact(params: { tenantId: string; callerId: string }): Promise<{ phoneE164?: string; customerName?: string } | null> {
-  const tenantId = params.tenantId.trim();
-  const callerId = params.callerId.trim();
-  if (!callerId) return null;
-
-  const base = String(config.CUSTOMER_PROFILE_SERVICE_URL ?? "").trim().replace(/\/+$/, "");
-  if (!base || !tenantId) {
-    return { phoneE164: callerId, customerName: "" };
-  }
-
-  const url = `${base}/v1/customers/contact?tenantId=${encodeURIComponent(tenantId)}&callerId=${encodeURIComponent(callerId)}`;
-  try {
-    const client = await googleAuth.getIdTokenClient(base);
-    const resp = await client.request<{ data?: any }>({ url, method: "GET" });
-    const data = (resp as any).data ?? {};
-    return { phoneE164: String(data.phoneE164 ?? "").trim(), customerName: String(data.customerName ?? "").trim() };
-  } catch (err) {
-    console.warn(JSON.stringify({ level: "warn", event: "customer_profile_lookup_failed", message: (err as Error).message }));
-    return { phoneE164: callerId, customerName: "" };
   }
 }
