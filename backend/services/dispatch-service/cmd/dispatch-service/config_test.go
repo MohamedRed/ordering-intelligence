@@ -55,3 +55,42 @@ func TestLoadConfigRejectsMissingTaskAuthWhenAuthRequired(t *testing.T) {
 		t.Fatal("expected loadConfig to reject missing task auth values")
 	}
 }
+
+func TestLoadConfigRejectsDisabledAuthInStrictEnvironment(t *testing.T) {
+	setRequiredConfigEnv(t)
+	t.Setenv("ENVIRONMENT", "prod")
+	t.Setenv("REQUIRE_AUTH", "false")
+
+	if _, err := loadConfig(); err == nil {
+		t.Fatal("expected loadConfig to reject disabled auth in strict environment")
+	}
+}
+
+func TestLoadConfigRequiresInternalAuthInStrictEnvironment(t *testing.T) {
+	setRequiredConfigEnv(t)
+	t.Setenv("ENVIRONMENT", "staging")
+	t.Setenv("INTERNAL_AUTH_AUDIENCE", "")
+	t.Setenv("INTERNAL_ALLOWED_EMAILS", "")
+
+	if _, err := loadConfig(); err == nil {
+		t.Fatal("expected loadConfig to reject missing internal auth in strict environment")
+	}
+}
+
+func TestLoadConfigAcceptsStrictAuthConfig(t *testing.T) {
+	setRequiredConfigEnv(t)
+	t.Setenv("ENVIRONMENT", "production")
+	t.Setenv("INTERNAL_AUTH_AUDIENCE", "https://dispatch.example.com")
+	t.Setenv("INTERNAL_ALLOWED_EMAILS", "agent-tools@test-project.iam.gserviceaccount.com")
+
+	cfg, err := loadConfig()
+	if err != nil {
+		t.Fatalf("unexpected loadConfig error: %v", err)
+	}
+	if !cfg.RequireAuth {
+		t.Fatal("expected auth to remain enabled")
+	}
+	if cfg.InternalAuthAudience != "https://dispatch.example.com" {
+		t.Fatalf("unexpected internal audience: %q", cfg.InternalAuthAudience)
+	}
+}

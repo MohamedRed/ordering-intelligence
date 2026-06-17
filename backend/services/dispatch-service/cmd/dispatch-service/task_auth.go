@@ -7,11 +7,25 @@ import (
 )
 
 func validateDispatchAuthConfig(cfg *serviceConfig) error {
-	if cfg == nil || !cfg.RequireAuth {
+	if cfg == nil {
+		return nil
+	}
+	if isStrictEnvironment(cfg.Environment) && !cfg.RequireAuth {
+		return fmt.Errorf("dispatch-service auth cannot be disabled in staging/production")
+	}
+	if !cfg.RequireAuth {
 		return nil
 	}
 
 	missing := []string{}
+	if isStrictEnvironment(cfg.Environment) {
+		if strings.TrimSpace(cfg.InternalAuthAudience) == "" {
+			missing = append(missing, "INTERNAL_AUTH_AUDIENCE")
+		}
+		if len(cfg.InternalAllowedEmails) == 0 {
+			missing = append(missing, "INTERNAL_ALLOWED_EMAILS")
+		}
+	}
 	if strings.TrimSpace(cfg.OrdersEventsOIDCAudience) == "" {
 		missing = append(missing, "ORDERS_EVENTS_OIDC_AUDIENCE")
 	}
@@ -28,6 +42,15 @@ func validateDispatchAuthConfig(cfg *serviceConfig) error {
 		return fmt.Errorf("dispatch-service auth config missing required values when REQUIRE_AUTH=true: %s", strings.Join(missing, ", "))
 	}
 	return nil
+}
+
+func isStrictEnvironment(environment string) bool {
+	switch strings.ToLower(strings.TrimSpace(environment)) {
+	case "prod", "production", "staging":
+		return true
+	default:
+		return false
+	}
 }
 
 func requireDispatchTaskAuth(

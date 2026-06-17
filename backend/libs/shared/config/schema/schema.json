@@ -636,17 +636,17 @@
       "type": "string",
       "required": false,
       "default": "true",
-      "description": "Whether Firebase/internal auth is required for /v1 endpoints."
+      "description": "Whether Firebase/internal auth is required for /v1 endpoints. Cannot be disabled in staging or production."
     },
     "INTERNAL_AUTH_AUDIENCE": {
       "type": "string",
       "required": false,
-      "description": "Expected audience for internal Google OIDC ID tokens (Cloud Run URL)."
+      "description": "Expected audience for internal Google OIDC ID tokens (Cloud Run URL). Required in staging and production."
     },
     "INTERNAL_ALLOWED_EMAILS": {
       "type": "string",
       "required": false,
-      "description": "Comma-separated allowlist for internal Google OIDC ID tokens."
+      "description": "Comma-separated allowlist for internal Google OIDC ID tokens. Required in staging and production."
     },
     "ORDERS_EVENTS_OIDC_AUDIENCE": {
       "type": "string",
