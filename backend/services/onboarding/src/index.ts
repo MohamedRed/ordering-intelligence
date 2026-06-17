@@ -14,6 +14,7 @@ import { v4 as uuidv4 } from 'uuid';
 import Stripe from 'stripe';
 import { VertexAI } from '@google-cloud/vertexai';
 import fetch from 'node-fetch';
+import { registerAgentCreationRoutes } from './agent_creation_routes.js';
 import {
   registerDeliveryPartnerStripeRoutes,
   upsertDeliveryPartnerStripeFromAccount,
@@ -459,6 +460,14 @@ registerVoiceNumberRoutes({
   getSession,
   audit,
 });
+registerAgentCreationRoutes({
+  app,
+  firestore,
+  sessions: SESSIONS,
+  getSession,
+  audit,
+  resolveTemplateAgentId: resolveElevenLabsTemplateAgentId,
+});
 
 app.get('/healthz', (_req, res) => {
   res.json({ status: 'ok' });
@@ -551,93 +560,6 @@ app.post('/onboarding-sessions', async (req, res) => {
 });
 
 // 2) Stripe endpoints (already defined below) are part of flow
-
-// 7) Create ElevenLabs agent (duplicate a template based on business type)
-app.post('/onboarding-sessions/:id/create-agent', async (req, res) => {
-  try {
-    const { id } = req.params;
-    const snap = await getSession(id, res);
-    if (!snap) return;
-
-    // Idempotent: return existing agent config if already set.
-    const existingAgentId = (snap as any).agent?.agent_id as string | undefined;
-    const existingTemplateId = (snap as any).agent?.template_agent_id as string | undefined;
-    if (existingTemplateId || existingAgentId) {
-      return res.json({
-        reused: true,
-        agent_mode: existingTemplateId ? 'shared_template' : 'per_tenant',
-        template_agent_id: existingTemplateId ?? null,
-        agent_id: existingTemplateId ?? existingAgentId,
-      });
-    }
-
-    const ingestStatus = (snap.ingestion?.status || '').toLowerCase();
-    const fastReadyFromSession = !!snap.ingestion?.fast_ready;
-    const readyByStatus = ['succeeded', 'partial_ok'].includes(ingestStatus);
-    let ready = readyByStatus || fastReadyFromSession;
-
-    // If image enrichment is running, the session status may be queued/processing; allow agent creation as long as
-    // the FastIngestion draft exists (menus_drafts/{jobId}) or the job has a readyKind from a prior run.
-    if (!ready) {
-      const jobIds = snap.ingestion?.job_ids || [];
-      const jobId = jobIds.length ? jobIds[jobIds.length - 1] : null;
-      if (jobId) {
-        try {
-          const jobSnap = await firestore.collection('menus_ingest').doc(jobId).get();
-          const job = jobSnap.exists ? (jobSnap.data() as any) : null;
-          const kind = (job?.readyKind ?? '').toLowerCase();
-          if (kind === 'menu_only' || kind === 'full') ready = true;
-        } catch (_) {
-          // ignore
-        }
-        if (!ready) {
-          try {
-            const draftSnap = await firestore.collection('menus_drafts').doc(jobId).get();
-            if (draftSnap.exists) ready = true;
-          } catch (_) {
-            // ignore
-          }
-        }
-      }
-    }
-
-    if (!ready) {
-      return res.status(400).json({ error: 'ingestion_not_ready', status: snap.ingestion?.status || null });
-    }
-
-    const businessType = ((snap.business?.type || '').trim() || 'fast_food').toLowerCase();
-    const templateAgentId = resolveElevenLabsTemplateAgentId(businessType);
-    if (!templateAgentId) {
-      return res.status(500).json({ error: 'elevenlabs_template_not_configured', business_type: businessType });
-    }
-
-    const ts = Timestamp.now();
-    await SESSIONS.doc(id).update({
-      agent: {
-        mode: 'shared_template',
-        template_agent_id: templateAgentId,
-        business_type: businessType,
-        status: 'configured',
-      },
-      updated_at: ts,
-    });
-    await audit(id, 'agent_created', {
-      template_agent_id: templateAgentId,
-      business_type: businessType,
-      mode: 'shared_template',
-    });
-    // Backward compat: return agent_id for the UI, but in shared-template mode it's the template id.
-    res.json({
-      reused: false,
-      agent_mode: 'shared_template',
-      template_agent_id: templateAgentId,
-      agent_id: templateAgentId,
-    });
-  } catch (err: any) {
-    console.error('create-agent error', err);
-    res.status(500).json({ error: 'agent_create_failed', message: err.message });
-  }
-});
 
 // Pub/Sub push handler for ingestion completion events
 // Expects message.data base64 JSON: { session_id?, job_id?, status }
