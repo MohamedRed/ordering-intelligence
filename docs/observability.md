@@ -2,7 +2,7 @@
 
 ## Metrics
 - Order service: `/metrics` (Prometheus exposition) + `/healthz/` (trailing slash)
-- Notification service: `/metrics` + `/healthz`
+- Notification service: `/metrics` (requires internal Google OIDC bearer auth) + `/healthz`
 - Voice agent worker (LiveKit): logs to stdout; smoke test script `backend/services/voice-agent-worker/scripts/livekit-smoke.sh`
 
 ## Alerting (Terraform)

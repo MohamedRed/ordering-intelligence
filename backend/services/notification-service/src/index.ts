@@ -239,7 +239,7 @@ app.get("/healthz", (_req: Request, res: Response) => {
   });
 });
 
-app.get("/metrics", (_req: Request, res: Response) => {
+app.get("/metrics", requireGoogleOidc(internalAuth), (_req: Request, res: Response) => {
   res.setHeader("Content-Type", "text/plain; version=0.0.4");
   res.send(
     `notifications_push_sent_total ${pushSent}\n` +

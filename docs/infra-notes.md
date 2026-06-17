@@ -7,7 +7,7 @@
 - Terraform stubs: `infra/terraform/pubsub_orders_subscription.tf`, `pubsub_orders_dlq.tf`, and vars in `variables_notification.tf`.
 
 ## Metrics
-- Scrape `/metrics` from order-service and notification-service (Prometheus/OpenTelemetry scraper).
+- Scrape `/metrics` from order-service and notification-service (Prometheus/OpenTelemetry scraper); notification-service metrics require an internal Google OIDC bearer token.
 - Add alerts: order_service_errors, notification_failures, auth_failures.
 - Consider annotating scrape config in Terraform once collector is defined.
 - CI preflight script: `tests/pubsub_subscription_test.sh` verifies envs before applying Pub/Sub subscription (no deploy).
