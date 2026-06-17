@@ -45,7 +45,7 @@ func handleGroupOrderSubmit(w http.ResponseWriter, r *http.Request, client *clou
 	if payload.IdempotencyKey == "" {
 		payload.IdempotencyKey = "group_order_" + session.ID
 	}
-	if existing, err := fetchOrderByIdempotencyKey(ctx, client, payload.IdempotencyKey); err == nil && existing != nil {
+	if existing, err := fetchIdempotentOrderForStore(ctx, client, payload.IdempotencyKey, session.StoreID, r.Context(), cfg.RequireAuth); err == nil && existing != nil {
 		session.OrderID = existing.ID
 		_, _ = updateGroupOrder(ctx, client, groupID, func(current groupOrderSession) (groupOrderSession, error) {
 			current.OrderID = existing.ID
@@ -54,17 +54,24 @@ func handleGroupOrderSubmit(w http.ResponseWriter, r *http.Request, client *clou
 		})
 		writeJSON(w, http.StatusOK, groupOrderResponse{GroupOrder: session})
 		return
+	} else if err != nil {
+		writeIdempotencyError(w, err)
+		return
 	}
 
 	pricing := groupOrderPricingForSubmit(session)
 	order := orderRecordFromGroup(session, pricing, cfg.OrderTTLDays)
 
-	order, err = createOrder(ctx, client, order, payload.IdempotencyKey)
+	order, err = createOrderFn(ctx, client, order, payload.IdempotencyKey)
 	if err != nil {
 		if errors.Is(err, errIdempotencyConflict) {
-			if existing, fetchErr := fetchOrderByIdempotencyKey(ctx, client, payload.IdempotencyKey); fetchErr == nil && existing != nil {
+			if existing, fetchErr := fetchIdempotentOrderForStore(ctx, client, payload.IdempotencyKey, session.StoreID, r.Context(), cfg.RequireAuth); fetchErr == nil && existing != nil {
 				order = *existing
 			} else {
+				if fetchErr != nil {
+					writeIdempotencyError(w, fetchErr)
+					return
+				}
 				writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "order_create_failed"})
 				return
 			}
