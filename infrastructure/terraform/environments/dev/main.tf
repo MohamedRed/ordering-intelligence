@@ -2575,6 +2575,7 @@ resource "google_pubsub_subscription" "menu_updates_to_onboarding" {
     push_endpoint = "${local.service_urls.onboarding_service}/ingest-pubsub"
     oidc_token {
       service_account_email = module.onboarding_service_sa.email
+      audience              = local.service_urls.onboarding_service
     }
   }
 
