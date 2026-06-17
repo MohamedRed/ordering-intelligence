@@ -3,52 +3,22 @@ import { FieldValue, Firestore, Timestamp } from '@google-cloud/firestore';
 import type { Bucket } from '@google-cloud/storage';
 import multer from 'multer';
 import { v4 as uuidv4 } from 'uuid';
-
-const DELIVERY_PARTNER_COMPLIANCE = 'delivery_partner_compliance';
-const MARKETPLACE_DELIVERERS = 'marketplace_deliverers';
+import {
+  appendAudit,
+  buildPublicUrl,
+  buildRequirements,
+  computeStatus,
+  DELIVERY_PARTNER_COMPLIANCE,
+  type DeliveryPartnerComplianceDoc,
+  type DeliveryPartnerComplianceDocument,
+  DOC_LABELS,
+  ensureDelivererExists,
+  normalizeDelivererId,
+  normalizeVehicleType,
+  VEHICLE_TYPES,
+} from './delivery_partner_compliance_helpers.js';
 
 const upload = multer({ storage: multer.memoryStorage() });
-
-const VEHICLE_TYPES = new Set(['bike', 'ebike', 'scooter', 'car', 'van']);
-const MOTOR_VEHICLES = new Set(['scooter', 'car', 'van', 'motorbike']);
-
-const DOC_TRANSPORT_CAPACITY = 'transport_capacity';
-const DOC_DRIVER_LICENSE = 'driver_license';
-const DOC_VEHICLE_REGISTRATION = 'vehicle_registration';
-const DOC_VEHICLE_INSURANCE = 'vehicle_insurance';
-const DOC_VEHICLE_PHOTO = 'vehicle_photo';
-
-const DOC_LABELS: Record<string, string> = {
-  [DOC_TRANSPORT_CAPACITY]: 'Transport capacity certificate',
-  [DOC_DRIVER_LICENSE]: 'Driver license',
-  [DOC_VEHICLE_REGISTRATION]: 'Vehicle registration (carte grise)',
-  [DOC_VEHICLE_INSURANCE]: 'Vehicle insurance',
-  [DOC_VEHICLE_PHOTO]: 'Vehicle photo',
-};
-
-type DeliveryPartnerComplianceDocument = {
-  status: string;
-  url: string;
-  key: string;
-  bucket: string;
-  content_type?: string;
-  file_name?: string;
-  uploaded_at: FirebaseFirestore.Timestamp;
-};
-
-type DeliveryPartnerComplianceDoc = {
-  deliverer_id: string;
-  country: string;
-  vehicle_type: string;
-  required_docs: string[];
-  optional_docs: string[];
-  documents?: Record<string, DeliveryPartnerComplianceDocument>;
-  status: string;
-  created_at?: FirebaseFirestore.Timestamp;
-  updated_at: FirebaseFirestore.Timestamp;
-  approved_at?: FirebaseFirestore.Timestamp;
-  approval_source?: string;
-};
 
 type DeliveryPartnerComplianceDeps = {
   app: express.Express;
@@ -56,90 +26,6 @@ type DeliveryPartnerComplianceDeps = {
   bucket: Bucket;
   publicBaseUrl?: string;
   makePublic: boolean;
-};
-
-const normalizeDelivererId = (value: unknown): string => {
-  if (typeof value !== 'string') return '';
-  return value.trim();
-};
-
-const normalizeVehicleType = (value: unknown): string => {
-  if (typeof value !== 'string') return '';
-  return value.trim().toLowerCase();
-};
-
-const isMotorizedVehicle = (vehicleType: string): boolean => MOTOR_VEHICLES.has(vehicleType);
-
-const buildRequirements = (vehicleType: string): { requiredDocs: string[]; optionalDocs: string[] } => {
-  if (isMotorizedVehicle(vehicleType)) {
-    return {
-      requiredDocs: [
-        DOC_TRANSPORT_CAPACITY,
-        DOC_DRIVER_LICENSE,
-        DOC_VEHICLE_REGISTRATION,
-        DOC_VEHICLE_INSURANCE,
-      ],
-      optionalDocs: [DOC_VEHICLE_PHOTO],
-    };
-  }
-  return {
-    requiredDocs: [],
-    optionalDocs: [DOC_VEHICLE_PHOTO],
-  };
-};
-
-const computeMissingDocs = (
-  requiredDocs: string[],
-  documents?: Record<string, DeliveryPartnerComplianceDocument>,
-): string[] =>
-  requiredDocs.filter((doc) => {
-    const entry = documents?.[doc];
-    if (!entry) return true;
-    return entry.status === 'rejected';
-  });
-
-const computeStatus = (
-  requiredDocs: string[],
-  documents?: Record<string, DeliveryPartnerComplianceDocument>,
-): { status: string; missingDocs: string[] } => {
-  const missingDocs = computeMissingDocs(requiredDocs, documents);
-  if (missingDocs.length === 0) {
-    return { status: 'approved', missingDocs };
-  }
-  return { status: 'needs_documents', missingDocs };
-};
-
-const ensureDelivererExists = async (firestore: Firestore, delivererId: string): Promise<boolean> => {
-  const snap = await firestore.collection(MARKETPLACE_DELIVERERS).doc(delivererId).get();
-  return snap.exists;
-};
-
-const buildPublicUrl = async (params: {
-  bucket: Bucket;
-  key: string;
-  makePublic: boolean;
-  publicBaseUrl?: string;
-}): Promise<string> => {
-  if (params.makePublic) {
-    const [signed] = await params.bucket.file(params.key).getSignedUrl({
-      action: 'read',
-      expires: Date.now() + 7 * 24 * 60 * 60 * 1000,
-    });
-    return signed;
-  }
-  const baseUrl = params.publicBaseUrl?.replace(/\/$/, '') || `https://storage.googleapis.com/${params.bucket.name}`;
-  return `${baseUrl}/${params.key}`;
-};
-
-const appendAudit = async (
-  docRef: FirebaseFirestore.DocumentReference,
-  event: string,
-  data?: any,
-) => {
-  const ts = Timestamp.now();
-  const entry: any = { ts, actor: 'system', event };
-  if (data !== undefined) entry.data = data;
-  await docRef.set({ audit: FieldValue.arrayUnion(entry), updated_at: ts }, { merge: true });
 };
 
 export const registerDeliveryPartnerComplianceRoutes = ({
