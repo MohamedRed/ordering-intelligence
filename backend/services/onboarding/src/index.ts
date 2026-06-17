@@ -27,6 +27,7 @@ import {
   phoneRouteDocIdFromToNumber,
 } from './phone_routes.js';
 import { buildCorsOptions, resolveCorsOrigins } from './cors_policy.js';
+import { registerMenuFlyerSessionRoutes } from './menu_flyer_session_routes.js';
 import { registerMenuFlyerUploadRoutes } from './menu_flyer_upload.js';
 import { registerMenuIngestionRoutes } from './menu_ingestion_routes.js';
 import {
@@ -428,6 +429,12 @@ registerMenuIngestionRoutes({
   getSession,
   audit,
 });
+registerMenuFlyerSessionRoutes({
+  app,
+  sessions: SESSIONS,
+  getSession,
+  audit,
+});
 
 app.get('/healthz', (_req, res) => {
   res.json({ status: 'ok' });
@@ -519,49 +526,7 @@ app.post('/onboarding-sessions', async (req, res) => {
   }
 });
 
-// 2) Attach menu flyers (urls)
-app.patch('/onboarding-sessions/:id/menu-flyers', async (req, res) => {
-  try {
-    const { id } = req.params;
-    const { urls } = req.body || {};
-    if (!Array.isArray(urls) || urls.length === 0) return res.status(400).json({ error: 'urls_required' });
-    const snap = await getSession(id, res);
-    if (!snap) return;
-    const ts = Timestamp.now();
-    await SESSIONS.doc(id).update({
-      flyers: FieldValue.arrayUnion(...urls),
-      updated_at: ts,
-    });
-    await audit(id, 'flyers_attached', { urls });
-    res.json({ ok: true });
-  } catch (err: any) {
-    console.error('menu-flyers error', err);
-    res.status(500).json({ error: 'flyers_failed', message: err.message });
-  }
-});
-
-// Remove menu flyers (urls)
-app.delete('/onboarding-sessions/:id/menu-flyers', express.json(), async (req, res) => {
-  try {
-    const { id } = req.params;
-    const { urls } = req.body || {};
-    if (!Array.isArray(urls) || urls.length === 0) return res.status(400).json({ error: 'urls_required' });
-    const snap = await getSession(id, res);
-    if (!snap) return;
-    const ts = Timestamp.now();
-    await SESSIONS.doc(id).update({
-      flyers: FieldValue.arrayRemove(...urls),
-      updated_at: ts,
-    });
-    await audit(id, 'flyers_detached', { urls });
-    res.json({ ok: true });
-  } catch (err: any) {
-    console.error('menu-flyers delete error', err);
-    res.status(500).json({ error: 'flyers_delete_failed', message: err.message });
-  }
-});
-
-// 3) AI prefill from menu flyers
+// 2) AI prefill from menu flyers
 app.post('/onboarding-sessions/:id/prefill', async (req, res) => {
   try {
     const { id } = req.params;
