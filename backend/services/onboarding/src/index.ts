@@ -33,6 +33,7 @@ import { registerIngestPubSubRoutes } from './ingest_pubsub_routes.js';
 import { registerMenuIngestionRoutes } from './menu_ingestion_routes.js';
 import { registerSessionLifecycleRoutes } from './session_lifecycle_routes.js';
 import { registerSessionStatusRoutes } from './session_status_routes.js';
+import { registerStripeConnectRoutes } from './stripe_connect_routes.js';
 import { registerVoiceNumberRoutes } from './voice_number_routes.js';
 import {
   createOnboardingAuthMiddleware,
@@ -371,37 +372,6 @@ const audit = async (id: string, event: string, data?: any) => {
   });
 };
 
-// Geocode + timezone from address/country
-const geocodeTimezone = async (address?: string, country?: string) => {
-  if (!address || !MAPS_KEY) return {};
-  const encoded = encodeURIComponent(address + (country ? ` ${country}` : ''));
-  const geoUrl = `https://maps.googleapis.com/maps/api/geocode/json?address=${encoded}&key=${MAPS_KEY}`;
-  const geoResp = await fetch(geoUrl);
-  if (!geoResp.ok) return {};
-  const geo: any = await geoResp.json();
-  const result = geo.results?.[0];
-  if (!result) return {};
-  const loc = result.geometry?.location;
-  const lat = loc?.lat;
-  const lng = loc?.lng;
-  if (lat == null || lng == null) return { address: result.formatted_address };
-  const tzUrl = `https://maps.googleapis.com/maps/api/timezone/json?location=${lat},${lng}&timestamp=${Math.floor(
-    Date.now() / 1000,
-  )}&key=${MAPS_KEY}`;
-  const tzResp = await fetch(tzUrl);
-  let timezone: string | undefined;
-  if (tzResp.ok) {
-    const tz: any = await tzResp.json();
-    if (tz.status === 'OK') timezone = tz.timeZoneId;
-  }
-  return {
-    address: result.formatted_address as string,
-    lat,
-    lng,
-    timezone,
-  };
-};
-
 // Utility: fetch session or 404
 const getSession = async (id: string, res: express.Response) => {
   const snap = await SESSIONS.doc(id).get();
@@ -478,6 +448,18 @@ registerSessionLifecycleRoutes({
   tenants: TENANTS,
   getSession,
   audit,
+});
+registerStripeConnectRoutes({
+  app,
+  firestore,
+  sessions: SESSIONS,
+  stripe,
+  stripeWebhookSecret: STRIPE_WEBHOOK_SECRET,
+  mapsKey: MAPS_KEY,
+  fetchImpl: fetch,
+  getSession,
+  audit,
+  upsertDeliveryPartnerStripeFromAccount,
 });
 
 app.get('/healthz', (_req, res) => {
@@ -643,136 +625,6 @@ app.post('/onboarding-sessions/:id/finalize', async (req, res) => {
 app.use((err: Error, _req: express.Request, res: express.Response, _next: express.NextFunction) => {
   console.error(err);
   res.status(500).json({ error: 'internal_error', message: err.message });
-});
-
-// ---- Stripe Connect (embedded onboarding) via SDK ----
-
-app.post('/stripe/account', async (req, res) => {
-  if (!stripe) return res.status(500).json({ error: 'stripe_not_configured' });
-  try {
-    const { session_id, capabilities = ['card_payments', 'transfers'], business_type = 'company' } = req.body || {};
-    if (!session_id) return res.status(400).json({ error: 'session_id_required' });
-    const session = await getSession(session_id, res);
-    if (!session) return;
-    const account = await stripe.accounts.create({
-      type: 'custom',
-      country: 'US',
-      business_type,
-      capabilities: Object.fromEntries(capabilities.map((c: string) => [c, { requested: true }])),
-      settings: { payouts: { schedule: { interval: 'manual' } } },
-    });
-    const ts = Timestamp.now();
-    await SESSIONS.doc(session_id).update({
-      stripe: {
-        account_id: account.id,
-        status: account.requirements?.disabled_reason ?? 'pending',
-        capabilities: account.capabilities ?? {},
-      },
-      updated_at: ts,
-    });
-    await audit(session_id, 'stripe_account_created', { account_id: account.id });
-    res.status(201).json({ account_id: account.id, capabilities });
-  } catch (err: any) {
-    console.error('stripe account error', err);
-    res.status(500).json({ error: 'stripe_account_failed', message: err.message });
-  }
-});
-
-app.post('/stripe/account-session', async (req, res) => {
-  if (!stripe) return res.status(500).json({ error: 'stripe_not_configured' });
-  try {
-    const { session_id } = req.body || {};
-    if (!session_id) return res.status(400).json({ error: 'session_id_required' });
-    const sessionDoc = await getSession(session_id, res);
-    if (!sessionDoc) return;
-    const account_id = sessionDoc.stripe?.account_id;
-    if (!account_id) return res.status(400).json({ error: 'account_id_missing_for_session' });
-    const stripeSession = await stripe.accountSessions.create({
-      account: account_id,
-      components: {
-        account_onboarding: { enabled: true },
-        payouts: { enabled: true },
-      },
-    });
-    res.status(201).json({ client_secret: stripeSession.client_secret });
-  } catch (err: any) {
-    console.error('stripe account-session error', err);
-    res.status(500).json({ error: 'stripe_account_session_failed', message: err.message });
-  }
-});
-
-// Stripe webhook with signature verification
-app.post('/stripe/webhook', express.raw({ type: 'application/json' }), async (req, res) => {
-  if (!stripe) return res.status(500).send('stripe_not_configured');
-  if (!STRIPE_WEBHOOK_SECRET) return res.status(500).send('webhook_secret_not_configured');
-  const sig = req.headers['stripe-signature'];
-  if (!sig) return res.status(400).send('missing_signature');
-  try {
-    const event = stripe.webhooks.constructEvent(req.body, sig as string, STRIPE_WEBHOOK_SECRET);
-    if (event.type === 'account.updated' || event.type.startsWith('capability.')) {
-      const acct = event.data.object as Stripe.Account;
-      const qsnap = await SESSIONS.where('stripe.account_id', '==', acct.id).limit(1).get();
-      if (!qsnap.empty) {
-        const doc = qsnap.docs[0];
-        const sessionId = doc.id;
-        const status = acct.requirements?.disabled_reason ?? 'active';
-
-        const businessAddress =
-          acct.company?.address?.line1 ||
-          acct.business_profile?.support_address?.line1 ||
-          acct.business_profile?.url ||
-          '';
-        const country = acct.company?.address?.country || acct.business_profile?.support_address?.country;
-        const phone = acct.business_profile?.support_phone || acct.company?.phone;
-        const name = acct.business_profile?.name || acct.company?.name;
-
-        let tz: any = {};
-        try {
-          tz = await geocodeTimezone(businessAddress, country || undefined);
-        } catch (e) {
-          console.error('geocode error', e);
-        }
-
-        const updates: any = {
-          stripe: {
-            account_id: acct.id,
-            status,
-            capabilities: acct.capabilities ?? {},
-          },
-          updated_at: Timestamp.now(),
-        };
-
-        if (name || phone || businessAddress || country || tz.timezone) {
-          updates.business = {
-            ...(doc.data().business ?? {}),
-            ...(name ? { name } : {}),
-            ...(phone ? { phone } : {}),
-            ...(businessAddress ? { address: businessAddress } : {}),
-            ...(country ? { country } : {}),
-            ...(tz.timezone ? { timezone: tz.timezone } : {}),
-            ...(tz.lat ? { lat: tz.lat, lng: tz.lng } : {}),
-          };
-        }
-
-        await doc.ref.update(updates);
-        await audit(sessionId, 'stripe_event', {
-          type: event.type,
-          status,
-          enriched: Boolean(tz.timezone),
-        });
-      }
-      try {
-        await upsertDeliveryPartnerStripeFromAccount(firestore, acct);
-      } catch (err) {
-        console.error('delivery partner stripe webhook update failed', err);
-      }
-    }
-    console.log('stripe event', event.type);
-    res.json({ received: true, verified: true });
-  } catch (err: any) {
-    console.error('stripe webhook error', err.message);
-    res.status(400).send(`Webhook Error: ${err.message}`);
-  }
 });
 
 app.listen(PORT, () => {
