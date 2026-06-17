@@ -17,6 +17,8 @@ type mobileOrderPaymentIntentRequest struct {
 	AmountCents       int64  `json:"amountCents,omitempty"`
 	Currency          string `json:"currency,omitempty"`
 	SavePaymentMethod *bool  `json:"savePaymentMethod,omitempty"`
+	Signature         string `json:"signature,omitempty"`
+	Timestamp         string `json:"timestamp,omitempty"`
 }
 
 type mobileOrderPaymentIntentResponse struct {
@@ -56,6 +58,9 @@ func handleMobileOrderPaymentIntent(
 	payload.SessionID = strings.TrimSpace(payload.SessionID)
 	if payload.SessionID == "" {
 		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "missing_session"})
+		return
+	}
+	if !verifyMobileSessionRequestAuth(cfg, w, r, payload.SessionID, payload.Signature, payload.Timestamp) {
 		return
 	}
 

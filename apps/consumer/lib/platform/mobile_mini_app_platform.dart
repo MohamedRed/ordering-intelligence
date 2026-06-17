@@ -1,18 +1,18 @@
-import 'dart:async';
-
 import 'package:consumer_core/consumer_core.dart';
 import 'package:consumer_ui/consumer_ui.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
-import 'package:share_plus/share_plus.dart';
-import 'package:url_launcher/url_launcher.dart';
 
 import '../adapters/mobile_notifications_adapter.dart';
 import '../adapters/mobile_payments_adapter.dart';
+import '../services/mobile_session_auth.dart';
 import 'mobile_audio_recorder.dart';
+import 'mobile_haptics.dart';
+import 'mobile_share_links.dart';
 
 class MobileMiniAppPlatform extends MiniAppPlatform {
-  static const _facebookAppId = String.fromEnvironment('FACEBOOK_APP_ID');
+  static const _shareLinks = MobileShareLinks(
+    facebookAppId: String.fromEnvironment('FACEBOOK_APP_ID'),
+  );
 
   MobileMiniAppPlatform({
     required ChannelGatewayApi api,
@@ -20,17 +20,30 @@ class MobileMiniAppPlatform extends MiniAppPlatform {
     required MiniAppLaunchContext launchContext,
     MobilePaymentsAdapter? paymentsAdapter,
     MobileNotificationsAdapter? notifications,
+    MobileSessionAuth? authSigner,
     Future<void> Function()? onSignOut,
-  })  : _api = api,
-        _session = session,
-        _launchContext = launchContext,
-        _paymentsAdapter = paymentsAdapter ?? MobilePaymentsAdapter(api: api),
-        _notifications = notifications ?? MobileNotificationsAdapter(api: api),
-        _onSignOut = onSignOut;
+  }) : _api = api,
+       _session = session,
+       _launchContext = launchContext,
+       _authSigner = authSigner ?? MobileSessionAuth.fromEnvironment(),
+       _paymentsAdapter =
+           paymentsAdapter ??
+           MobilePaymentsAdapter(
+             api: api,
+             authSigner: authSigner ?? MobileSessionAuth.fromEnvironment(),
+           ),
+       _notifications =
+           notifications ??
+           MobileNotificationsAdapter(
+             api: api,
+             authSigner: authSigner ?? MobileSessionAuth.fromEnvironment(),
+           ),
+       _onSignOut = onSignOut;
 
   final ChannelGatewayApi _api;
   final SessionInfo _session;
   final MiniAppLaunchContext _launchContext;
+  final MobileSessionAuth? _authSigner;
   final MobilePaymentsAdapter _paymentsAdapter;
   final MobileNotificationsAdapter _notifications;
   final Future<void> Function()? _onSignOut;
@@ -42,13 +55,14 @@ class MobileMiniAppPlatform extends MiniAppPlatform {
   PaymentsAdapter get paymentsAdapter => _paymentsAdapter;
 
   @override
-  MiniAppHaptics get haptics => const _MobileHaptics();
+  MiniAppHaptics get haptics => const MobileHaptics();
 
   @override
   MiniAppLaunchContext resolveLaunchContext() => _launchContext;
 
   @override
-  Future<SessionInfo?> startSession(MiniAppLaunchContext context) async => _session;
+  Future<SessionInfo?> startSession(MiniAppLaunchContext context) async =>
+      _session;
 
   @override
   Future<void> onSessionReady(SessionInfo session) async {
@@ -91,19 +105,11 @@ class MobileMiniAppPlatform extends MiniAppPlatform {
   String currentChannel(MiniAppLaunchContext context) => 'mobile';
 
   @override
-  List<MiniAppLinkTarget> linkTargets() => defaultMiniAppLinkTargets;
+  List<MiniAppLinkTarget> linkTargets() => _shareLinks.linkTargets();
 
   @override
-  String labelForChannel(String channel) {
-    switch (channel.toLowerCase()) {
-      case 'discord':
-        return 'Discord';
-      case 'snapchat':
-        return 'Snapchat';
-      default:
-        return 'Telegram';
-    }
-  }
+  String labelForChannel(String channel) =>
+      _shareLinks.labelForChannel(channel);
 
   @override
   Uri buildLinkUri({
@@ -111,74 +117,30 @@ class MobileMiniAppPlatform extends MiniAppPlatform {
     required String targetChannel,
     required String token,
     SessionInfo? session,
-  }) {
-    final base = context.baseUri;
-    final params = Map<String, String>.from(base.queryParameters);
-    params['platform'] = targetChannel;
-    params['linkToken'] = token;
-    if (session != null && session.storeId.isNotEmpty) {
-      params['storeId'] = session.storeId;
-    }
-    params.remove('code');
-    params.remove('state');
-    params.remove('error');
-    params.remove('error_description');
-    return base.replace(queryParameters: params);
-  }
+  }) => _shareLinks.buildLinkUri(
+    context: context,
+    targetChannel: targetChannel,
+    token: token,
+    session: session,
+  );
 
   @override
-  void openLink(String channel, Uri uri) {
-    unawaited(launchUrl(uri, mode: LaunchMode.externalApplication));
-  }
+  void openLink(String channel, Uri uri) => _shareLinks.openLink(channel, uri);
 
   @override
-  Future<void> shareGroupOrderLink(Uri uri, {required String text}) async {
-    await Share.share('$text\n${uri.toString()}');
-  }
+  Future<void> shareGroupOrderLink(Uri uri, {required String text}) =>
+      _shareLinks.shareGroupOrderLink(uri, text: text);
 
   @override
-  List<MiniAppShareTarget> groupOrderShareTargets() {
-    return [
-      const MiniAppShareTarget(id: 'system', label: 'Share'),
-      const MiniAppShareTarget(id: 'telegram', label: 'Telegram'),
-      const MiniAppShareTarget(id: 'whatsapp', label: 'WhatsApp'),
-      if (_facebookAppId.isNotEmpty)
-        const MiniAppShareTarget(id: 'messenger', label: 'Messenger'),
-      const MiniAppShareTarget(id: 'discord', label: 'Discord'),
-      const MiniAppShareTarget(id: 'sms', label: 'SMS'),
-    ];
-  }
+  List<MiniAppShareTarget> groupOrderShareTargets() =>
+      _shareLinks.groupOrderShareTargets();
 
   @override
   Future<void> shareGroupOrderLinkToTarget(
     MiniAppShareTarget target,
     Uri uri, {
     required String text,
-  }) async {
-    final shareText = '$text\n${uri.toString()}';
-    switch (target.id) {
-      case 'system':
-        await shareGroupOrderLink(uri, text: text);
-        return;
-      case 'telegram':
-        await _launchShareUri(_telegramShareUri(uri, text), fallbackText: shareText);
-        return;
-      case 'whatsapp':
-        await _launchShareUri(_whatsAppShareUri(shareText), fallbackText: shareText);
-        return;
-      case 'messenger':
-        await _launchShareUri(_messengerShareUri(uri), fallbackText: shareText);
-        return;
-      case 'sms':
-        await _launchShareUri(_smsShareUri(shareText), fallbackText: shareText);
-        return;
-      case 'discord':
-        await shareGroupOrderLink(uri, text: text);
-        return;
-      default:
-        await shareGroupOrderLink(uri, text: text);
-    }
-  }
+  }) => _shareLinks.shareGroupOrderLinkToTarget(target, uri, text: text);
 
   @override
   Future<void> handleOrderUpdates(SessionInfo session, String orderId) async {
@@ -232,12 +194,22 @@ class MobileMiniAppPlatform extends MiniAppPlatform {
   Future<List<PaymentMethodSummary>> fetchSavedPaymentMethods(
     SessionInfo session,
   ) async {
-    return _api.fetchMobilePaymentMethods(sessionId: session.sessionId);
+    final signature = _signSession(session);
+    return _api.fetchMobilePaymentMethods(
+      sessionId: session.sessionId,
+      signature: signature?.signature,
+      timestamp: signature?.timestamp,
+    );
   }
 
   @override
   Future<SetupIntentInfo?> createSetupIntent(SessionInfo session) async {
-    return _api.createMobileSetupIntent(sessionId: session.sessionId);
+    final signature = _signSession(session);
+    return _api.createMobileSetupIntent(
+      sessionId: session.sessionId,
+      signature: signature?.signature,
+      timestamp: signature?.timestamp,
+    );
   }
 
   @override
@@ -250,9 +222,12 @@ class MobileMiniAppPlatform extends MiniAppPlatform {
     SessionInfo session,
     String paymentMethodId,
   ) async {
+    final signature = _signSession(session);
     await _api.setMobileDefaultPaymentMethod(
       sessionId: session.sessionId,
       paymentMethodId: paymentMethodId,
+      signature: signature?.signature,
+      timestamp: signature?.timestamp,
     );
   }
 
@@ -263,11 +238,14 @@ class MobileMiniAppPlatform extends MiniAppPlatform {
     int? amountCents,
     String? currency,
   }) async {
+    final signature = _signSession(session);
     return _api.payMobileOrderWithDefault(
       orderId: orderId,
       sessionId: session.sessionId,
       amountCents: amountCents,
       currency: currency,
+      signature: signature?.signature,
+      timestamp: signature?.timestamp,
     );
   }
 
@@ -277,10 +255,13 @@ class MobileMiniAppPlatform extends MiniAppPlatform {
     required String groupOrderId,
     String? participantId,
   }) async {
+    final signature = _signSession(session);
     return _api.createMobileGroupOrderPaymentIntent(
       groupOrderId: groupOrderId,
       sessionId: session.sessionId,
       participantId: participantId,
+      signature: signature?.signature,
+      timestamp: signature?.timestamp,
     );
   }
 
@@ -290,72 +271,17 @@ class MobileMiniAppPlatform extends MiniAppPlatform {
     required String groupOrderId,
     String? participantId,
   }) async {
+    final signature = _signSession(session);
     return _api.payMobileGroupOrderWithDefault(
       groupOrderId: groupOrderId,
       sessionId: session.sessionId,
       participantId: participantId,
+      signature: signature?.signature,
+      timestamp: signature?.timestamp,
     );
   }
 
-  Uri _telegramShareUri(Uri inviteUri, String text) {
-    return Uri.parse(
-      'https://t.me/share/url?url=${Uri.encodeComponent(inviteUri.toString())}&text=${Uri.encodeComponent(text)}',
-    );
-  }
-
-  Uri _whatsAppShareUri(String text) {
-    return Uri.parse('https://wa.me/?text=${Uri.encodeComponent(text)}');
-  }
-
-  Uri _messengerShareUri(Uri inviteUri) {
-    final params = {
-      'link': inviteUri.toString(),
-      'app_id': _facebookAppId,
-    };
-    return Uri(
-      scheme: 'fb-messenger',
-      host: 'share',
-      queryParameters: params,
-    );
-  }
-
-  Uri _smsShareUri(String text) {
-    return Uri(
-      scheme: 'sms',
-      queryParameters: {'body': text},
-    );
-  }
-
-  Future<void> _launchShareUri(
-    Uri uri, {
-    required String fallbackText,
-  }) async {
-    final launched = await launchUrl(uri, mode: LaunchMode.externalApplication);
-    if (!launched) {
-      await Share.share(fallbackText);
-    }
-  }
-}
-
-class _MobileHaptics extends MiniAppHaptics {
-  const _MobileHaptics();
-
-  @override
-  void selection() {
-    HapticFeedback.selectionClick();
-  }
-
-  @override
-  void impact({String style = 'light'}) {
-    switch (style) {
-      case 'medium':
-        HapticFeedback.mediumImpact();
-        break;
-      case 'heavy':
-        HapticFeedback.heavyImpact();
-        break;
-      default:
-        HapticFeedback.lightImpact();
-    }
+  MobileSessionSignature? _signSession(SessionInfo session) {
+    return _authSigner?.signSession(sessionId: session.sessionId);
   }
 }

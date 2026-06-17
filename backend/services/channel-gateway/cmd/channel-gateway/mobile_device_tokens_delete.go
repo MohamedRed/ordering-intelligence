@@ -15,6 +15,8 @@ import (
 type mobileDeviceTokenDeleteRequest struct {
 	SessionID   string `json:"sessionId"`
 	DeviceToken string `json:"deviceToken"`
+	Signature   string `json:"signature,omitempty"`
+	Timestamp   string `json:"timestamp,omitempty"`
 }
 
 func handleMobileDeviceTokenDelete(
@@ -32,6 +34,9 @@ func handleMobileDeviceTokenDelete(
 	payload.DeviceToken = strings.TrimSpace(payload.DeviceToken)
 	if payload.SessionID == "" || payload.DeviceToken == "" {
 		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "missing_fields"})
+		return
+	}
+	if !verifyMobileSessionRequestAuth(cfg, w, r, payload.SessionID, payload.Signature, payload.Timestamp) {
 		return
 	}
 

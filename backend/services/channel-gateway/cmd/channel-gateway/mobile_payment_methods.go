@@ -21,6 +21,8 @@ type mobilePaymentMethodsResponse struct {
 type mobilePaymentMethodsRequest struct {
 	SessionID       string `json:"sessionId"`
 	PaymentMethodID string `json:"paymentMethodId"`
+	Signature       string `json:"signature,omitempty"`
+	Timestamp       string `json:"timestamp,omitempty"`
 }
 
 type mobileSetupIntentResponse struct {
@@ -42,6 +44,9 @@ func handleMobilePaymentMethodsList(
 	sessionID := strings.TrimSpace(r.URL.Query().Get("sessionId"))
 	if sessionID == "" {
 		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "missing_session"})
+		return
+	}
+	if !verifyMobileSessionRequestAuth(cfg, w, r, sessionID, "", "") {
 		return
 	}
 	ctx, cancel := context.WithTimeout(r.Context(), 10*time.Second)
@@ -114,6 +119,9 @@ func handleMobilePaymentSetupIntent(
 		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "missing_session"})
 		return
 	}
+	if !verifyMobileSessionRequestAuth(cfg, w, r, payload.SessionID, payload.Signature, payload.Timestamp) {
+		return
+	}
 	ctx, cancel := context.WithTimeout(r.Context(), 10*time.Second)
 	defer cancel()
 	session, err := loadSessionWithCustomer(ctx, cfg, firestoreClient, payload.SessionID)
@@ -131,7 +139,7 @@ func handleMobilePaymentSetupIntent(
 		return
 	}
 	requestPayload := map[string]any{
-		"tenantId":    strings.TrimSpace(session.TenantID),
+		"tenantId":     strings.TrimSpace(session.TenantID),
 		"customerName": strings.TrimSpace(session.DisplayName),
 	}
 	body, _ := json.Marshal(requestPayload)
@@ -186,6 +194,9 @@ func handleMobilePaymentDefault(
 		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "missing_fields"})
 		return
 	}
+	if !verifyMobileSessionRequestAuth(cfg, w, r, payload.SessionID, payload.Signature, payload.Timestamp) {
+		return
+	}
 	ctx, cancel := context.WithTimeout(r.Context(), 10*time.Second)
 	defer cancel()
 	session, err := loadSessionWithCustomer(ctx, cfg, firestoreClient, payload.SessionID)
@@ -203,8 +214,8 @@ func handleMobilePaymentDefault(
 		return
 	}
 	requestPayload := map[string]any{
-		"tenantId":         strings.TrimSpace(session.TenantID),
-		"paymentMethodId":  payload.PaymentMethodID,
+		"tenantId":        strings.TrimSpace(session.TenantID),
+		"paymentMethodId": payload.PaymentMethodID,
 	}
 	body, _ := json.Marshal(requestPayload)
 	endpoint := fmt.Sprintf(

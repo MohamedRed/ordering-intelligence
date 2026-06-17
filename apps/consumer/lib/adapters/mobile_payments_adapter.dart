@@ -1,15 +1,20 @@
 import 'package:consumer_core/consumer_core.dart';
 import 'package:flutter_stripe/flutter_stripe.dart';
 
+import '../services/mobile_session_auth.dart';
 import '../services/payment_sheet_config.dart';
 
 class MobilePaymentsAdapter implements PaymentsAdapter {
-  MobilePaymentsAdapter({required this.api});
+  MobilePaymentsAdapter({required this.api, MobileSessionAuth? authSigner})
+    : _authSigner = authSigner ?? MobileSessionAuth.fromEnvironment();
 
   final ChannelGatewayApi api;
+  final MobileSessionAuth? _authSigner;
 
   @override
-  Future<CheckoutIntent?> startCheckout({required Map<String, dynamic> orderResponse}) async {
+  Future<CheckoutIntent?> startCheckout({
+    required Map<String, dynamic> orderResponse,
+  }) async {
     final orderId = (orderResponse['id'] ?? '').toString();
     if (orderId.isEmpty) {
       return null;
@@ -35,12 +40,15 @@ class MobilePaymentsAdapter implements PaymentsAdapter {
     String? currency,
     bool? savePaymentMethod,
   }) async {
+    final signature = _authSigner?.signSession(sessionId: sessionId);
     final payload = await api.createMobilePaymentIntent(
       orderId: orderId,
       sessionId: sessionId,
       amountCents: amountCents,
       currency: currency,
       savePaymentMethod: savePaymentMethod,
+      signature: signature?.signature,
+      timestamp: signature?.timestamp,
     );
     return PaymentIntentInfo.fromJson(payload);
   }
@@ -68,8 +76,9 @@ class MobilePaymentsAdapter implements PaymentsAdapter {
       paymentSheetParameters: SetupPaymentSheetParameters(
         paymentIntentClientSecret: intent.clientSecret,
         customerId: intent.customerId.isEmpty ? null : intent.customerId,
-        customerEphemeralKeySecret:
-            intent.ephemeralKey.isEmpty ? null : intent.ephemeralKey,
+        customerEphemeralKeySecret: intent.ephemeralKey.isEmpty
+            ? null
+            : intent.ephemeralKey,
         merchantDisplayName: config.merchantDisplayName,
         applePay: config.applePay,
         googlePay: config.googlePay,
@@ -99,8 +108,9 @@ class MobilePaymentsAdapter implements PaymentsAdapter {
       paymentSheetParameters: SetupPaymentSheetParameters(
         setupIntentClientSecret: intent.clientSecret,
         customerId: intent.customerId.isEmpty ? null : intent.customerId,
-        customerEphemeralKeySecret:
-            intent.ephemeralKey.isEmpty ? null : intent.ephemeralKey,
+        customerEphemeralKeySecret: intent.ephemeralKey.isEmpty
+            ? null
+            : intent.ephemeralKey,
         merchantDisplayName: merchantName,
       ),
     );

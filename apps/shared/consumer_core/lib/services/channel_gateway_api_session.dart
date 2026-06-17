@@ -121,10 +121,14 @@ mixin ChannelGatewaySessionApi on ChannelGatewayApiBase {
 
   Future<SessionInfo> fetchMobileSession({
     required String sessionId,
+    String? signature,
+    String? timestamp,
   }) async {
     final response = await _client.get(
       _buildUri('/mobile/session', {
         'sessionId': sessionId,
+        if (signature != null) 'signature': signature,
+        if (timestamp != null) 'timestamp': timestamp,
       }),
       headers: const {'Content-Type': 'application/json'},
     );

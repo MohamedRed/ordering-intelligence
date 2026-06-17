@@ -20,6 +20,9 @@ func handleMobileSessionGet(
 		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "missing_session_id"})
 		return
 	}
+	if !verifyMobileSessionRequestAuth(cfg, w, r, sessionID, "", "") {
+		return
+	}
 
 	ctx, cancel := context.WithTimeout(r.Context(), 8*time.Second)
 	defer cancel()

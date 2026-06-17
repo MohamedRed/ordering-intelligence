@@ -67,6 +67,8 @@ mixin ChannelGatewayOrdersApi on ChannelGatewayApiBase {
     int? amountCents,
     String? currency,
     bool? savePaymentMethod,
+    String? signature,
+    String? timestamp,
   }) async {
     final response = await _client.post(
       _buildUri('/mobile/orders/$orderId/payment-intent'),
@@ -76,6 +78,8 @@ mixin ChannelGatewayOrdersApi on ChannelGatewayApiBase {
         'amountCents': amountCents,
         'currency': currency,
         'savePaymentMethod': savePaymentMethod,
+        'signature': signature,
+        'timestamp': timestamp,
       }),
     );
     if (response.statusCode < 200 || response.statusCode >= 300) {

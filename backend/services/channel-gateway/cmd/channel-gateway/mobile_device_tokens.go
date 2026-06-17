@@ -16,6 +16,8 @@ type mobileDeviceTokenRequest struct {
 	Platform    string `json:"platform"`
 	DeviceID    string `json:"deviceId"`
 	Locale      string `json:"locale"`
+	Signature   string `json:"signature,omitempty"`
+	Timestamp   string `json:"timestamp,omitempty"`
 }
 
 func handleMobileDeviceTokenRegister(
@@ -36,6 +38,9 @@ func handleMobileDeviceTokenRegister(
 
 	if payload.SessionID == "" || payload.DeviceToken == "" {
 		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "missing_fields"})
+		return
+	}
+	if !verifyMobileSessionRequestAuth(cfg, w, r, payload.SessionID, payload.Signature, payload.Timestamp) {
 		return
 	}
 

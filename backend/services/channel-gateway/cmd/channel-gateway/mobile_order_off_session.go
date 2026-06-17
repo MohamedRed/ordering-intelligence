@@ -16,6 +16,8 @@ type mobileOrderOffSessionRequest struct {
 	SessionID   string `json:"sessionId"`
 	AmountCents int64  `json:"amountCents,omitempty"`
 	Currency    string `json:"currency,omitempty"`
+	Signature   string `json:"signature,omitempty"`
+	Timestamp   string `json:"timestamp,omitempty"`
 }
 
 type mobileOffSessionPaymentResponse struct {
@@ -57,6 +59,9 @@ func handleMobileOrderPayDefault(
 	payload.SessionID = strings.TrimSpace(payload.SessionID)
 	if payload.SessionID == "" {
 		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "missing_session"})
+		return
+	}
+	if !verifyMobileSessionRequestAuth(cfg, w, r, payload.SessionID, payload.Signature, payload.Timestamp) {
 		return
 	}
 	ctx, cancel := context.WithTimeout(r.Context(), 12*time.Second)

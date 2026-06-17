@@ -17,6 +17,8 @@ type mobileGroupOrderPaymentRequest struct {
 	ParticipantID     string `json:"participantId,omitempty"`
 	Currency          string `json:"currency,omitempty"`
 	SavePaymentMethod *bool  `json:"savePaymentMethod,omitempty"`
+	Signature         string `json:"signature,omitempty"`
+	Timestamp         string `json:"timestamp,omitempty"`
 }
 
 func handleMobileGroupOrderPaymentIntent(
@@ -44,6 +46,9 @@ func handleMobileGroupOrderPaymentIntent(
 	payload.SessionID = strings.TrimSpace(payload.SessionID)
 	if payload.SessionID == "" {
 		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "missing_session"})
+		return
+	}
+	if !verifyMobileSessionRequestAuth(cfg, w, r, payload.SessionID, payload.Signature, payload.Timestamp) {
 		return
 	}
 	ctx, cancel := context.WithTimeout(r.Context(), 12*time.Second)
@@ -139,6 +144,9 @@ func handleMobileGroupOrderPayDefault(
 	payload.SessionID = strings.TrimSpace(payload.SessionID)
 	if payload.SessionID == "" {
 		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "missing_session"})
+		return
+	}
+	if !verifyMobileSessionRequestAuth(cfg, w, r, payload.SessionID, payload.Signature, payload.Timestamp) {
 		return
 	}
 	ctx, cancel := context.WithTimeout(r.Context(), 12*time.Second)

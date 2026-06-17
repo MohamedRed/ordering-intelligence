@@ -3,22 +3,29 @@ import 'package:consumer_ui/consumer_ui.dart';
 import 'package:flutter/widgets.dart';
 
 import '../adapters/mobile_payments_adapter.dart';
+import '../services/mobile_session_auth.dart';
 
 class TvMiniAppPlatform extends MiniAppPlatform {
   TvMiniAppPlatform({
     required ChannelGatewayApi api,
     required SessionInfo session,
     required MiniAppLaunchContext launchContext,
+    MobileSessionAuth? authSigner,
     Future<void> Function()? onSignOut,
-  })  : _api = api,
-        _session = session,
-        _launchContext = launchContext,
-        _paymentsAdapter = MobilePaymentsAdapter(api: api),
-        _onSignOut = onSignOut;
+  }) : _api = api,
+       _session = session,
+       _launchContext = launchContext,
+       _authSigner = authSigner ?? MobileSessionAuth.fromEnvironment(),
+       _paymentsAdapter = MobilePaymentsAdapter(
+         api: api,
+         authSigner: authSigner ?? MobileSessionAuth.fromEnvironment(),
+       ),
+       _onSignOut = onSignOut;
 
   final ChannelGatewayApi _api;
   final SessionInfo _session;
   final MiniAppLaunchContext _launchContext;
+  final MobileSessionAuth? _authSigner;
   final MobilePaymentsAdapter _paymentsAdapter;
   final Future<void> Function()? _onSignOut;
 
@@ -35,7 +42,8 @@ class TvMiniAppPlatform extends MiniAppPlatform {
   MiniAppLaunchContext resolveLaunchContext() => _launchContext;
 
   @override
-  Future<SessionInfo?> startSession(MiniAppLaunchContext context) async => _session;
+  Future<SessionInfo?> startSession(MiniAppLaunchContext context) async =>
+      _session;
 
   @override
   Future<void> onSessionReady(SessionInfo session) async {}
@@ -141,12 +149,22 @@ class TvMiniAppPlatform extends MiniAppPlatform {
   Future<List<PaymentMethodSummary>> fetchSavedPaymentMethods(
     SessionInfo session,
   ) async {
-    return _api.fetchMobilePaymentMethods(sessionId: session.sessionId);
+    final signature = _signSession(session);
+    return _api.fetchMobilePaymentMethods(
+      sessionId: session.sessionId,
+      signature: signature?.signature,
+      timestamp: signature?.timestamp,
+    );
   }
 
   @override
   Future<SetupIntentInfo?> createSetupIntent(SessionInfo session) async {
-    return _api.createMobileSetupIntent(sessionId: session.sessionId);
+    final signature = _signSession(session);
+    return _api.createMobileSetupIntent(
+      sessionId: session.sessionId,
+      signature: signature?.signature,
+      timestamp: signature?.timestamp,
+    );
   }
 
   @override
@@ -159,9 +177,12 @@ class TvMiniAppPlatform extends MiniAppPlatform {
     SessionInfo session,
     String paymentMethodId,
   ) async {
+    final signature = _signSession(session);
     await _api.setMobileDefaultPaymentMethod(
       sessionId: session.sessionId,
       paymentMethodId: paymentMethodId,
+      signature: signature?.signature,
+      timestamp: signature?.timestamp,
     );
   }
 
@@ -172,11 +193,14 @@ class TvMiniAppPlatform extends MiniAppPlatform {
     int? amountCents,
     String? currency,
   }) async {
+    final signature = _signSession(session);
     return _api.payMobileOrderWithDefault(
       orderId: orderId,
       sessionId: session.sessionId,
       amountCents: amountCents,
       currency: currency,
+      signature: signature?.signature,
+      timestamp: signature?.timestamp,
     );
   }
 
@@ -186,10 +210,13 @@ class TvMiniAppPlatform extends MiniAppPlatform {
     required String groupOrderId,
     String? participantId,
   }) async {
+    final signature = _signSession(session);
     return _api.createMobileGroupOrderPaymentIntent(
       groupOrderId: groupOrderId,
       sessionId: session.sessionId,
       participantId: participantId,
+      signature: signature?.signature,
+      timestamp: signature?.timestamp,
     );
   }
 
@@ -199,10 +226,17 @@ class TvMiniAppPlatform extends MiniAppPlatform {
     required String groupOrderId,
     String? participantId,
   }) async {
+    final signature = _signSession(session);
     return _api.payMobileGroupOrderWithDefault(
       groupOrderId: groupOrderId,
       sessionId: session.sessionId,
       participantId: participantId,
+      signature: signature?.signature,
+      timestamp: signature?.timestamp,
     );
+  }
+
+  MobileSessionSignature? _signSession(SessionInfo session) {
+    return _authSigner?.signSession(sessionId: session.sessionId);
   }
 }

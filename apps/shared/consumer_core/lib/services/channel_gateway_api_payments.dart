@@ -3,10 +3,14 @@ part of 'channel_gateway_api.dart';
 mixin ChannelGatewayPaymentsApi on ChannelGatewayApiBase {
   Future<List<PaymentMethodSummary>> fetchMobilePaymentMethods({
     required String sessionId,
+    String? signature,
+    String? timestamp,
   }) async {
     final response = await _client.get(
       _buildUri('/mobile/payment-methods', {
         'sessionId': sessionId,
+        if (signature != null) 'signature': signature,
+        if (timestamp != null) 'timestamp': timestamp,
       }),
       headers: const {'Content-Type': 'application/json'},
     );
@@ -24,11 +28,17 @@ mixin ChannelGatewayPaymentsApi on ChannelGatewayApiBase {
 
   Future<SetupIntentInfo> createMobileSetupIntent({
     required String sessionId,
+    String? signature,
+    String? timestamp,
   }) async {
     final response = await _client.post(
       _buildUri('/mobile/payment-methods/setup-intent'),
       headers: const {'Content-Type': 'application/json'},
-      body: jsonEncode({'sessionId': sessionId}),
+      body: jsonEncode({
+        'sessionId': sessionId,
+        'signature': signature,
+        'timestamp': timestamp,
+      }),
     );
     if (response.statusCode < 200 || response.statusCode >= 300) {
       throw Exception('Setup intent failed (${response.statusCode})');
@@ -41,6 +51,8 @@ mixin ChannelGatewayPaymentsApi on ChannelGatewayApiBase {
   Future<void> setMobileDefaultPaymentMethod({
     required String sessionId,
     required String paymentMethodId,
+    String? signature,
+    String? timestamp,
   }) async {
     final response = await _client.post(
       _buildUri('/mobile/payment-methods/default'),
@@ -48,6 +60,8 @@ mixin ChannelGatewayPaymentsApi on ChannelGatewayApiBase {
       body: jsonEncode({
         'sessionId': sessionId,
         'paymentMethodId': paymentMethodId,
+        'signature': signature,
+        'timestamp': timestamp,
       }),
     );
     if (response.statusCode < 200 || response.statusCode >= 300) {
@@ -60,6 +74,8 @@ mixin ChannelGatewayPaymentsApi on ChannelGatewayApiBase {
     required String sessionId,
     int? amountCents,
     String? currency,
+    String? signature,
+    String? timestamp,
   }) async {
     final response = await _client.post(
       _buildUri('/mobile/orders/$orderId/pay-default'),
@@ -68,6 +84,8 @@ mixin ChannelGatewayPaymentsApi on ChannelGatewayApiBase {
         'sessionId': sessionId,
         'amountCents': amountCents,
         'currency': currency,
+        'signature': signature,
+        'timestamp': timestamp,
       }),
     );
     if (response.statusCode < 200 || response.statusCode >= 300) {
@@ -84,6 +102,8 @@ mixin ChannelGatewayPaymentsApi on ChannelGatewayApiBase {
     String? participantId,
     String? currency,
     bool? savePaymentMethod,
+    String? signature,
+    String? timestamp,
   }) async {
     final response = await _client.post(
       _buildUri('/mobile/group-orders/$groupOrderId/payment-intent'),
@@ -93,10 +113,14 @@ mixin ChannelGatewayPaymentsApi on ChannelGatewayApiBase {
         'participantId': participantId,
         'currency': currency,
         'savePaymentMethod': savePaymentMethod,
+        'signature': signature,
+        'timestamp': timestamp,
       }),
     );
     if (response.statusCode < 200 || response.statusCode >= 300) {
-      throw Exception('Group order payment intent failed (${response.statusCode})');
+      throw Exception(
+        'Group order payment intent failed (${response.statusCode})',
+      );
     }
     return PaymentIntentInfo.fromJson(
       jsonDecode(response.body) as Map<String, dynamic>,
@@ -108,6 +132,8 @@ mixin ChannelGatewayPaymentsApi on ChannelGatewayApiBase {
     required String sessionId,
     String? participantId,
     String? currency,
+    String? signature,
+    String? timestamp,
   }) async {
     final response = await _client.post(
       _buildUri('/mobile/group-orders/$groupOrderId/pay-default'),
@@ -116,10 +142,14 @@ mixin ChannelGatewayPaymentsApi on ChannelGatewayApiBase {
         'sessionId': sessionId,
         'participantId': participantId,
         'currency': currency,
+        'signature': signature,
+        'timestamp': timestamp,
       }),
     );
     if (response.statusCode < 200 || response.statusCode >= 300) {
-      throw Exception('Group order off-session failed (${response.statusCode})');
+      throw Exception(
+        'Group order off-session failed (${response.statusCode})',
+      );
     }
     return OffSessionPaymentResult.fromJson(
       jsonDecode(response.body) as Map<String, dynamic>,
