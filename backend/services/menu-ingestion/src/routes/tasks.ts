@@ -280,7 +280,8 @@ export function tasksRouter(ctx: AppContext) {
     });
 
     if (!jobSnap) {
-      return res.status(404).json({ error: 'job not found' });
+      console.warn('ingest task job not found', { jobId });
+      return res.json({ ok: true, skipped: true, reason: 'job_not_found' });
     }
     if (jobSnap.skip) {
       return res.json({ ok: true, skipped: true });

@@ -80,9 +80,9 @@ function makeFirestore(seed: Record<string, Job>) {
   };
 }
 
-const makeApp = async (job: Job) => {
+const makeApp = async (job?: Job) => {
   const { tasksRouter } = await import('../src/routes/tasks');
-  const firestore = makeFirestore({ job1: job });
+  const firestore = makeFirestore(job ? { job1: job } : {});
   const app: Express = express();
   app.use(express.json());
   app.use(
@@ -156,5 +156,15 @@ describe('/tasks/process guards', () => {
     const { agent } = await makeApp({ status: 'queued' });
     const res = await agent.post('/tasks/process').send({}).expect(200);
     expect(res.body.skipped).toBe(true);
+  });
+
+  it('returns 200 when job is missing to avoid Pub/Sub redelivery loops', async () => {
+    const warn = jest.spyOn(console, 'warn').mockImplementation(() => undefined);
+    const { agent } = await makeApp();
+
+    const res = await agent.post('/tasks/process').send(buildMessage()).expect(200);
+
+    expect(res.body).toEqual({ ok: true, skipped: true, reason: 'job_not_found' });
+    expect(warn).toHaveBeenCalledWith('ingest task job not found', { jobId: 'job1' });
   });
 });
