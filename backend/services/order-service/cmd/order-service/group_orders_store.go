@@ -7,6 +7,10 @@ import (
 	cloudfirestore "cloud.google.com/go/firestore"
 )
 
+var createGroupOrderFn = createGroupOrder
+var fetchGroupOrderFn = fetchGroupOrder
+var updateGroupOrderFn = updateGroupOrder
+
 func createGroupOrder(ctx context.Context, client *cloudfirestore.Client, session groupOrderSession) error {
 	session.CreatedAt = time.Now().UTC()
 	session.UpdatedAt = session.CreatedAt

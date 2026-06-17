@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"net/http"
 	"strings"
 	"time"
@@ -11,7 +12,7 @@ import (
 	"github.com/go-chi/chi/v5"
 )
 
-func handleGroupOrderGet(w http.ResponseWriter, r *http.Request, client *cloudfirestore.Client) {
+func handleGroupOrderGet(w http.ResponseWriter, r *http.Request, client *cloudfirestore.Client, cfg *serviceConfig) {
 	groupID := strings.TrimSpace(chi.URLParam(r, "groupOrderId"))
 	if groupID == "" {
 		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "missing_group_order_id"})
@@ -19,15 +20,18 @@ func handleGroupOrderGet(w http.ResponseWriter, r *http.Request, client *cloudfi
 	}
 	ctx, cancel := context.WithTimeout(r.Context(), 6*time.Second)
 	defer cancel()
-	session, err := fetchGroupOrder(ctx, client, groupID)
+	session, err := fetchGroupOrderFn(ctx, client, groupID)
 	if err != nil {
 		writeJSON(w, http.StatusNotFound, map[string]string{"error": "group_order_not_found"})
+		return
+	}
+	if !requireGroupOrderSessionAccess(w, r, cfg, session) {
 		return
 	}
 	writeJSON(w, http.StatusOK, groupOrderResponse{GroupOrder: session})
 }
 
-func handleGroupOrderLock(w http.ResponseWriter, r *http.Request, client *cloudfirestore.Client) {
+func handleGroupOrderLock(w http.ResponseWriter, r *http.Request, client *cloudfirestore.Client, cfg *serviceConfig) {
 	groupID := strings.TrimSpace(chi.URLParam(r, "groupOrderId"))
 	if groupID == "" {
 		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "missing_group_order_id"})
@@ -40,7 +44,7 @@ func handleGroupOrderLock(w http.ResponseWriter, r *http.Request, client *cloudf
 	}
 	ctx, cancel := context.WithTimeout(r.Context(), 8*time.Second)
 	defer cancel()
-	updated, err := updateGroupOrder(ctx, client, groupID, func(current groupOrderSession) (groupOrderSession, error) {
+	updated, err := updateGroupOrderWithStoreAccess(ctx, client, groupID, r.Context(), cfg, func(current groupOrderSession) (groupOrderSession, error) {
 		if current.Status != groupOrderStatusOpen {
 			return current, errInvalidGroupStatus
 		}
@@ -50,6 +54,10 @@ func handleGroupOrderLock(w http.ResponseWriter, r *http.Request, client *cloudf
 		return current, nil
 	})
 	if err != nil {
+		if errors.Is(err, errUnauthorizedStore) {
+			writeJSON(w, http.StatusForbidden, map[string]string{"error": "forbidden"})
+			return
+		}
 		if errorsIsInvalidStatus(err) {
 			writeJSON(w, http.StatusConflict, map[string]string{"error": "group_order_locked"})
 			return

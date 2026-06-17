@@ -11,7 +11,7 @@ import (
 	"google.golang.org/api/iterator"
 )
 
-func handleGroupOrderLookup(w http.ResponseWriter, r *http.Request, client *cloudfirestore.Client) {
+func handleGroupOrderLookup(w http.ResponseWriter, r *http.Request, client *cloudfirestore.Client, cfg *serviceConfig) {
 	code := strings.ToUpper(strings.TrimSpace(chi.URLParam(r, "joinCode")))
 	if code == "" {
 		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "missing_join_code"})
@@ -33,6 +33,9 @@ func handleGroupOrderLookup(w http.ResponseWriter, r *http.Request, client *clou
 	var session groupOrderSession
 	if err := doc.DataTo(&session); err != nil {
 		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "decode_failed"})
+		return
+	}
+	if !requireGroupOrderSessionAccess(w, r, cfg, session) {
 		return
 	}
 	writeJSON(w, http.StatusOK, groupOrderResponse{GroupOrder: session})

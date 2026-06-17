@@ -10,7 +10,7 @@ import (
 	cloudfirestore "cloud.google.com/go/firestore"
 )
 
-func handleGroupOrderCreate(w http.ResponseWriter, r *http.Request, client *cloudfirestore.Client) {
+func handleGroupOrderCreate(w http.ResponseWriter, r *http.Request, client *cloudfirestore.Client, cfg *serviceConfig) {
 	var payload groupOrderCreateRequest
 	if err := json.NewDecoder(r.Body).Decode(&payload); err != nil {
 		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "invalid_payload"})
@@ -25,6 +25,9 @@ func handleGroupOrderCreate(w http.ResponseWriter, r *http.Request, client *clou
 	payload.CustomerID = strings.TrimSpace(payload.CustomerID)
 	if payload.TenantID == "" || payload.StoreID == "" {
 		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "missing_store_or_tenant"})
+		return
+	}
+	if !requireGroupOrderStoreAccess(w, r, cfg, payload.StoreID) {
 		return
 	}
 	participantID := participantIDFromContact(payload.Host, payload.ParticipantID)
@@ -59,7 +62,7 @@ func handleGroupOrderCreate(w http.ResponseWriter, r *http.Request, client *clou
 	session.JoinCode = groupOrderJoinCode(session.ID)
 	ctx, cancel := context.WithTimeout(r.Context(), 8*time.Second)
 	defer cancel()
-	if err := createGroupOrder(ctx, client, session); err != nil {
+	if err := createGroupOrderFn(ctx, client, session); err != nil {
 		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "group_order_create_failed"})
 		return
 	}

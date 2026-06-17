@@ -16,25 +16,25 @@ func registerGroupOrderRoutes(
 ) {
 	router.Route("/group_orders", func(r chi.Router) {
 		r.Post("/", func(w http.ResponseWriter, req *http.Request) {
-			handleGroupOrderCreate(w, req, firestoreClient)
+			handleGroupOrderCreate(w, req, firestoreClient, cfg)
 		})
 		r.Get("/join/{joinCode}", func(w http.ResponseWriter, req *http.Request) {
-			handleGroupOrderLookup(w, req, firestoreClient)
+			handleGroupOrderLookup(w, req, firestoreClient, cfg)
 		})
 		r.Get("/{groupOrderId}", func(w http.ResponseWriter, req *http.Request) {
-			handleGroupOrderGet(w, req, firestoreClient)
+			handleGroupOrderGet(w, req, firestoreClient, cfg)
 		})
 		r.Post("/{groupOrderId}/join", func(w http.ResponseWriter, req *http.Request) {
-			handleGroupOrderJoin(w, req, firestoreClient)
+			handleGroupOrderJoin(w, req, firestoreClient, cfg)
 		})
 		r.Post("/{groupOrderId}/items", func(w http.ResponseWriter, req *http.Request) {
-			handleGroupOrderAddItems(w, req, firestoreClient)
+			handleGroupOrderAddItems(w, req, firestoreClient, cfg)
 		})
 		r.Post("/{groupOrderId}/invites", func(w http.ResponseWriter, req *http.Request) {
-			handleGroupOrderInviteCreate(w, req, firestoreClient)
+			handleGroupOrderInviteCreate(w, req, firestoreClient, cfg)
 		})
 		r.Post("/{groupOrderId}/lock", func(w http.ResponseWriter, req *http.Request) {
-			handleGroupOrderLock(w, req, firestoreClient)
+			handleGroupOrderLock(w, req, firestoreClient, cfg)
 		})
 		r.Post("/{groupOrderId}/submit", func(w http.ResponseWriter, req *http.Request) {
 			handleGroupOrderSubmit(w, req, firestoreClient, pubsubClient, cfg)

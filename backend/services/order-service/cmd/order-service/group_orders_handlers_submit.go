@@ -26,9 +26,12 @@ func handleGroupOrderSubmit(w http.ResponseWriter, r *http.Request, client *clou
 	ctx, cancel := context.WithTimeout(r.Context(), 12*time.Second)
 	defer cancel()
 
-	session, err := fetchGroupOrder(ctx, client, groupID)
+	session, err := fetchGroupOrderFn(ctx, client, groupID)
 	if err != nil {
 		writeJSON(w, http.StatusNotFound, map[string]string{"error": "group_order_not_found"})
+		return
+	}
+	if !requireGroupOrderSessionAccess(w, r, cfg, session) {
 		return
 	}
 	if session.Status == groupOrderStatusSubmitted || session.OrderID != "" {

@@ -11,7 +11,7 @@ import (
 	"github.com/go-chi/chi/v5"
 )
 
-func handleGroupOrderJoin(w http.ResponseWriter, r *http.Request, client *cloudfirestore.Client) {
+func handleGroupOrderJoin(w http.ResponseWriter, r *http.Request, client *cloudfirestore.Client, cfg *serviceConfig) {
 	groupID := strings.TrimSpace(chi.URLParam(r, "groupOrderId"))
 	if groupID == "" {
 		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "missing_group_order_id"})
@@ -32,6 +32,14 @@ func handleGroupOrderJoin(w http.ResponseWriter, r *http.Request, client *cloudf
 	}
 	ctx, cancel := context.WithTimeout(r.Context(), 8*time.Second)
 	defer cancel()
+	session, err := fetchGroupOrderFn(ctx, client, groupID)
+	if err != nil {
+		writeJSON(w, http.StatusNotFound, map[string]string{"error": "group_order_not_found"})
+		return
+	}
+	if !requireGroupOrderSessionAccess(w, r, cfg, session) {
+		return
+	}
 	updated, err := joinGroupOrderWithInvite(
 		ctx,
 		client,

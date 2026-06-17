@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"net/http"
 	"strings"
 	"time"
@@ -11,7 +12,7 @@ import (
 	"github.com/go-chi/chi/v5"
 )
 
-func handleGroupOrderAddItems(w http.ResponseWriter, r *http.Request, client *cloudfirestore.Client) {
+func handleGroupOrderAddItems(w http.ResponseWriter, r *http.Request, client *cloudfirestore.Client, cfg *serviceConfig) {
 	groupID := strings.TrimSpace(chi.URLParam(r, "groupOrderId"))
 	if groupID == "" {
 		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "missing_group_order_id"})
@@ -30,7 +31,7 @@ func handleGroupOrderAddItems(w http.ResponseWriter, r *http.Request, client *cl
 	}
 	ctx, cancel := context.WithTimeout(r.Context(), 8*time.Second)
 	defer cancel()
-	updated, err := updateGroupOrder(ctx, client, groupID, func(current groupOrderSession) (groupOrderSession, error) {
+	updated, err := updateGroupOrderWithStoreAccess(ctx, client, groupID, r.Context(), cfg, func(current groupOrderSession) (groupOrderSession, error) {
 		if current.Status != groupOrderStatusOpen {
 			return current, errInvalidGroupStatus
 		}
@@ -52,6 +53,10 @@ func handleGroupOrderAddItems(w http.ResponseWriter, r *http.Request, client *cl
 		return current, nil
 	})
 	if err != nil {
+		if errors.Is(err, errUnauthorizedStore) {
+			writeJSON(w, http.StatusForbidden, map[string]string{"error": "forbidden"})
+			return
+		}
 		if errorsIsInvalidStatus(err) {
 			writeJSON(w, http.StatusConflict, map[string]string{"error": "group_order_locked"})
 			return
