@@ -15,6 +15,7 @@
     "@google-cloud/pubsub": "^4.7.5",
     "@google-cloud/storage": "^7.12.0",
     "@google-cloud/vertexai": "^1.9.0",
+    "body-parser": "^1.20.5",
     "cors": "^2.8.5",
     "dotenv": "^16.4.5",
     "express": "^4.19.2",
@@ -28,6 +29,7 @@
     "uuid": "^11.0.0"
   },
   "devDependencies": {
+    "@types/body-parser": "^1.19.6",
     "@types/cors": "^2.8.17",
     "@types/express": "^4.17.21",
     "@types/jest": "^30.0.0",

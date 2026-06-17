@@ -551,18 +551,18 @@
       "type": "string",
       "required": false,
       "sensitive": true,
-      "description": "Stripe secret key for merchant and delivery partner onboarding."
+      "description": "Stripe secret key for merchant and delivery partner onboarding. Required in staging and production."
     },
     "STRIPE_WEBHOOK_SECRET": {
       "type": "string",
       "required": false,
       "sensitive": true,
-      "description": "Stripe webhook signing secret."
+      "description": "Stripe webhook signing secret. Required in staging and production."
     },
     "STRIPE_PUBLISHABLE_KEY": {
       "type": "string",
       "required": false,
-      "description": "Stripe publishable key for embedded onboarding pages."
+      "description": "Stripe publishable key for embedded onboarding pages. Required in staging and production."
     }
   },
   "agent-customization": {

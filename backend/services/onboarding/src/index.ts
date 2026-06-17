@@ -33,6 +33,7 @@ import {
   createOnboardingAuthMiddleware,
   resolveOnboardingAuthPolicy,
 } from './auth_policy.js';
+import { resolveOnboardingStripeConfig } from './stripe_config.js';
 
 const app = express();
 
@@ -40,9 +41,10 @@ const PORT = Number(process.env.PORT) || 8080;
 const BUCKET = process.env.GCS_BUCKET || 'ordering-intelligence-menus-dev';
 const PUBLIC_BASE_URL = process.env.PUBLIC_BASE_URL; // optional override for returned URLs
 const MAKE_PUBLIC = (process.env.MAKE_PUBLIC || 'true').toLowerCase() !== 'false';
-const STRIPE_SECRET_KEY = process.env.STRIPE_SECRET_KEY || '';
-const STRIPE_WEBHOOK_SECRET = process.env.STRIPE_WEBHOOK_SECRET || '';
-const STRIPE_PUBLISHABLE_KEY = process.env.STRIPE_PUBLISHABLE_KEY || '';
+const STRIPE_CONFIG = resolveOnboardingStripeConfig(process.env);
+const STRIPE_SECRET_KEY = STRIPE_CONFIG.secretKey;
+const STRIPE_WEBHOOK_SECRET = STRIPE_CONFIG.webhookSecret;
+const STRIPE_PUBLISHABLE_KEY = STRIPE_CONFIG.publishableKey;
 const stripe = STRIPE_SECRET_KEY
   ? new Stripe(STRIPE_SECRET_KEY, { apiVersion: '2023-10-16' })
   : null;
