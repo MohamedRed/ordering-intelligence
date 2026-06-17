@@ -6,12 +6,17 @@ jest.mock("axios", () => ({
   default: { post: (...args: any[]) => (axiosPost as any)(...args) }
 }));
 
-const oidcVerifyIdToken = jest.fn(async () => ({}));
+const eventCallerEmail = "events-push@demo.iam.gserviceaccount.com";
+const tasksCallerEmail = "tasks-sa@demo.iam.gserviceaccount.com";
+const notificationAudience = "https://notification-service.example";
+const oidcVerifyIdToken = jest.fn(async () => ({
+  getPayload: () => ({ email: eventCallerEmail })
+}));
 const idTokenClientRequest = jest.fn(async () => ({ data: { phoneE164: "+15551234567", customerName: "Test" } }));
 const accessTokenClientRequest = jest.fn(async () => ({ data: {} }));
 jest.mock("google-auth-library", () => {
   class OAuth2Client {
-    verifyIdToken = (...args: any[]) => (oidcVerifyIdToken as any)(...args);
+    verifyIdToken = (options: unknown) => (oidcVerifyIdToken as any)(options);
   }
   class GoogleAuth {
     constructor(_opts?: any) {}
@@ -126,6 +131,12 @@ describe("/events/orders", () => {
     process.env.CLOUD_TASKS_READY_ESCALATION_QUEUE = "ready-escalation";
     process.env.CLOUD_TASKS_OIDC_SERVICE_ACCOUNT_EMAIL = "tasks-sa@demo.iam.gserviceaccount.com";
     process.env.NOTIFICATION_SERVICE_URL = "https://notification-service.example";
+    process.env.ORDERS_EVENTS_OIDC_AUDIENCE = notificationAudience;
+    process.env.DISPATCH_EVENTS_OIDC_AUDIENCE = notificationAudience;
+    process.env.DELIVERIES_EVENTS_OIDC_AUDIENCE = notificationAudience;
+    process.env.EVENTS_OIDC_ALLOWED_EMAILS = eventCallerEmail;
+    process.env.CLOUD_TASKS_OIDC_AUDIENCE = notificationAudience;
+    process.env.CLOUD_TASKS_OIDC_ALLOWED_EMAILS = tasksCallerEmail;
     process.env.NODE_ENV = "test";
     // Import after env setup to allow config validation to pass.
     const mod = await import("../src/index");
@@ -136,6 +147,9 @@ describe("/events/orders", () => {
     accessTokenClientRequest.mockClear();
     idTokenClientRequest.mockClear();
     oidcVerifyIdToken.mockClear();
+    oidcVerifyIdToken.mockResolvedValue({
+      getPayload: () => ({ email: eventCallerEmail })
+    });
 
     (global as any).__firestoreStores?.clear?.();
     (global as any).__firestoreOrders?.clear?.();
@@ -143,7 +157,10 @@ describe("/events/orders", () => {
   });
 
   it("rejects missing payload", async () => {
-    const res = await request(app).post("/events/orders").send({});
+    const res = await request(app)
+      .post("/events/orders")
+      .set("Authorization", "Bearer event-token")
+      .send({});
     expect(res.status).toBe(400);
   });
 
@@ -160,6 +177,7 @@ describe("/events/orders", () => {
 
     const res = await request(app)
       .post("/events/orders")
+      .set("Authorization", "Bearer event-token")
       .send({ message: { data: payload } });
 
     expect(res.status).toBe(204);
@@ -194,6 +212,7 @@ describe("/events/orders", () => {
 
     const res = await request(app)
       .post("/events/orders")
+      .set("Authorization", "Bearer event-token")
       .send({ message: { data: payload } });
 
     expect(res.status).toBe(204);
@@ -236,6 +255,7 @@ describe("/events/orders", () => {
 
     const res = await request(app)
       .post("/events/orders")
+      .set("Authorization", "Bearer event-token")
       .send({ message: { data: payload } });
 
     expect(res.status).toBe(204);
@@ -261,6 +281,8 @@ describe("/tasks/ready-escalation", () => {
     process.env.TWILIO_MESSAGING_NUMBER = "+15550000000";
     process.env.ELEVENLABS_API_KEY = "el_key";
     process.env.ELEVENLABS_API_BASE_URL = "https://api.elevenlabs.io";
+    process.env.CLOUD_TASKS_OIDC_AUDIENCE = notificationAudience;
+    process.env.CLOUD_TASKS_OIDC_ALLOWED_EMAILS = tasksCallerEmail;
     process.env.NODE_ENV = "test";
     const mod = await import("../src/index");
     app = mod.app;
@@ -270,6 +292,9 @@ describe("/tasks/ready-escalation", () => {
     accessTokenClientRequest.mockClear();
     idTokenClientRequest.mockClear();
     oidcVerifyIdToken.mockClear();
+    oidcVerifyIdToken.mockResolvedValue({
+      getPayload: () => ({ email: tasksCallerEmail })
+    });
     (global as any).__firestoreStores?.clear?.();
     (global as any).__firestoreOrders?.clear?.();
     (global as any).__firestoreAlerts?.clear?.();
@@ -295,6 +320,7 @@ describe("/tasks/ready-escalation", () => {
 
     const res = await request(app)
       .post("/tasks/ready-escalation")
+      .set("Authorization", "Bearer task-token")
       .send({ orderId: "order-4", storeId: "store-1" });
 
     expect(res.status).toBe(204);

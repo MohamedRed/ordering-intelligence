@@ -1547,6 +1547,15 @@ module "notification_service" {
     ORDERS_EVENTS_OIDC_AUDIENCE     = local.service_urls.notification_service
     DISPATCH_EVENTS_OIDC_AUDIENCE   = local.service_urls.notification_service
     DELIVERIES_EVENTS_OIDC_AUDIENCE = local.service_urls.notification_service
+    EVENTS_OIDC_ALLOWED_EMAILS = join(",", [
+      module.orders_events_push_sa.email,
+      module.github_ci_sa.email,
+    ])
+    INTERNAL_AUTH_AUDIENCE = local.service_urls.notification_service
+    INTERNAL_ALLOWED_EMAILS = join(",", [
+      module.agent_tools_sa.email,
+      module.payments_service_sa.email,
+    ])
 
     NOTIFICATION_SERVICE_URL               = local.service_urls.notification_service
     CLOUD_TASKS_PROJECT_ID                 = var.project_id
@@ -1554,6 +1563,7 @@ module "notification_service" {
     CLOUD_TASKS_READY_ESCALATION_QUEUE     = "ready-escalation-${var.environment_name}"
     CLOUD_TASKS_OIDC_SERVICE_ACCOUNT_EMAIL = module.notification_tasks_sa.email
     CLOUD_TASKS_OIDC_AUDIENCE              = local.service_urls.notification_service
+    CLOUD_TASKS_OIDC_ALLOWED_EMAILS        = module.notification_tasks_sa.email
     ELEVENLABS_API_BASE_URL                = "https://api.elevenlabs.io"
     NOTIFICATIONS_DRY_RUN                  = "true"
   }, lookup(local.cloud_run_config.notification_service, "env_overrides", {}))

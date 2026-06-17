@@ -14,8 +14,9 @@ import { registerToken } from "./registerToken";
 import { loadConfig } from "@ordering-intelligence/config";
 import cors from "cors";
 import axios from "axios";
-import { GoogleAuth, OAuth2Client } from "google-auth-library";
+import { GoogleAuth } from "google-auth-library";
 import { buildNotificationCorsOptions, resolveNotificationCorsOrigins } from "./cors_policy";
+import { requireGoogleOidc, requireGoogleOidcRequest } from "./internal_auth";
 
 interface NotificationConfig {
   PORT: number;
@@ -35,6 +36,9 @@ interface NotificationConfig {
   ORDERS_EVENTS_OIDC_AUDIENCE?: string;
   DISPATCH_EVENTS_OIDC_AUDIENCE?: string;
   DELIVERIES_EVENTS_OIDC_AUDIENCE?: string;
+  EVENTS_OIDC_ALLOWED_EMAILS?: string;
+  INTERNAL_AUTH_AUDIENCE?: string;
+  INTERNAL_ALLOWED_EMAILS?: string;
 
   ELEVENLABS_API_KEY?: string;
   ELEVENLABS_API_BASE_URL?: string;
@@ -47,6 +51,7 @@ interface NotificationConfig {
   CLOUD_TASKS_READY_ESCALATION_QUEUE?: string;
   CLOUD_TASKS_OIDC_SERVICE_ACCOUNT_EMAIL?: string;
   CLOUD_TASKS_OIDC_AUDIENCE?: string;
+  CLOUD_TASKS_OIDC_ALLOWED_EMAILS?: string;
 }
 
 interface NotificationPayload {
@@ -201,10 +206,30 @@ if (config.SENDGRID_API_KEY) {
   sgMail.setApiKey(config.SENDGRID_API_KEY);
 }
 
-const oidcVerifier = new OAuth2Client();
 const googleAuth = new GoogleAuth({
   scopes: ["https://www.googleapis.com/auth/cloud-platform"]
 });
+
+const internalAuth = {
+  audience: config.INTERNAL_AUTH_AUDIENCE,
+  allowedEmails: config.INTERNAL_ALLOWED_EMAILS
+};
+const ordersEventsAuth = {
+  audience: config.ORDERS_EVENTS_OIDC_AUDIENCE,
+  allowedEmails: config.EVENTS_OIDC_ALLOWED_EMAILS
+};
+const dispatchEventsAuth = {
+  audience: config.DISPATCH_EVENTS_OIDC_AUDIENCE,
+  allowedEmails: config.EVENTS_OIDC_ALLOWED_EMAILS
+};
+const deliveriesEventsAuth = {
+  audience: config.DELIVERIES_EVENTS_OIDC_AUDIENCE,
+  allowedEmails: config.EVENTS_OIDC_ALLOWED_EMAILS
+};
+const cloudTasksAuth = {
+  audience: config.CLOUD_TASKS_OIDC_AUDIENCE,
+  allowedEmails: config.CLOUD_TASKS_OIDC_ALLOWED_EMAILS
+};
 
 app.get("/healthz", (_req: Request, res: Response) => {
   res.status(200).json({
@@ -238,7 +263,7 @@ app.get("/alerts", verifyFirebaseAdmin, async (_req: Request, res: Response) => 
   }
 });
 
-app.post("/notify", async (req: Request, res: Response) => {
+app.post("/notify", requireGoogleOidc(internalAuth), async (req: Request, res: Response) => {
   const payload = req.body as NotifyRequest;
   if (!payload?.channel || !payload.payload) {
     res.status(400).json({ error: "invalid_payload" });
@@ -273,7 +298,7 @@ app.post("/notify", async (req: Request, res: Response) => {
   res.status(202).json({ status: "dispatched" });
 });
 
-app.post("/group-orders/notify", async (req: Request, res: Response) => {
+app.post("/group-orders/notify", requireGoogleOidc(internalAuth), async (req: Request, res: Response) => {
   const payload = req.body as NotifyRequest & { source?: string };
   if (!payload?.channel || !payload.payload) {
     res.status(400).json({ error: "invalid_payload" });
@@ -311,12 +336,8 @@ app.post("/group-orders/notify", async (req: Request, res: Response) => {
 // Pub/Sub push endpoint for order events. Expects message.data to contain an order payload.
 app.post("/events/orders", async (req: Request, res: Response) => {
   try {
-    if (config.ORDERS_EVENTS_OIDC_AUDIENCE) {
-      const ok = await verifyGoogleOidc(req, config.ORDERS_EVENTS_OIDC_AUDIENCE);
-      if (!ok) {
-        res.status(401).json({ error: "unauthorized" });
-        return;
-      }
+    if (!(await requireGoogleOidcRequest(req, res, ordersEventsAuth))) {
+      return;
     }
 
     const env = req.body as PubSubPushEnvelope;
@@ -412,12 +433,8 @@ app.post("/events/orders", async (req: Request, res: Response) => {
 // Cloud Tasks callback (ready escalation).
 app.post("/tasks/ready-escalation", async (req: Request, res: Response) => {
   try {
-    if (config.CLOUD_TASKS_OIDC_AUDIENCE) {
-      const ok = await verifyGoogleOidc(req, config.CLOUD_TASKS_OIDC_AUDIENCE);
-      if (!ok) {
-        res.status(401).json({ error: "unauthorized" });
-        return;
-      }
+    if (!(await requireGoogleOidcRequest(req, res, cloudTasksAuth))) {
+      return;
     }
 
     const orderId = String(req.body?.orderId ?? "").trim();
@@ -473,12 +490,8 @@ app.post("/tasks/ready-escalation", async (req: Request, res: Response) => {
 // Pub/Sub push endpoint for dispatch events (assignment requests, route updates).
 app.post("/events/dispatch", async (req: Request, res: Response) => {
   try {
-    if (config.DISPATCH_EVENTS_OIDC_AUDIENCE) {
-      const ok = await verifyGoogleOidc(req, config.DISPATCH_EVENTS_OIDC_AUDIENCE);
-      if (!ok) {
-        res.status(401).json({ error: "unauthorized" });
-        return;
-      }
+    if (!(await requireGoogleOidcRequest(req, res, dispatchEventsAuth))) {
+      return;
     }
 
     const env = req.body as PubSubPushEnvelope;
@@ -603,12 +616,8 @@ app.post("/events/dispatch", async (req: Request, res: Response) => {
 // Pub/Sub push endpoint for delivery-service events (customer delivery updates).
 app.post("/events/deliveries", async (req: Request, res: Response) => {
   try {
-    if (config.DELIVERIES_EVENTS_OIDC_AUDIENCE) {
-      const ok = await verifyGoogleOidc(req, config.DELIVERIES_EVENTS_OIDC_AUDIENCE);
-      if (!ok) {
-        res.status(401).json({ error: "unauthorized" });
-        return;
-      }
+    if (!(await requireGoogleOidcRequest(req, res, deliveriesEventsAuth))) {
+      return;
     }
 
     const env = req.body as PubSubPushEnvelope;
@@ -740,7 +749,7 @@ async function listDeviceTokensForCustomer(params: { customerId: string; storeId
   return snap.docs.map((d) => String(d.id)).filter((t) => t.trim().length > 0);
 }
 
-app.post("/handoff", async (req: Request, res: Response) => {
+app.post("/handoff", requireGoogleOidc(internalAuth), async (req: Request, res: Response) => {
   const callSid = req.body?.callSid;
   if (!callSid) {
     res.status(400).json({ error: "missing_callSid" });
@@ -814,31 +823,6 @@ function parseServiceAccount(value: string): object {
   }
   const fileContents = fs.readFileSync(value, "utf-8");
   return JSON.parse(fileContents);
-}
-
-async function verifyGoogleOidc(req: Request, audience: string): Promise<boolean> {
-  const authHeader = String(req.header("Authorization") ?? "");
-  if (!authHeader.startsWith("Bearer ")) {
-    return false;
-  }
-  const token = authHeader.replace("Bearer ", "").trim();
-  if (!token) {
-    return false;
-  }
-  try {
-    await oidcVerifier.verifyIdToken({ idToken: token, audience });
-    return true;
-  } catch (err) {
-    console.warn(
-      JSON.stringify({
-        level: "warn",
-        event: "oidc_verify_failed",
-        audience,
-        message: (err as Error).message
-      })
-    );
-    return false;
-  }
 }
 
 async function fetchStore(storeId: string): Promise<StoreDoc | null> {

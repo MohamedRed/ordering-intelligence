@@ -145,6 +145,21 @@
       "required": false,
       "description": "Expected OIDC audience for Pub/Sub push to /events/deliveries."
     },
+    "EVENTS_OIDC_ALLOWED_EMAILS": {
+      "type": "string",
+      "required": false,
+      "description": "Comma-separated service-account email allowlist for Pub/Sub push event endpoints."
+    },
+    "INTERNAL_AUTH_AUDIENCE": {
+      "type": "string",
+      "required": false,
+      "description": "Expected OIDC audience for internal notification-service calls."
+    },
+    "INTERNAL_ALLOWED_EMAILS": {
+      "type": "string",
+      "required": false,
+      "description": "Comma-separated service-account email allowlist for internal notification-service calls."
+    },
     "ELEVENLABS_API_KEY": {
       "type": "string",
       "required": false,
@@ -196,6 +211,11 @@
       "type": "string",
       "required": false,
       "description": "Expected OIDC audience for Cloud Tasks callbacks."
+    },
+    "CLOUD_TASKS_OIDC_ALLOWED_EMAILS": {
+      "type": "string",
+      "required": false,
+      "description": "Comma-separated service-account email allowlist for Cloud Tasks callbacks."
     },
     "ALERT_TOPIC": {
       "type": "string",
