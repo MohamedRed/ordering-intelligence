@@ -7,9 +7,13 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"net/url"
 	"strings"
+	"time"
 
 	cloudfirestore "cloud.google.com/go/firestore"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 )
 
 type webAppFuelPumpRequest struct {
@@ -30,19 +34,35 @@ func handleWebAppFuelPumpUpdate(
 		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "invalid_payload"})
 		return
 	}
+	payload.SessionID = strings.TrimSpace(payload.SessionID)
 	pumpNumber := strings.TrimSpace(payload.PumpNumber)
+	if payload.SessionID == "" {
+		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "missing_session"})
+		return
+	}
 	if pumpNumber == "" {
 		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "missing_pump_number"})
 		return
 	}
-	if strings.TrimSpace(payload.SessionID) != "" {
-		if _, err := loadSessionByID(r.Context(), firestoreClient, payload.SessionID); err != nil {
+
+	ctx, cancel := context.WithTimeout(r.Context(), 8*time.Second)
+	defer cancel()
+
+	session, err := loadSessionWithCustomerFn(ctx, cfg, firestoreClient, payload.SessionID)
+	if err != nil {
+		if status.Code(err) == codes.NotFound {
 			writeJSON(w, http.StatusNotFound, map[string]string{"error": "session_not_found"})
 			return
 		}
+		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "session_read_failed"})
+		return
+	}
+	if _, err := authorizeSessionOrder(ctx, cfg, orderHTTPClient, session, orderID); err != nil {
+		writeWebAppOrderAccessError(w, err)
+		return
 	}
 
-	respBody, status, err := updateOrderFuelPump(r.Context(), cfg, orderHTTPClient, orderID, pumpNumber)
+	respBody, status, err := updateOrderFuelPump(ctx, cfg, orderHTTPClient, orderID, pumpNumber)
 	if err != nil {
 		writeJSON(w, http.StatusBadGateway, map[string]string{"error": "order_service_unavailable"})
 		return
@@ -67,7 +87,7 @@ func updateOrderFuelPump(
 	pumpNumber string,
 ) ([]byte, int, error) {
 	body, _ := json.Marshal(map[string]string{"pumpNumber": pumpNumber})
-	endpoint := fmt.Sprintf("%s/orders/%s/fuel", strings.TrimRight(cfg.OrderServiceURL, "/"), orderID)
+	endpoint := fmt.Sprintf("%s/orders/%s/fuel", strings.TrimRight(cfg.OrderServiceURL, "/"), url.PathEscape(strings.TrimSpace(orderID)))
 	req, _ := http.NewRequestWithContext(ctx, http.MethodPatch, endpoint, bytes.NewReader(body))
 	req.Header.Set("Content-Type", "application/json")
 	resp, err := client.Do(req)

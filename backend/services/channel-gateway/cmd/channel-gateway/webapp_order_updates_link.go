@@ -42,13 +42,17 @@ func handleWebAppOrderUpdatesLink(
 	ctx, cancel := context.WithTimeout(r.Context(), 8*time.Second)
 	defer cancel()
 
-	session, err := loadWebAppSession(ctx, firestoreClient, payload.SessionID)
+	session, err := loadSessionWithCustomerFn(ctx, cfg, firestoreClient, payload.SessionID)
 	if err != nil {
 		if errors.Is(err, errWebAppSessionNotFound) || status.Code(err) == codes.NotFound {
 			writeJSON(w, http.StatusNotFound, map[string]string{"error": "session_not_found"})
 			return
 		}
 		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "session_read_failed"})
+		return
+	}
+	if _, err := authorizeSessionOrder(ctx, cfg, orderHTTPClient, session, orderID); err != nil {
+		writeWebAppOrderAccessError(w, err)
 		return
 	}
 
