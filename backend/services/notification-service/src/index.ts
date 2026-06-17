@@ -18,6 +18,7 @@ import { buildNotificationCorsOptions, resolveNotificationCorsOrigins } from "./
 import { requireFirebaseAdmin, requireFirebaseUser } from "./firebase_auth";
 import { initializeFirebaseApp } from "./firebase_init";
 import { requireGoogleOidc, requireGoogleOidcRequest } from "./internal_auth";
+import { NotificationChannels, type NotificationDeliveryChannel } from "./notification_channels";
 import {
   defaultMessageForStatus,
   DELIVERY_COMMS_RATE_LIMIT_DEFAULT,
@@ -65,13 +66,6 @@ const verifyFirebaseAdmin = requireFirebaseAdmin(firebaseAuth);
 const verifyUser = requireFirebaseUser(firebaseAuth);
 
 const messaging = admin.messaging();
-
-let pushSent = 0;
-let smsSent = 0;
-let emailSent = 0;
-let pushFailed = 0;
-let smsFailed = 0;
-let emailFailed = 0;
 const ALERT_TTL_DAYS = 14;
 const notificationsDryRun =
   String(process.env.NOTIFICATIONS_DRY_RUN ?? config.NOTIFICATIONS_DRY_RUN ?? "").toLowerCase() === "true";
@@ -84,6 +78,14 @@ const twilioClient =
 if (config.SENDGRID_API_KEY) {
   sgMail.setApiKey(config.SENDGRID_API_KEY);
 }
+
+const notificationChannels = new NotificationChannels({
+  config,
+  dryRun: notificationsDryRun,
+  messaging,
+  twilioClient,
+  mailClient: sgMail
+});
 
 const googleAuth = new GoogleAuth({
   scopes: ["https://www.googleapis.com/auth/cloud-platform"]
@@ -120,15 +122,7 @@ app.get("/healthz", (_req: Request, res: Response) => {
 
 app.get("/metrics", requireGoogleOidc(internalAuth), (_req: Request, res: Response) => {
   res.setHeader("Content-Type", "text/plain; version=0.0.4");
-  res.send(
-    `notifications_push_sent_total ${pushSent}\n` +
-      `notifications_sms_sent_total ${smsSent}\n` +
-      `notifications_email_sent_total ${emailSent}\n` +
-      `notifications_push_failed_total ${pushFailed}\n` +
-      `notifications_sms_failed_total ${smsFailed}\n` +
-      `notifications_email_failed_total ${emailFailed}\n` +
-      `notifications_dry_run ${notificationsDryRun ? 1 : 0}\n`
-  );
+  res.send(notificationChannels.metricsText());
 });
 
 // Simple alert retrieval for admin app (read-only, auth required)
@@ -153,11 +147,11 @@ app.post("/notify", requireGoogleOidc(internalAuth), async (req: Request, res: R
     payload.channel.map(async (channel) => {
       switch (channel) {
         case "push":
-          return sendPushNotification(payload, req.body.source ?? "generic");
+          return notificationChannels.sendPushNotification(payload, req.body.source ?? "generic");
         case "sms":
-          return sendSmsNotification(payload);
+          return notificationChannels.sendSmsNotification(payload);
         case "email":
-          return sendEmailNotification(payload);
+          return notificationChannels.sendEmailNotification(payload);
         default:
           throw new Error(`Unsupported channel ${channel}`);
       }
@@ -188,11 +182,11 @@ app.post("/group-orders/notify", requireGoogleOidc(internalAuth), async (req: Re
     payload.channel.map(async (channel) => {
       switch (channel) {
         case "push":
-          return sendPushNotification(payload, payload.source ?? "group-order");
+          return notificationChannels.sendPushNotification(payload, payload.source ?? "group-order");
         case "sms":
-          return sendSmsNotification(payload);
+          return notificationChannels.sendSmsNotification(payload);
         case "email":
-          return sendEmailNotification(payload);
+          return notificationChannels.sendEmailNotification(payload);
         default:
           throw new Error(`Unsupported channel ${channel}`);
       }
@@ -256,14 +250,15 @@ app.post("/events/orders", async (req: Request, res: Response) => {
         }
       }
     };
+    const eventChannels: NotificationDeliveryChannel[] = ["push", "sms", "email"];
     const results = await Promise.allSettled([
-      sendPushNotification(notifyRequest, "order-event"),
-      sendSmsNotification(notifyRequest),
-      sendEmailNotification(notifyRequest)
+      notificationChannels.sendPushNotification(notifyRequest, "order-event"),
+      notificationChannels.sendSmsNotification(notifyRequest),
+      notificationChannels.sendEmailNotification(notifyRequest)
     ]);
 
     const failures = results
-      .map((r, idx) => ({ r, channel: ["push", "sms", "email"][idx] }))
+      .map((r, idx) => ({ r, channel: eventChannels[idx] }))
       .filter((x) => x.r.status === "rejected");
     const failureDetails = failures.map((f) => {
       const reason = (f.r as PromiseRejectedResult).reason as any;
@@ -272,9 +267,7 @@ app.post("/events/orders", async (req: Request, res: Response) => {
       return { channel: f.channel, message, code };
     });
     failures.forEach((f) => {
-      if (f.channel === "push") pushFailed += 1;
-      if (f.channel === "sms") smsFailed += 1;
-      if (f.channel === "email") emailFailed += 1;
+      notificationChannels.recordFailure(f.channel);
     });
 
     // Persist alert (best-effort)
@@ -408,7 +401,7 @@ app.post("/events/dispatch", async (req: Request, res: Response) => {
             }
           }
         };
-        await sendPushNotification(notifyRequest, "dispatch_assignment_request");
+        await notificationChannels.sendPushNotification(notifyRequest, "dispatch_assignment_request");
       }
     }
 
@@ -431,7 +424,7 @@ app.post("/events/dispatch", async (req: Request, res: Response) => {
             }
           }
         };
-        await sendPushNotification(notifyRequest, "marketplace_offer");
+        await notificationChannels.sendPushNotification(notifyRequest, "marketplace_offer");
       }
     }
 
@@ -652,8 +645,8 @@ app.post("/handoff", requireGoogleOidc(internalAuth), async (req: Request, res: 
   };
 
   const result = await Promise.allSettled([
-    sendPushNotification(notifyRequest, "handoff"),
-    sendSmsNotification(notifyRequest)
+    notificationChannels.sendPushNotification(notifyRequest, "handoff"),
+    notificationChannels.sendSmsNotification(notifyRequest)
   ]);
 
   const hasError = result.some((entry) => entry.status === "rejected");
@@ -859,7 +852,7 @@ async function triggerCustomerComms(params: {
           }
         }
       };
-      await sendPushNotification(notifyRequest, "customer_status_update");
+      await notificationChannels.sendPushNotification(notifyRequest, "customer_status_update");
     }
   }
 
@@ -869,7 +862,7 @@ async function triggerCustomerComms(params: {
       console.warn(JSON.stringify({ level: "warn", event: "store_from_number_missing", storeId: params.storeId }));
       return;
     }
-    await sendCustomerSms({ to, from, body: message });
+    await notificationChannels.sendCustomerSms({ to, from, body: message });
     return;
   }
 
@@ -904,22 +897,6 @@ async function resolveCustomerContact(params: { tenantId: string; callerId: stri
     console.warn(JSON.stringify({ level: "warn", event: "customer_profile_lookup_failed", message: (err as Error).message }));
     return { phoneE164: callerId, customerName: "" };
   }
-}
-
-async function sendCustomerSms(params: { to: string; from: string; body: string }): Promise<void> {
-  if (notificationsDryRun) {
-    smsSent += 1;
-    console.log(JSON.stringify({ level: "info", event: "customer_sms_dry_run", to: params.to, from: params.from }));
-    return;
-  }
-  if (!twilioClient) return;
-  await twilioClient.messages.create({
-    to: params.to,
-    from: params.from,
-    body: params.body
-  });
-  smsSent += 1;
-  console.log(JSON.stringify({ level: "info", event: "customer_sms_sent", to: params.to, from: params.from }));
 }
 
 async function startElevenLabsOutboundCall(params: {
@@ -1019,168 +996,4 @@ async function enqueueReadyEscalationTask(params: { orderId: string; storeId: st
     if (status === 409) return;
     console.warn(JSON.stringify({ level: "warn", event: "cloud_tasks_enqueue_failed", status, message: err?.message ?? String(err) }));
   }
-}
-
-async function sendPushNotification(payload: NotifyRequest, source: string): Promise<void> {
-  const target = payload.target;
-  if (!target.deviceTokens?.length && !target.topic) {
-    throw new Error("missing push target");
-  }
-
-  const baseDataEntries = Object.entries(payload.payload.data ?? {}).map(([key, value]) => [
-    key,
-    String(value)
-  ]);
-  const baseData: Record<string, string> = Object.fromEntries([
-    ["source", source],
-    ...baseDataEntries
-  ]);
-
-  if (target.deviceTokens?.length) {
-    if (notificationsDryRun) {
-      pushSent += target.deviceTokens.length;
-      console.log(
-        JSON.stringify({
-          level: "info",
-          event: "push_multicast_dry_run",
-          source,
-          tokens: target.deviceTokens.length,
-          title: payload.payload.title
-        })
-      );
-    } else {
-    const multicast: admin.messaging.MulticastMessage = {
-      tokens: target.deviceTokens,
-      data: baseData,
-      notification: {
-        title: payload.payload.title,
-        body: payload.payload.body
-      }
-    };
-    await messaging.sendEachForMulticast(multicast);
-    pushSent += target.deviceTokens.length;
-    console.log(
-      JSON.stringify({
-        level: "info",
-        event: "push_multicast_sent",
-        source,
-        tokens: target.deviceTokens.length,
-        title: payload.payload.title
-      })
-    );
-    }
-  }
-
-  if (target.topic) {
-    if (notificationsDryRun) {
-      pushSent += 1;
-      console.log(
-        JSON.stringify({
-          level: "info",
-          event: "push_topic_dry_run",
-          source,
-          topic: target.topic,
-          title: payload.payload.title
-        })
-      );
-      return;
-    }
-    const message: admin.messaging.Message = {
-      topic: target.topic,
-      data: baseData,
-      notification: {
-        title: payload.payload.title,
-        body: payload.payload.body
-      }
-    };
-    await messaging.send(message);
-    pushSent += 1;
-    console.log(
-      JSON.stringify({
-        level: "info",
-        event: "push_topic_sent",
-        source,
-        topic: target.topic,
-        title: payload.payload.title
-      })
-    );
-  }
-}
-
-async function sendSmsNotification(payload: NotifyRequest): Promise<void> {
-  if (notificationsDryRun) {
-    smsSent += 1;
-    console.log(
-      JSON.stringify({
-        level: "info",
-        event: "sms_dry_run",
-        to: payload.target.phoneNumber ?? config.OPS_PHONE,
-        title: payload.payload.title
-      })
-    );
-    return;
-  }
-  if (!twilioClient) {
-    return;
-  }
-  const phoneNumber = payload.target.phoneNumber ?? config.OPS_PHONE;
-  if (!phoneNumber) {
-    throw new Error("missing phoneNumber for sms channel");
-  }
-  if (!config.TWILIO_MESSAGING_NUMBER) {
-    throw new Error("missing TWILIO_MESSAGING_NUMBER");
-  }
-
-  await twilioClient.messages.create({
-    to: phoneNumber,
-    from: config.TWILIO_MESSAGING_NUMBER,
-    body: payload.payload.body
-  });
-  smsSent += 1;
-  console.log(
-    JSON.stringify({
-      level: "info",
-      event: "sms_sent",
-      to: phoneNumber,
-      title: payload.payload.title
-    })
-  );
-}
-
-async function sendEmailNotification(payload: NotifyRequest): Promise<void> {
-  if (notificationsDryRun) {
-    emailSent += 1;
-    console.log(
-      JSON.stringify({
-        level: "info",
-        event: "email_dry_run",
-        to: payload.target.email ?? config.OPS_EMAIL,
-        title: payload.payload.title
-      })
-    );
-    return;
-  }
-  if (!config.SENDGRID_API_KEY) {
-    return;
-  }
-  const email = payload.target.email ?? config.OPS_EMAIL;
-  if (!email) {
-    throw new Error("missing email target");
-  }
-
-  await sgMail.send({
-    to: email,
-    from: config.SENDGRID_FROM_EMAIL ?? "alerts@ordering-intelligence.test",
-    subject: payload.payload.title,
-    text: payload.payload.body
-  });
-  emailSent += 1;
-  console.log(
-    JSON.stringify({
-      level: "info",
-      event: "email_sent",
-      to: email,
-      title: payload.payload.title
-    })
-  );
 }
