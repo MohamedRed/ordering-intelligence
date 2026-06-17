@@ -768,33 +768,7 @@ func main() {
 	})
 
 	router.Put("/stores/{storeID}/menu", func(w http.ResponseWriter, r *http.Request) {
-		storeID := chi.URLParam(r, "storeID")
-		if storeID == "" {
-			writeJSON(w, http.StatusBadRequest, map[string]string{"error": "missing_store_id"})
-			return
-		}
-		var payload menuRecord
-		if err := json.NewDecoder(r.Body).Decode(&payload); err != nil {
-			writeJSON(w, http.StatusBadRequest, map[string]string{"error": "invalid_payload"})
-			return
-		}
-		normalized := normalizeMenuRecord(&payload)
-		if normalized != nil {
-			payload = *normalized
-		}
-		if err := validateMenu(payload); err != nil {
-			writeJSON(w, http.StatusBadRequest, map[string]string{"error": err.Error()})
-			return
-		}
-		payload.StoreID = storeID
-		payload.UpdatedAt = time.Now().UTC()
-		if err := upsertMenu(ctx, firestoreClient, payload); err != nil {
-			log.Printf("failed to save menu: %v", err)
-			writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "save_failed"})
-			return
-		}
-		invalidateMenuCache(storeID)
-		writeJSON(w, http.StatusOK, payload)
+		handleMenuUpsert(ctx, firestoreClient, cfg, w, r)
 	})
 
 	// Menu updates Pub/Sub push (optional). Expects message.data base64 JSON {storeId, updatedAt, jobId, source}
