@@ -53,7 +53,16 @@ const fetchMetrics = async () => {
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), DEFAULT_TIMEOUT_MS);
   try {
-    const res = await fetch(`${apiBase}/metrics`, { signal: controller.signal });
+    const res = await fetch(`${apiBase}/metrics`, {
+      signal: controller.signal,
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+    if (!res.ok) {
+      const text = await res.text();
+      throw new Error(`metrics fetch failed: ${res.status} ${text.slice(0, 200)}`);
+    }
     const text = await res.text();
     const metrics = {};
     for (const line of text.split('\n')) {

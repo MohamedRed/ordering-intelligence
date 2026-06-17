@@ -1558,6 +1558,7 @@ module "notification_service" {
     INTERNAL_ALLOWED_EMAILS = join(",", [
       module.agent_tools_sa.email,
       module.payments_service_sa.email,
+      module.github_ci_sa.email,
     ])
 
     NOTIFICATION_SERVICE_URL               = local.service_urls.notification_service
