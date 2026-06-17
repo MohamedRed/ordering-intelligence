@@ -14,6 +14,10 @@ import { VertexAI } from '@google-cloud/vertexai';
 import fetch from 'node-fetch';
 import { registerAgentCreationRoutes } from './agent_creation_routes.js';
 import {
+  createElevenLabsPhoneNumberImporter,
+  createElevenLabsTemplateAgentResolver,
+} from './elevenlabs_phone_numbers.js';
+import {
   registerDeliveryPartnerStripeRoutes,
   upsertDeliveryPartnerStripeFromAccount,
 } from './delivery_partner_stripe.js';
@@ -21,12 +25,8 @@ import { registerBusinessProfileRoutes } from './business_profile_routes.js';
 import { registerDeliveryPartnerComplianceRoutes } from './delivery_partner_compliance.js';
 import { registerMerchantStripeEmbedRoutes } from './merchant_stripe_embed.js';
 import { registerFinalizeRoutes } from './finalize_routes.js';
-import {
-  maskPhone,
-  normalizePhoneNumberKey,
-  phoneRouteDocIdFromElevenLabsPhoneNumberId,
-  phoneRouteDocIdFromToNumber,
-} from './phone_routes.js';
+import { maskPhone } from './phone_routes.js';
+import { createPhoneNumberRouteStore } from './phone_number_route_store.js';
 import { buildCorsOptions, resolveCorsOrigins } from './cors_policy.js';
 import { registerMenuFlyerSessionRoutes } from './menu_flyer_session_routes.js';
 import { registerMenuFlyerUploadRoutes } from './menu_flyer_upload.js';
@@ -40,6 +40,7 @@ import {
   createOnboardingAuthMiddleware,
   resolveOnboardingAuthPolicy,
 } from './auth_policy.js';
+import type { OnboardingSession } from './onboarding_session_types.js';
 import { resolveOnboardingStripeConfig } from './stripe_config.js';
 
 const app = express();
@@ -58,7 +59,7 @@ const stripe = STRIPE_SECRET_KEY
 const firestore = new Firestore();
 const SESSIONS = firestore.collection('onboarding_sessions');
 const TENANTS = firestore.collection('onboarding_tenants');
-const PHONE_NUMBER_ROUTES = firestore.collection('phone_number_routes');
+const upsertPhoneNumberRoute = createPhoneNumberRouteStore(firestore.collection('phone_number_routes'));
 const pubsub = new PubSub();
 const MENU_INGEST_TOPIC = process.env.MENU_INGEST_TOPIC || 'menu-ingest';
 
@@ -99,215 +100,21 @@ const ELEVENLABS_TEMPLATE_FAST_FOOD_AGENT_ID = process.env.ELEVENLABS_TEMPLATE_F
 const ELEVENLABS_TEMPLATE_AUTO_PARTS_AGENT_ID = process.env.ELEVENLABS_TEMPLATE_AUTO_PARTS_AGENT_ID || '';
 const ELEVENLABS_TEMPLATE_GAS_STATION_AGENT_ID =
   process.env.ELEVENLABS_TEMPLATE_GAS_STATION_AGENT_ID || '';
-
-async function upsertPhoneNumberRoute(params: {
-  onboardingSessionId: string;
-  toNumber?: string;
-  elevenlabsPhoneNumberId?: string;
-  twilioSid?: string;
-  tenantId?: string;
-  storeId?: string;
-  businessType?: string;
-  routeStatus?: string;
-  source: 'onboarding_voice_number' | 'onboarding_finalize' | 'manual';
-}): Promise<void> {
-  const ts = Timestamp.now();
-  const onboardingSessionId = params.onboardingSessionId.trim();
-  const toNumber = params.toNumber ? normalizePhoneNumberKey(params.toNumber) : '';
-  const elevenlabsPhoneNumberId = (params.elevenlabsPhoneNumberId || '').trim();
-
-  // Use stable defaults that match finalize() fallback IDs.
-  const tenantId = (params.tenantId || '').trim() || `tenant_${onboardingSessionId}`;
-  const storeId = (params.storeId || '').trim() || `store_${onboardingSessionId}`;
-
-  const payload: any = {
-    route_version: 1,
-    source: params.source,
-    route_status: params.routeStatus || 'active',
-    onboarding_session_id: onboardingSessionId,
-    tenant_id: tenantId,
-    store_id: storeId,
-    business_type: (params.businessType || '').trim(),
-    ...(toNumber ? { to_number: toNumber } : {}),
-    ...(params.twilioSid ? { twilio_sid: String(params.twilioSid).trim() } : {}),
-    ...(elevenlabsPhoneNumberId ? { elevenlabs_phone_number_id: elevenlabsPhoneNumberId } : {}),
-    updated_at: ts,
-    // Note: we intentionally do not try to keep a perfect created_at without a read.
-    created_at: ts,
-  };
-
-  const writes: Promise<any>[] = [];
-  if (toNumber) {
-    writes.push(PHONE_NUMBER_ROUTES.doc(phoneRouteDocIdFromToNumber(toNumber)).set(payload, { merge: true }));
-  }
-  if (elevenlabsPhoneNumberId) {
-    writes.push(
-      PHONE_NUMBER_ROUTES.doc(phoneRouteDocIdFromElevenLabsPhoneNumberId(elevenlabsPhoneNumberId)).set(payload, {
-        merge: true,
-      }),
-    );
-  }
-  if (!writes.length) return;
-  await Promise.all(writes);
-}
-
-async function elevenlabsJson<T>(path: string, opts: { method: string; body?: any }): Promise<T> {
-  if (!ELEVENLABS_API_KEY) throw new Error('ELEVENLABS_API_KEY not configured');
-  const url = `${ELEVENLABS_API_BASE_URL}${path}`;
-  const res = await fetch(url, {
-    method: opts.method,
-    headers: {
-      'Content-Type': 'application/json',
-      'xi-api-key': ELEVENLABS_API_KEY,
-    },
-    body: opts.body ? JSON.stringify(opts.body) : undefined,
-  });
-  const text = await res.text();
-  if (!res.ok) {
-    throw new Error(`elevenlabs ${opts.method} ${path} failed status=${res.status} body=${text.slice(0, 400)}`);
-  }
-  try {
-    return JSON.parse(text) as T;
-  } catch {
-    // Some endpoints can return non-JSON, but our usage expects JSON.
-    throw new Error(`elevenlabs ${opts.method} ${path} invalid json: ${text.slice(0, 200)}`);
-  }
-}
-
-type ElevenLabsPhoneNumber =
-  | {
-      provider: 'twilio';
-      phone_number_id: string;
-      phone_number: string;
-      label?: string;
-      assigned_agent?: { agent_id: string } | null;
-    }
-  | {
-      provider: 'sip_trunk';
-      phone_number_id: string;
-      phone_number: string;
-      label?: string;
-      assigned_agent?: { agent_id: string } | null;
-    };
-
-async function ensureElevenLabsPhoneNumberImported(params: {
-  phoneNumber: string;
-  label: string;
-  agentId: string;
-}): Promise<string> {
-  const { phoneNumber, label, agentId } = params;
-  // 1) Try find existing
-  let existing: ElevenLabsPhoneNumber | undefined;
-  try {
-    const list = await elevenlabsJson<ElevenLabsPhoneNumber[]>('/v1/convai/phone-numbers', { method: 'GET' });
-    existing = list.find((p) => p.phone_number === phoneNumber);
-  } catch (err) {
-    // If listing fails, still attempt create.
-    console.warn('elevenlabs list phone-numbers failed', (err as Error).message);
-  }
-
-  const phoneNumberId =
-    existing?.phone_number_id ??
-    (
-      await elevenlabsJson<{ phone_number_id: string }>('/v1/convai/phone-numbers', {
-        method: 'POST',
-        body: {
-          provider: 'twilio',
-          phone_number: phoneNumber,
-          label,
-          sid: TWILIO_ACCOUNT_SID,
-          token: TWILIO_AUTH_TOKEN,
-          supports_inbound: true,
-          supports_outbound: true,
-        },
-      })
-    ).phone_number_id;
-
-  // 2) Assign the (template) agent to the phone number.
-  await elevenlabsJson(`/v1/convai/phone-numbers/${encodeURIComponent(phoneNumberId)}`, {
-    method: 'PATCH',
-    body: { agent_id: agentId },
-  });
-
-  return phoneNumberId;
-}
-
-type SessionStatus =
-  | 'collecting'
-  | 'prefill_ready'
-  | 'awaiting_kyc'
-  | 'ingesting'
-  | 'ready'
-  | 'failed';
-
-interface OnboardingSession {
-  status: SessionStatus;
-  business?: {
-    name?: string;
-    address?: string;
-    phone?: string;
-    timezone?: string;
-    type?: string;
-    primaryContact?: string;
-    currency?: string;
-    fuel_default_prepay_cents?: number;
-    fuelDefaultPrepayCents?: number;
-  };
-  flyers?: string[];
-  prefill?: Record<string, any>;
-  stripe?: {
-    account_id?: string;
-    status?: string;
-    capabilities?: Record<string, any>;
-  };
-  twilio?: {
-    number?: string;
-    sid?: string;
-    status?: string;
-    elevenlabs_phone_number_id?: string;
-  };
-  ingestion?: {
-    job_ids?: string[];
-    status?: string;
-    // True once the FastIngestion (menu_only) draft exists, even if image enrichment is later resumed.
-    fast_ready?: boolean;
-  };
-  agent?: {
-    template_agent_id?: string;
-    business_type?: string;
-    mode?: 'shared_template' | 'per_tenant';
-    // Backward-compat: older sessions may have a per-tenant agent_id.
-    agent_id?: string;
-    voice_id?: string;
-    branch_id?: string;
-    status?: string;
-  };
-  notifications?: {
-    device_tokens?: string[];
-    webhook_url?: string;
-  };
-  audit?: { ts: FirebaseFirestore.Timestamp; actor: string; event: string; data?: any }[];
-  tenant?: {
-    tenant_id?: string;
-    store_id?: string;
-  };
-  created_at: FirebaseFirestore.Timestamp;
-  updated_at: FirebaseFirestore.Timestamp;
-}
+const ensureElevenLabsPhoneNumberImported = createElevenLabsPhoneNumberImporter({
+  apiKey: ELEVENLABS_API_KEY,
+  apiBaseUrl: ELEVENLABS_API_BASE_URL,
+  twilioAccountSid: TWILIO_ACCOUNT_SID,
+  twilioAuthToken: TWILIO_AUTH_TOKEN,
+  fetchImpl: fetch,
+});
 
 const storage = new Storage();
 const bucket = storage.bucket(BUCKET);
-
-const resolveElevenLabsTemplateAgentId = (businessTypeRaw: string) => {
-  const businessType = (businessTypeRaw || '').trim().toLowerCase();
-  if (businessType === 'auto_parts') {
-    return ELEVENLABS_TEMPLATE_AUTO_PARTS_AGENT_ID || ELEVENLABS_TEMPLATE_FAST_FOOD_AGENT_ID;
-  }
-  if (businessType === 'gas_station') {
-    return ELEVENLABS_TEMPLATE_GAS_STATION_AGENT_ID || ELEVENLABS_TEMPLATE_FAST_FOOD_AGENT_ID;
-  }
-  return ELEVENLABS_TEMPLATE_FAST_FOOD_AGENT_ID;
-};
+const resolveElevenLabsTemplateAgentId = createElevenLabsTemplateAgentResolver({
+  fastFoodAgentId: ELEVENLABS_TEMPLATE_FAST_FOOD_AGENT_ID,
+  autoPartsAgentId: ELEVENLABS_TEMPLATE_AUTO_PARTS_AGENT_ID,
+  gasStationAgentId: ELEVENLABS_TEMPLATE_GAS_STATION_AGENT_ID,
+});
 
 const jsonParser = express.json();
 app.use((req, res, next) => {
