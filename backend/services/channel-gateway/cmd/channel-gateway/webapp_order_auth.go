@@ -13,7 +13,6 @@ import (
 var errWebAppOrderForbidden = errors.New("order_forbidden")
 var errWebAppOrderNotFound = errors.New("order_not_found")
 var errWebAppOrderLookupFailed = errors.New("order_lookup_failed")
-var errWebAppSessionMissingOrderStore = errors.New("session_store_missing")
 var errWebAppSessionMissingCustomer = errors.New("session_customer_missing")
 
 var fetchWebAppOrderFn = fetchWebAppOrder
@@ -22,18 +21,6 @@ type webAppOrderSnapshot struct {
 	ID         string `json:"id"`
 	StoreID    string `json:"storeId"`
 	CustomerID string `json:"customerId,omitempty"`
-}
-
-func resolveSessionOrderStore(session channelSession, requestedStoreID string) (string, error) {
-	sessionStoreID := strings.TrimSpace(session.StoreID)
-	if sessionStoreID == "" {
-		return "", errWebAppSessionMissingOrderStore
-	}
-	requestedStoreID = strings.TrimSpace(requestedStoreID)
-	if requestedStoreID != "" && requestedStoreID != sessionStoreID {
-		return "", errWebAppOrderForbidden
-	}
-	return sessionStoreID, nil
 }
 
 func authorizeSessionOrder(
@@ -47,7 +34,7 @@ func authorizeSessionOrder(
 	if err != nil {
 		return webAppOrderSnapshot{}, err
 	}
-	sessionStoreID, err := resolveSessionOrderStore(session, "")
+	sessionStoreID, err := resolveWebAppSessionStore(session, "")
 	if err != nil {
 		return webAppOrderSnapshot{}, err
 	}
@@ -106,13 +93,13 @@ func fetchWebAppOrder(
 
 func writeWebAppOrderAccessError(w http.ResponseWriter, err error) {
 	switch {
-	case errors.Is(err, errWebAppSessionMissingOrderStore):
+	case errors.Is(err, errWebAppSessionMissingStore):
 		writeJSON(w, http.StatusConflict, map[string]string{"error": "session_store_missing"})
 	case errors.Is(err, errWebAppSessionMissingCustomer):
 		writeJSON(w, http.StatusConflict, map[string]string{"error": "customer_not_resolved"})
 	case errors.Is(err, errWebAppOrderNotFound):
 		writeJSON(w, http.StatusNotFound, map[string]string{"error": "order_not_found"})
-	case errors.Is(err, errWebAppOrderForbidden):
+	case errors.Is(err, errWebAppSessionStoreForbidden), errors.Is(err, errWebAppOrderForbidden):
 		writeJSON(w, http.StatusForbidden, map[string]string{"error": "forbidden"})
 	default:
 		writeJSON(w, http.StatusBadGateway, map[string]string{"error": "order_lookup_failed"})

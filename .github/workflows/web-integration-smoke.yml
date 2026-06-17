@@ -98,6 +98,9 @@ jobs:
       - name: Run channel webapp auth simulation test
         run: node tests/integration/channel_oauth_sim.mjs
 
+      - name: Run webapp delivery prewarm test
+        run: node tests/integration/webapp_delivery_prewarm.mjs
+
       - name: Run menu ingest e2e test
         run: node tests/integration/menu_ingest_e2e.mjs
 

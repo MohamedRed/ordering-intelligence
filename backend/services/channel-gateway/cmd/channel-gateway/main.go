@@ -999,7 +999,7 @@ func handleWebAppOrderCreate(
 	}
 	isMobile := strings.EqualFold(session.Channel, "mobile")
 
-	storeID, err := resolveSessionOrderStore(session, payload.StoreID)
+	storeID, err := resolveWebAppSessionStore(session, payload.StoreID)
 	if err != nil {
 		writeWebAppOrderAccessError(w, err)
 		return

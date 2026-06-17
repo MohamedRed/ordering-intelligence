@@ -12,7 +12,6 @@ import (
 var errWebAppGroupOrderForbidden = errors.New("group_order_forbidden")
 var errWebAppGroupOrderNotFound = errors.New("group_order_not_found")
 var errWebAppGroupOrderLookupFailed = errors.New("group_order_lookup_failed")
-var errWebAppSessionMissingStore = errors.New("session_store_missing")
 
 var fetchWebAppGroupOrderFn = fetchWebAppGroupOrder
 

@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"io"
 	"net/http"
+	"net/url"
 	"strings"
 	"time"
 
@@ -49,7 +50,7 @@ func handleWebAppDeliveryPrewarm(
 	ctx, cancel := context.WithTimeout(r.Context(), 10*time.Second)
 	defer cancel()
 
-	session, err := loadSessionWithCustomer(ctx, cfg, firestoreClient, payload.SessionID)
+	session, err := loadSessionWithCustomerFn(ctx, cfg, firestoreClient, payload.SessionID)
 	if err != nil {
 		if status.Code(err) == codes.NotFound {
 			writeJSON(w, http.StatusNotFound, map[string]string{"error": "session_not_found"})
@@ -59,12 +60,9 @@ func handleWebAppDeliveryPrewarm(
 		return
 	}
 
-	storeID := payload.StoreID
-	if storeID == "" {
-		storeID = strings.TrimSpace(session.StoreID)
-	}
-	if storeID == "" {
-		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "missing_store"})
+	storeID, err := resolveWebAppSessionStore(session, payload.StoreID)
+	if err != nil {
+		writeWebAppSessionStoreAccessError(w, err)
 		return
 	}
 
@@ -74,15 +72,15 @@ func handleWebAppDeliveryPrewarm(
 		"dropoffAddressText": payload.DropoffAddressText,
 	})
 
-	endpoint := strings.TrimRight(cfg.DispatchServiceURL, "/") + "/v1/stores/" + storeID + "/marketplace/prewarm"
+	endpoint := strings.TrimRight(cfg.DispatchServiceURL, "/") + "/v1/stores/" + url.PathEscape(storeID) + "/marketplace/prewarm"
 	req, _ := http.NewRequestWithContext(ctx, http.MethodPost, endpoint, bytes.NewReader(body))
 	req.Header.Set("Content-Type", "application/json")
 
-	client := dispatchHTTPClient
-	if client == nil {
-		client = &http.Client{Timeout: 12 * time.Second}
+	if dispatchHTTPClient == nil {
+		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "dispatch_client_not_configured"})
+		return
 	}
-	resp, err := client.Do(req)
+	resp, err := dispatchHTTPClient.Do(req)
 	if err != nil {
 		writeJSON(w, http.StatusBadGateway, map[string]string{"error": "dispatch_service_unavailable"})
 		return

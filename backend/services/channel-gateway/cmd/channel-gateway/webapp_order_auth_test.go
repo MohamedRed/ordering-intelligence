@@ -32,9 +32,9 @@ func withStubbedWebAppOrderAuth(
 	body()
 }
 
-func TestResolveSessionOrderStoreRejectsStoreOverride(t *testing.T) {
-	_, err := resolveSessionOrderStore(channelSession{StoreID: "store-a"}, "store-b")
-	if err != errWebAppOrderForbidden {
+func TestResolveWebAppSessionStoreRejectsStoreOverride(t *testing.T) {
+	_, err := resolveWebAppSessionStore(channelSession{StoreID: "store-a"}, "store-b")
+	if err != errWebAppSessionStoreForbidden {
 		t.Fatalf("expected forbidden, got %v", err)
 	}
 }
