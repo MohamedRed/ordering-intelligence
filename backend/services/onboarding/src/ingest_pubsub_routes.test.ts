@@ -21,6 +21,14 @@ function makeHarness(params: {
 
   const sessions = {
     doc: (id: string) => ({
+      get: async () => ({
+        exists: params.session !== null,
+        data: () => ({
+          status: 'ingesting',
+          ingestion: { job_ids: ['job-existing'] },
+          ...(params.session ?? {}),
+        }),
+      }),
       update: async (payload: any) => {
         updates.push({ id, payload });
       },
@@ -41,18 +49,6 @@ function makeHarness(params: {
   registerIngestPubSubRoutes({
     app,
     sessions: sessions as any,
-    getSession: async (id, res) => {
-      if (params.session === null) {
-        res.status(404).json({ error: 'session_not_found' });
-        return null;
-      }
-      return {
-        id,
-        status: 'ingesting',
-        ingestion: { job_ids: ['job-existing'] },
-        ...(params.session ?? {}),
-      };
-    },
     audit: async (id, event, data) => {
       audits.push({ id, event, data });
     },
@@ -68,12 +64,13 @@ describe('ingest Pub/Sub routes', () => {
     await request(app).get('/ingest-pubsub').expect(405, 'Method Not Allowed');
   });
 
-  it('rejects malformed Pub/Sub payloads before decoding', async () => {
-    const { app } = makeHarness();
+  it('acknowledges malformed Pub/Sub payloads before decoding', async () => {
+    const { app, audits, updates } = makeHarness();
 
-    const res = await request(app).post('/ingest-pubsub').send({ message: {} }).expect(400);
+    await request(app).post('/ingest-pubsub').send({ message: {} }).expect(204);
 
-    expect(res.body.error).toBe('invalid_message');
+    expect(audits).toEqual([]);
+    expect(updates).toEqual([]);
   });
 
   it('updates the explicit onboarding session and normalizes completed status', async () => {
@@ -129,19 +126,74 @@ describe('ingest Pub/Sub routes', () => {
     });
   });
 
-  it('requires a status and a resolvable session id', async () => {
-    const { app } = makeHarness();
+  it('updates an explicit session without writing undefined audit fields when job id is omitted', async () => {
+    const { app, audits, updates } = makeHarness();
 
-    const missingStatus = await request(app)
+    await request(app)
+      .post('/ingest-pubsub')
+      .send(pubsubPayload({ session_id: 'session-1', status: 'partial_ok' }))
+      .expect(204);
+
+    expect(updates[0]).toMatchObject({
+      id: 'session-1',
+      payload: {
+        ingestion: { job_ids: ['job-existing'], status: 'partial_ok' },
+      },
+    });
+    expect(audits).toEqual([
+      {
+        id: 'session-1',
+        event: 'ingest_pubsub',
+        data: { status: 'partial_ok' },
+      },
+    ]);
+  });
+
+  it('acknowledges messages without status and audits the skipped session event', async () => {
+    const { app, audits, updates } = makeHarness();
+
+    await request(app)
       .post('/ingest-pubsub')
       .send(pubsubPayload({ session_id: 'session-1', job_id: 'job-1' }))
-      .expect(400);
-    expect(missingStatus.body.error).toBe('status_required');
+      .expect(204);
 
-    const missingSession = await request(app)
+    expect(updates).toEqual([]);
+    expect(audits).toEqual([
+      {
+        id: 'session-1',
+        event: 'ingest_pubsub_skipped',
+        data: { reason: 'status_required', job_id: 'job-1' },
+      },
+    ]);
+  });
+
+  it('acknowledges messages without a resolvable session id', async () => {
+    const { app, audits, updates, whereCalls } = makeHarness();
+
+    await request(app)
       .post('/ingest-pubsub')
       .send(pubsubPayload({ job_id: 'job-1', status: 'processing' }))
-      .expect(400);
-    expect(missingSession.body.error).toBe('session_id_not_found');
+      .expect(204);
+
+    expect(whereCalls).toEqual([{ field: 'ingestion.job_ids', op: 'array-contains', value: 'job-1' }]);
+    expect(updates).toEqual([]);
+    expect(audits).toEqual([]);
+  });
+
+  it('acknowledges stale messages for deleted sessions', async () => {
+    const { app, audits, updates } = makeHarness({ session: null });
+
+    await request(app)
+      .post('/ingest-pubsub')
+      .send(pubsubPayload({ session_id: 'deleted-session', job_id: 'job-1', status: 'completed' }))
+      .expect(204);
+
+    expect(updates).toEqual([]);
+    expect(audits).toHaveLength(1);
+    expect(audits[0]).toMatchObject({
+      id: 'deleted-session',
+      event: 'ingest_pubsub_skipped',
+      data: { reason: 'session_not_found', job_id: 'job-1', status: 'completed' },
+    });
   });
 });

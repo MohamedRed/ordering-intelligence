@@ -247,7 +247,6 @@ registerSessionStatusRoutes({
 registerIngestPubSubRoutes({
   app,
   sessions: SESSIONS,
-  getSession,
   audit,
 });
 registerSessionLifecycleRoutes({
