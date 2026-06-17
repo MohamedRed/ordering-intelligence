@@ -159,12 +159,12 @@ describe("/events/orders", () => {
     (global as any).__firestoreAlerts?.clear?.();
   });
 
-  it("rejects missing payload", async () => {
+  it("acknowledges missing Pub/Sub payload", async () => {
     const res = await request(app)
       .post("/events/orders")
       .set("Authorization", "Bearer event-token")
       .send({});
-    expect(res.status).toBe(400);
+    expect(res.status).toBe(204);
   });
 
   it("decodes order event and returns 204", async () => {

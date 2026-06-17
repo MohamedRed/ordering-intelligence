@@ -5,7 +5,6 @@ import admin from "firebase-admin";
 import { Firestore } from "@google-cloud/firestore";
 import sgMail from "@sendgrid/mail";
 import twilio from "twilio";
-import { Buffer } from "buffer";
 import { listAlerts, storeAlert } from "./alerts";
 import { getAuth } from "firebase-admin/auth";
 import { registerToken } from "./registerToken";
@@ -21,6 +20,7 @@ import { requireFirebaseAdmin, requireFirebaseUser } from "./firebase_auth";
 import { initializeFirebaseApp } from "./firebase_init";
 import { requireGoogleOidc, requireGoogleOidcRequest } from "./internal_auth";
 import { NotificationChannels, type NotificationDeliveryChannel } from "./notification_channels";
+import { decodePubSubJson, logPubSubDecodeFailure } from "./pubsub_envelope";
 import { enqueueReadyEscalationTask } from "./ready_escalation_tasks";
 import {
   defaultMessageForStatus,
@@ -216,13 +216,13 @@ app.post("/events/orders", async (req: Request, res: Response) => {
       return;
     }
 
-    const env = req.body as PubSubPushEnvelope;
-    const message = env?.message;
-    if (!message?.data) {
-      res.status(400).json({ error: "invalid_message" });
+    const pubSubPayload = decodePubSubJson<any>(req.body as PubSubPushEnvelope);
+    if (!pubSubPayload.ok) {
+      logPubSubDecodeFailure("events/orders", pubSubPayload);
+      res.status(204).send();
       return;
     }
-    const raw = JSON.parse(Buffer.from(message.data, "base64").toString("utf8")) as any;
+    const raw = pubSubPayload.value;
 
     // Support both legacy payloads (raw OrderEvent) and v2 envelopes (e.g. order_customer_comms).
     const kind = String(raw?.kind ?? "").trim();
@@ -369,13 +369,13 @@ app.post("/events/dispatch", async (req: Request, res: Response) => {
       return;
     }
 
-    const env = req.body as PubSubPushEnvelope;
-    const message = env?.message;
-    if (!message?.data) {
-      res.status(400).json({ error: "invalid_message" });
+    const pubSubPayload = decodePubSubJson<DispatchEvent>(req.body as PubSubPushEnvelope);
+    if (!pubSubPayload.ok) {
+      logPubSubDecodeFailure("events/dispatch", pubSubPayload);
+      res.status(204).send();
       return;
     }
-    const raw = JSON.parse(Buffer.from(message.data, "base64").toString("utf8")) as DispatchEvent;
+    const raw = pubSubPayload.value;
     const kind = String(raw?.kind ?? "").trim();
     const storeId = String(raw?.storeId ?? "").trim();
     const driverId = String(raw?.driverId ?? "").trim();
@@ -495,13 +495,13 @@ app.post("/events/deliveries", async (req: Request, res: Response) => {
       return;
     }
 
-    const env = req.body as PubSubPushEnvelope;
-    const message = env?.message;
-    if (!message?.data) {
-      res.status(400).json({ error: "invalid_message" });
+    const pubSubPayload = decodePubSubJson<DeliveryEvent>(req.body as PubSubPushEnvelope);
+    if (!pubSubPayload.ok) {
+      logPubSubDecodeFailure("events/deliveries", pubSubPayload);
+      res.status(204).send();
       return;
     }
-    const raw = JSON.parse(Buffer.from(message.data, "base64").toString("utf8")) as DeliveryEvent;
+    const raw = pubSubPayload.value;
     const kind = String(raw?.kind ?? "").trim();
     const status = String(raw?.status ?? "").trim();
     const storeId = String(raw?.storeId ?? "").trim();
