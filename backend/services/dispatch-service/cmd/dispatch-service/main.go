@@ -3,7 +3,6 @@ package main
 import (
 	"bytes"
 	"context"
-	"encoding/base64"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -762,25 +761,10 @@ func handleOrdersEvents(
 	httpClient *http.Client,
 	orderTokenSrc oauth2.TokenSource,
 ) {
-	var env pubsubPushEnvelope
-	if err := json.NewDecoder(r.Body).Decode(&env); err != nil {
-		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "invalid_pubsub_envelope"})
-		return
-	}
-	if strings.TrimSpace(env.Message.Data) == "" {
-		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "missing_message_data"})
-		return
-	}
-
-	raw, err := base64.StdEncoding.DecodeString(env.Message.Data)
-	if err != nil {
-		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "invalid_base64"})
-		return
-	}
-
 	var order orderRecord
-	if err := json.Unmarshal(raw, &order); err != nil {
-		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "invalid_order_payload"})
+	if reason, err := decodePubSubPushJSON(r.Body, &order); err != nil {
+		log.Printf("skipping malformed orders Pub/Sub event reason=%s err=%v", reason, err)
+		writeJSON(w, http.StatusOK, map[string]string{"status": "ignored_invalid_pubsub", "reason": reason})
 		return
 	}
 
