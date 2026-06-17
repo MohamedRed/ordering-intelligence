@@ -18,6 +18,7 @@ func handleWebAppGroupOrderCheckout(
 	r *http.Request,
 	cfg *serviceConfig,
 	firestoreClient *cloudfirestore.Client,
+	orderHTTPClient *http.Client,
 	paymentsHTTPClient *http.Client,
 ) {
 	groupID := strings.TrimSpace(chi.URLParam(r, "groupOrderId"))
@@ -46,14 +47,23 @@ func handleWebAppGroupOrderCheckout(
 		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "payments_service_not_configured"})
 		return
 	}
+	if strings.TrimSpace(cfg.OrderServiceURL) == "" {
+		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "order_service_not_configured"})
+		return
+	}
 	ctx, cancel := context.WithTimeout(r.Context(), 12*time.Second)
 	defer cancel()
-	if _, err := loadWebAppSession(ctx, firestoreClient, payload.SessionID); err != nil {
+	session, err := loadWebAppSessionFn(ctx, firestoreClient, payload.SessionID)
+	if err != nil {
 		if errors.Is(err, errWebAppSessionNotFound) {
 			writeJSON(w, http.StatusNotFound, map[string]string{"error": "session_not_found"})
 			return
 		}
 		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "session_read_failed"})
+		return
+	}
+	if _, err := authorizeWebAppGroupOrder(ctx, cfg, orderHTTPClient, session, groupID, groupOrderAccessParticipant); err != nil {
+		writeWebAppGroupOrderAccessError(w, err)
 		return
 	}
 	endpoint := fmt.Sprintf("%s/group-orders/%s/checkout", strings.TrimRight(cfg.PaymentsServiceURL, "/"), groupID)
@@ -62,7 +72,12 @@ func handleWebAppGroupOrderCheckout(
 		"cancelUrl":  payload.CancelURL,
 	}
 	if payload.ParticipantID != "" {
-		checkoutPayload["participantId"] = payload.ParticipantID
+		participantID, err := resolveSessionParticipantID(session, payload.ParticipantID)
+		if err != nil {
+			writeWebAppGroupOrderAccessError(w, err)
+			return
+		}
+		checkoutPayload["participantId"] = participantID
 	}
 	if payload.Currency != "" {
 		checkoutPayload["currency"] = payload.Currency

@@ -39,7 +39,7 @@ func handleWebAppGroupOrderCreate(
 	}
 	ctx, cancel := context.WithTimeout(r.Context(), 8*time.Second)
 	defer cancel()
-	session, err := loadWebAppSessionWithCustomer(ctx, cfg, firestoreClient, payload.SessionID)
+	session, err := loadWebAppSessionWithCustomerFn(ctx, cfg, firestoreClient, payload.SessionID)
 	if err != nil {
 		if errors.Is(err, errWebAppSessionNotFound) {
 			writeJSON(w, http.StatusNotFound, map[string]string{"error": "session_not_found"})
@@ -48,12 +48,9 @@ func handleWebAppGroupOrderCreate(
 		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "session_read_failed"})
 		return
 	}
-	storeID := payload.StoreID
-	if storeID == "" {
-		storeID = strings.TrimSpace(session.StoreID)
-	}
-	if storeID == "" {
-		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "missing_store"})
+	storeID, err := resolveSessionGroupOrderStore(session, payload.StoreID)
+	if err != nil {
+		writeWebAppGroupOrderAccessError(w, err)
 		return
 	}
 	tenantID := strings.TrimSpace(session.TenantID)

@@ -283,7 +283,7 @@ func main() {
 			writeJSON(w, http.StatusBadRequest, map[string]string{"error": "missing_group_order_id"})
 			return
 		}
-		handleMobileGroupOrderPaymentIntent(w, r, cfg, firestoreClient, paymentsHTTPClient, groupOrderID)
+		handleMobileGroupOrderPaymentIntent(w, r, cfg, firestoreClient, orderHTTPClient, paymentsHTTPClient, groupOrderID)
 	})
 	router.Post("/mobile/group-orders/{groupOrderId}/pay-default", func(w http.ResponseWriter, r *http.Request) {
 		groupOrderID := chi.URLParam(r, "groupOrderId")
@@ -291,7 +291,7 @@ func main() {
 			writeJSON(w, http.StatusBadRequest, map[string]string{"error": "missing_group_order_id"})
 			return
 		}
-		handleMobileGroupOrderPayDefault(w, r, cfg, firestoreClient, paymentsHTTPClient, groupOrderID)
+		handleMobileGroupOrderPayDefault(w, r, cfg, firestoreClient, orderHTTPClient, paymentsHTTPClient, groupOrderID)
 	})
 
 	router.Post("/snap/lens/session/start", func(w http.ResponseWriter, r *http.Request) {

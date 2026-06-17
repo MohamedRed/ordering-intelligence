@@ -47,7 +47,7 @@ func handleWebAppGroupOrderAddItems(
 	}
 	ctx, cancel := context.WithTimeout(r.Context(), 10*time.Second)
 	defer cancel()
-	session, err := loadWebAppSession(ctx, firestoreClient, payload.SessionID)
+	session, err := loadWebAppSessionFn(ctx, firestoreClient, payload.SessionID)
 	if err != nil {
 		if errors.Is(err, errWebAppSessionNotFound) {
 			writeJSON(w, http.StatusNotFound, map[string]string{"error": "session_not_found"})
@@ -56,12 +56,13 @@ func handleWebAppGroupOrderAddItems(
 		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "session_read_failed"})
 		return
 	}
-	participantID := payload.ParticipantID
-	if participantID == "" {
-		participantID = strings.TrimSpace(session.UserID)
+	if _, err := authorizeWebAppGroupOrder(ctx, cfg, orderHTTPClient, session, groupID, groupOrderAccessParticipant); err != nil {
+		writeWebAppGroupOrderAccessError(w, err)
+		return
 	}
-	if participantID == "" {
-		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "missing_participant"})
+	participantID, err := resolveSessionParticipantID(session, payload.ParticipantID)
+	if err != nil {
+		writeWebAppGroupOrderAccessError(w, err)
 		return
 	}
 	label := payload.ParticipantLabel

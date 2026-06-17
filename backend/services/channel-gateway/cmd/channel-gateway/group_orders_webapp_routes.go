@@ -40,10 +40,10 @@ func registerWebAppGroupOrderRoutes(
 			handleWebAppGroupOrderInviteCreate(w, req, cfg, firestoreClient, orderHTTPClient)
 		})
 		r.Post("/{groupOrderId}/lock", func(w http.ResponseWriter, req *http.Request) {
-			handleWebAppGroupOrderLock(w, req, cfg, orderHTTPClient)
+			handleWebAppGroupOrderLock(w, req, cfg, firestoreClient, orderHTTPClient)
 		})
 		r.Post("/{groupOrderId}/checkout", func(w http.ResponseWriter, req *http.Request) {
-			handleWebAppGroupOrderCheckout(w, req, cfg, firestoreClient, paymentsHTTPClient)
+			handleWebAppGroupOrderCheckout(w, req, cfg, firestoreClient, orderHTTPClient, paymentsHTTPClient)
 		})
 		r.Post("/{groupOrderId}/submit", func(w http.ResponseWriter, req *http.Request) {
 			handleWebAppGroupOrderSubmit(w, req, cfg, firestoreClient, orderHTTPClient)

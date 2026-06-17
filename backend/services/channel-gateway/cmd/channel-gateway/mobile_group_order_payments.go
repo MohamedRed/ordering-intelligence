@@ -14,10 +14,10 @@ import (
 )
 
 type mobileGroupOrderPaymentRequest struct {
-	SessionID       string `json:"sessionId"`
-	ParticipantID   string `json:"participantId,omitempty"`
-	Currency        string `json:"currency,omitempty"`
-	SavePaymentMethod *bool `json:"savePaymentMethod,omitempty"`
+	SessionID         string `json:"sessionId"`
+	ParticipantID     string `json:"participantId,omitempty"`
+	Currency          string `json:"currency,omitempty"`
+	SavePaymentMethod *bool  `json:"savePaymentMethod,omitempty"`
 }
 
 func handleMobileGroupOrderPaymentIntent(
@@ -25,11 +25,16 @@ func handleMobileGroupOrderPaymentIntent(
 	r *http.Request,
 	cfg *serviceConfig,
 	firestoreClient *cloudfirestore.Client,
+	orderHTTPClient *http.Client,
 	paymentsHTTPClient *http.Client,
 	groupOrderID string,
 ) {
 	if strings.TrimSpace(cfg.PaymentsServiceURL) == "" {
 		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "payments_service_not_configured"})
+		return
+	}
+	if strings.TrimSpace(cfg.OrderServiceURL) == "" {
+		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "order_service_not_configured"})
 		return
 	}
 	var payload mobileGroupOrderPaymentRequest
@@ -44,7 +49,7 @@ func handleMobileGroupOrderPaymentIntent(
 	}
 	ctx, cancel := context.WithTimeout(r.Context(), 12*time.Second)
 	defer cancel()
-	session, err := loadSessionWithCustomer(ctx, cfg, firestoreClient, payload.SessionID)
+	session, err := loadSessionWithCustomerFn(ctx, cfg, firestoreClient, payload.SessionID)
 	if err != nil {
 		writeJSON(w, http.StatusNotFound, map[string]string{"error": "session_not_found"})
 		return
@@ -58,12 +63,25 @@ func handleMobileGroupOrderPaymentIntent(
 		writeJSON(w, http.StatusConflict, map[string]string{"error": "customer_not_resolved"})
 		return
 	}
+	if _, err := authorizeWebAppGroupOrder(ctx, cfg, orderHTTPClient, session, groupOrderID, groupOrderAccessParticipant); err != nil {
+		writeWebAppGroupOrderAccessError(w, err)
+		return
+	}
+	participantID := strings.TrimSpace(payload.ParticipantID)
+	if participantID != "" {
+		var err error
+		participantID, err = resolveSessionParticipantID(session, participantID)
+		if err != nil {
+			writeWebAppGroupOrderAccessError(w, err)
+			return
+		}
+	}
 	requestPayload := map[string]any{
-		"customerId":   customerID,
-		"customerName": strings.TrimSpace(session.DisplayName),
-		"sessionId":    payload.SessionID,
-		"tenantId":     strings.TrimSpace(session.TenantID),
-		"participantId": strings.TrimSpace(payload.ParticipantID),
+		"customerId":    customerID,
+		"customerName":  strings.TrimSpace(session.DisplayName),
+		"sessionId":     payload.SessionID,
+		"tenantId":      strings.TrimSpace(session.TenantID),
+		"participantId": participantID,
 	}
 	if strings.TrimSpace(payload.Currency) != "" {
 		requestPayload["currency"] = strings.TrimSpace(payload.Currency)
@@ -106,11 +124,16 @@ func handleMobileGroupOrderPayDefault(
 	r *http.Request,
 	cfg *serviceConfig,
 	firestoreClient *cloudfirestore.Client,
+	orderHTTPClient *http.Client,
 	paymentsHTTPClient *http.Client,
 	groupOrderID string,
 ) {
 	if strings.TrimSpace(cfg.PaymentsServiceURL) == "" {
 		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "payments_service_not_configured"})
+		return
+	}
+	if strings.TrimSpace(cfg.OrderServiceURL) == "" {
+		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "order_service_not_configured"})
 		return
 	}
 	var payload mobileGroupOrderPaymentRequest
@@ -125,7 +148,7 @@ func handleMobileGroupOrderPayDefault(
 	}
 	ctx, cancel := context.WithTimeout(r.Context(), 12*time.Second)
 	defer cancel()
-	session, err := loadSessionWithCustomer(ctx, cfg, firestoreClient, payload.SessionID)
+	session, err := loadSessionWithCustomerFn(ctx, cfg, firestoreClient, payload.SessionID)
 	if err != nil {
 		writeJSON(w, http.StatusNotFound, map[string]string{"error": "session_not_found"})
 		return
@@ -139,12 +162,25 @@ func handleMobileGroupOrderPayDefault(
 		writeJSON(w, http.StatusConflict, map[string]string{"error": "customer_not_resolved"})
 		return
 	}
+	if _, err := authorizeWebAppGroupOrder(ctx, cfg, orderHTTPClient, session, groupOrderID, groupOrderAccessParticipant); err != nil {
+		writeWebAppGroupOrderAccessError(w, err)
+		return
+	}
+	participantID := strings.TrimSpace(payload.ParticipantID)
+	if participantID != "" {
+		var err error
+		participantID, err = resolveSessionParticipantID(session, participantID)
+		if err != nil {
+			writeWebAppGroupOrderAccessError(w, err)
+			return
+		}
+	}
 	requestPayload := map[string]any{
-		"customerId":   customerID,
-		"customerName": strings.TrimSpace(session.DisplayName),
-		"sessionId":    payload.SessionID,
-		"tenantId":     strings.TrimSpace(session.TenantID),
-		"participantId": strings.TrimSpace(payload.ParticipantID),
+		"customerId":    customerID,
+		"customerName":  strings.TrimSpace(session.DisplayName),
+		"sessionId":     payload.SessionID,
+		"tenantId":      strings.TrimSpace(session.TenantID),
+		"participantId": participantID,
 	}
 	if strings.TrimSpace(payload.Currency) != "" {
 		requestPayload["currency"] = strings.TrimSpace(payload.Currency)

@@ -41,12 +41,17 @@ func handleWebAppGroupOrderSubmit(
 	}
 	ctx, cancel := context.WithTimeout(r.Context(), 8*time.Second)
 	defer cancel()
-	if _, err := loadWebAppSession(ctx, firestoreClient, payload.SessionID); err != nil {
+	session, err := loadWebAppSessionFn(ctx, firestoreClient, payload.SessionID)
+	if err != nil {
 		if errors.Is(err, errWebAppSessionNotFound) {
 			writeJSON(w, http.StatusNotFound, map[string]string{"error": "session_not_found"})
 			return
 		}
 		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "session_read_failed"})
+		return
+	}
+	if _, err := authorizeWebAppGroupOrder(ctx, cfg, orderHTTPClient, session, groupID, groupOrderAccessHost); err != nil {
+		writeWebAppGroupOrderAccessError(w, err)
 		return
 	}
 	endpoint := fmt.Sprintf("%s/group_orders/%s/submit", strings.TrimRight(cfg.OrderServiceURL, "/"), groupID)

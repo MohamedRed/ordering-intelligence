@@ -15,6 +15,10 @@ import (
 
 var errWebAppSessionNotFound = errors.New("session_not_found")
 
+var loadWebAppSessionFn = loadWebAppSession
+var loadWebAppSessionWithCustomerFn = loadWebAppSessionWithCustomer
+var loadSessionWithCustomerFn = loadSessionWithCustomer
+
 func loadWebAppSession(ctx context.Context, client *cloudfirestore.Client, sessionID string) (channelSession, error) {
 	snap, err := client.Collection(channelSessionsCollection).Doc(sessionID).Get(ctx)
 	if err != nil {

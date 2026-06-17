@@ -41,13 +41,17 @@ func handleWebAppGroupOrderInviteCreate(
 	}
 	ctx, cancel := context.WithTimeout(r.Context(), 8*time.Second)
 	defer cancel()
-	session, err := loadWebAppSession(ctx, firestoreClient, payload.SessionID)
+	session, err := loadWebAppSessionFn(ctx, firestoreClient, payload.SessionID)
 	if err != nil {
 		if errors.Is(err, errWebAppSessionNotFound) {
 			writeJSON(w, http.StatusNotFound, map[string]string{"error": "session_not_found"})
 			return
 		}
 		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "session_read_failed"})
+		return
+	}
+	if _, err := authorizeWebAppGroupOrder(ctx, cfg, orderHTTPClient, session, groupID, groupOrderAccessHost); err != nil {
+		writeWebAppGroupOrderAccessError(w, err)
 		return
 	}
 	invitePayload := groupOrderInviteCreatePayload{
