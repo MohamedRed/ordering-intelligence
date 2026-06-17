@@ -438,6 +438,8 @@ locals {
         ])
         ORDER_SERVICE_URL                      = local.service_urls.order_service
         DISPATCH_EVENTS_TOPIC                  = module.core.pubsub_topics["dispatch-events"]
+        ORDERS_EVENTS_OIDC_AUDIENCE            = local.service_urls.dispatch_service
+        ORDERS_EVENTS_OIDC_ALLOWED_EMAILS      = module.orders_events_push_sa.email
         ASSIGNMENT_TTL_SECONDS                 = "30"
         TOP_K_CANDIDATES                       = "5"
         DISPATCH_SERVICE_URL                   = local.service_urls.dispatch_service
@@ -446,6 +448,7 @@ locals {
         CLOUD_TASKS_ASSIGNMENT_QUEUE           = "dispatch-assignments-${var.environment_name}"
         CLOUD_TASKS_OIDC_SERVICE_ACCOUNT_EMAIL = module.dispatch_tasks_sa.email
         CLOUD_TASKS_OIDC_AUDIENCE              = local.service_urls.dispatch_service
+        CLOUD_TASKS_OIDC_ALLOWED_EMAILS        = module.dispatch_tasks_sa.email
       }
       secret_env_overrides = {}
     }

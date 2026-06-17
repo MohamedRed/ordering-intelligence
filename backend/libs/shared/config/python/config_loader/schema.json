@@ -648,6 +648,16 @@
       "required": false,
       "description": "Comma-separated allowlist for internal Google OIDC ID tokens."
     },
+    "ORDERS_EVENTS_OIDC_AUDIENCE": {
+      "type": "string",
+      "required": false,
+      "description": "OIDC audience for Pub/Sub push subscription on orders-events."
+    },
+    "ORDERS_EVENTS_OIDC_ALLOWED_EMAILS": {
+      "type": "string",
+      "required": false,
+      "description": "Comma-separated service-account email allowlist for orders-events Pub/Sub push calls."
+    },
     "ORDER_SERVICE_URL": {
       "type": "string",
       "required": true,
@@ -676,6 +686,47 @@
       "required": false,
       "default": 5,
       "description": "Number of best candidate drivers to consider (v1 uses distance per driver)."
+    },
+    "MARKETPLACE_CANDIDATE_LIMIT": {
+      "type": "number",
+      "required": false,
+      "default": 25,
+      "description": "Maximum marketplace deliverer candidates to evaluate for an offer."
+    },
+    "DISPATCH_SERVICE_URL": {
+      "type": "string",
+      "required": false,
+      "description": "Public URL of dispatch-service (used as Cloud Tasks target)."
+    },
+    "CLOUD_TASKS_PROJECT_ID": {
+      "type": "string",
+      "required": false,
+      "description": "GCP project ID for Cloud Tasks queue."
+    },
+    "CLOUD_TASKS_LOCATION": {
+      "type": "string",
+      "required": false,
+      "description": "Cloud Tasks queue location/region."
+    },
+    "CLOUD_TASKS_ASSIGNMENT_QUEUE": {
+      "type": "string",
+      "required": false,
+      "description": "Cloud Tasks queue ID for dispatch assignment expiry and marketplace finalization."
+    },
+    "CLOUD_TASKS_OIDC_SERVICE_ACCOUNT_EMAIL": {
+      "type": "string",
+      "required": false,
+      "description": "Service account email used to mint OIDC tokens for Cloud Tasks callbacks."
+    },
+    "CLOUD_TASKS_OIDC_AUDIENCE": {
+      "type": "string",
+      "required": false,
+      "description": "Expected OIDC audience for Cloud Tasks callbacks."
+    },
+    "CLOUD_TASKS_OIDC_ALLOWED_EMAILS": {
+      "type": "string",
+      "required": false,
+      "description": "Comma-separated service-account email allowlist for Cloud Tasks callbacks."
     }
   },
   "delivery-service": {

@@ -65,6 +65,9 @@ type serviceConfig struct {
 	InternalAuthAudience  string
 	InternalAllowedEmails []string
 
+	OrdersEventsOIDCAudience      string
+	OrdersEventsOIDCAllowedEmails []string
+
 	OrderServiceURL           string
 	DispatchEventsTopic       string
 	RadarAPIKey               string
@@ -77,6 +80,7 @@ type serviceConfig struct {
 	CloudTasksAssignmentQueue    string
 	CloudTasksOIDCServiceAccount string
 	CloudTasksOIDCAudience       string
+	CloudTasksOIDCAllowedEmails  []string
 	DispatchServiceBaseURL       string
 }
 
@@ -282,14 +286,23 @@ func main() {
 		_, _ = fmt.Fprintf(w, "dispatch_assignments_created_total %d\n", atomic.LoadUint64(&assignmentsCreatedCounter))
 	})
 
-	// Pub/Sub push endpoint for orders-events (invocation protected by Cloud Run IAM).
+	// Task endpoints use app-level OIDC allowlists because the service also accepts public browser traffic.
 	router.Post("/tasks/orders-events", func(w http.ResponseWriter, r *http.Request) {
+		if !requireDispatchTaskAuth(w, r, cfg, cfg.OrdersEventsOIDCAudience, cfg.OrdersEventsOIDCAllowedEmails) {
+			return
+		}
 		handleOrdersEvents(w, r, fs, cfg, pubsubClient, tasksClient, httpClient, orderTokenSrc)
 	})
 	router.Post("/tasks/assignments/expire", func(w http.ResponseWriter, r *http.Request) {
+		if !requireDispatchTaskAuth(w, r, cfg, cfg.CloudTasksOIDCAudience, cfg.CloudTasksOIDCAllowedEmails) {
+			return
+		}
 		handleAssignmentExpiry(w, r, fs, cfg, pubsubClient, tasksClient, httpClient, orderTokenSrc)
 	})
 	router.Post("/tasks/marketplace/offers/{offerId}/finalize", func(w http.ResponseWriter, r *http.Request) {
+		if !requireDispatchTaskAuth(w, r, cfg, cfg.CloudTasksOIDCAudience, cfg.CloudTasksOIDCAllowedEmails) {
+			return
+		}
 		offerID := strings.TrimSpace(chi.URLParam(r, "offerId"))
 		if offerID == "" {
 			writeJSON(w, http.StatusBadRequest, map[string]string{"error": "missing_offer_id"})
@@ -523,6 +536,8 @@ func loadConfig() (*serviceConfig, error) {
 
 	internalAllowed := strings.TrimSpace(stringOrDefault(values["INTERNAL_ALLOWED_EMAILS"], strings.TrimSpace(os.Getenv("INTERNAL_ALLOWED_EMAILS"))))
 	internalAllowedEmails := splitCSV(internalAllowed)
+	ordersEventsAllowed := strings.TrimSpace(stringOrDefault(values["ORDERS_EVENTS_OIDC_ALLOWED_EMAILS"], strings.TrimSpace(os.Getenv("ORDERS_EVENTS_OIDC_ALLOWED_EMAILS"))))
+	cloudTasksAllowed := strings.TrimSpace(stringOrDefault(values["CLOUD_TASKS_OIDC_ALLOWED_EMAILS"], strings.TrimSpace(os.Getenv("CLOUD_TASKS_OIDC_ALLOWED_EMAILS"))))
 	corsOrigins, err := resolveDispatchCORSOrigins(
 		strings.TrimSpace(stringOrDefault(values["CORS_ORIGINS"], strings.TrimSpace(os.Getenv("CORS_ORIGINS")))),
 	)
@@ -549,28 +564,35 @@ func loadConfig() (*serviceConfig, error) {
 		marketplaceLimit = 50
 	}
 
-	return &serviceConfig{
-		Port:                         port,
-		Environment:                  strings.TrimSpace(stringOrDefault(values["ENVIRONMENT"], "development")),
-		FirestoreProjectID:           project,
-		CredentialsFile:              strings.TrimSpace(stringOrDefault(values["GOOGLE_APPLICATION_CREDENTIALS"], "")),
-		RequireAuth:                  strings.TrimSpace(stringOrDefault(values["REQUIRE_AUTH"], strings.TrimSpace(os.Getenv("REQUIRE_AUTH")))) != "false",
-		CORSOrigins:                  corsOrigins,
-		InternalAuthAudience:         strings.TrimSpace(stringOrDefault(values["INTERNAL_AUTH_AUDIENCE"], strings.TrimSpace(os.Getenv("INTERNAL_AUTH_AUDIENCE")))),
-		InternalAllowedEmails:        internalAllowedEmails,
-		OrderServiceURL:              strings.TrimSpace(stringOrDefault(values["ORDER_SERVICE_URL"], strings.TrimSpace(os.Getenv("ORDER_SERVICE_URL")))),
-		DispatchEventsTopic:          strings.TrimSpace(stringOrDefault(values["DISPATCH_EVENTS_TOPIC"], strings.TrimSpace(os.Getenv("DISPATCH_EVENTS_TOPIC")))),
-		RadarAPIKey:                  strings.TrimSpace(stringOrDefault(values["RADAR_API_KEY"], strings.TrimSpace(os.Getenv("RADAR_API_KEY")))),
-		AssignmentTTLSeconds:         ttlSeconds,
-		TopKCandidates:               topK,
-		MarketplaceCandidateLimit:    marketplaceLimit,
-		CloudTasksProjectID:          strings.TrimSpace(stringOrDefault(values["CLOUD_TASKS_PROJECT_ID"], strings.TrimSpace(os.Getenv("CLOUD_TASKS_PROJECT_ID")))),
-		CloudTasksLocation:           strings.TrimSpace(stringOrDefault(values["CLOUD_TASKS_LOCATION"], strings.TrimSpace(os.Getenv("CLOUD_TASKS_LOCATION")))),
-		CloudTasksAssignmentQueue:    strings.TrimSpace(stringOrDefault(values["CLOUD_TASKS_ASSIGNMENT_QUEUE"], strings.TrimSpace(os.Getenv("CLOUD_TASKS_ASSIGNMENT_QUEUE")))),
-		CloudTasksOIDCServiceAccount: strings.TrimSpace(stringOrDefault(values["CLOUD_TASKS_OIDC_SERVICE_ACCOUNT_EMAIL"], strings.TrimSpace(os.Getenv("CLOUD_TASKS_OIDC_SERVICE_ACCOUNT_EMAIL")))),
-		CloudTasksOIDCAudience:       strings.TrimSpace(stringOrDefault(values["CLOUD_TASKS_OIDC_AUDIENCE"], strings.TrimSpace(os.Getenv("CLOUD_TASKS_OIDC_AUDIENCE")))),
-		DispatchServiceBaseURL:       strings.TrimRight(strings.TrimSpace(stringOrDefault(values["DISPATCH_SERVICE_URL"], strings.TrimSpace(os.Getenv("DISPATCH_SERVICE_URL")))), "/"),
-	}, nil
+	cfg := &serviceConfig{
+		Port:                          port,
+		Environment:                   strings.TrimSpace(stringOrDefault(values["ENVIRONMENT"], "development")),
+		FirestoreProjectID:            project,
+		CredentialsFile:               strings.TrimSpace(stringOrDefault(values["GOOGLE_APPLICATION_CREDENTIALS"], "")),
+		RequireAuth:                   strings.TrimSpace(stringOrDefault(values["REQUIRE_AUTH"], strings.TrimSpace(os.Getenv("REQUIRE_AUTH")))) != "false",
+		CORSOrigins:                   corsOrigins,
+		InternalAuthAudience:          strings.TrimSpace(stringOrDefault(values["INTERNAL_AUTH_AUDIENCE"], strings.TrimSpace(os.Getenv("INTERNAL_AUTH_AUDIENCE")))),
+		InternalAllowedEmails:         internalAllowedEmails,
+		OrdersEventsOIDCAudience:      strings.TrimSpace(stringOrDefault(values["ORDERS_EVENTS_OIDC_AUDIENCE"], strings.TrimSpace(os.Getenv("ORDERS_EVENTS_OIDC_AUDIENCE")))),
+		OrdersEventsOIDCAllowedEmails: splitCSV(ordersEventsAllowed),
+		OrderServiceURL:               strings.TrimSpace(stringOrDefault(values["ORDER_SERVICE_URL"], strings.TrimSpace(os.Getenv("ORDER_SERVICE_URL")))),
+		DispatchEventsTopic:           strings.TrimSpace(stringOrDefault(values["DISPATCH_EVENTS_TOPIC"], strings.TrimSpace(os.Getenv("DISPATCH_EVENTS_TOPIC")))),
+		RadarAPIKey:                   strings.TrimSpace(stringOrDefault(values["RADAR_API_KEY"], strings.TrimSpace(os.Getenv("RADAR_API_KEY")))),
+		AssignmentTTLSeconds:          ttlSeconds,
+		TopKCandidates:                topK,
+		MarketplaceCandidateLimit:     marketplaceLimit,
+		CloudTasksProjectID:           strings.TrimSpace(stringOrDefault(values["CLOUD_TASKS_PROJECT_ID"], strings.TrimSpace(os.Getenv("CLOUD_TASKS_PROJECT_ID")))),
+		CloudTasksLocation:            strings.TrimSpace(stringOrDefault(values["CLOUD_TASKS_LOCATION"], strings.TrimSpace(os.Getenv("CLOUD_TASKS_LOCATION")))),
+		CloudTasksAssignmentQueue:     strings.TrimSpace(stringOrDefault(values["CLOUD_TASKS_ASSIGNMENT_QUEUE"], strings.TrimSpace(os.Getenv("CLOUD_TASKS_ASSIGNMENT_QUEUE")))),
+		CloudTasksOIDCServiceAccount:  strings.TrimSpace(stringOrDefault(values["CLOUD_TASKS_OIDC_SERVICE_ACCOUNT_EMAIL"], strings.TrimSpace(os.Getenv("CLOUD_TASKS_OIDC_SERVICE_ACCOUNT_EMAIL")))),
+		CloudTasksOIDCAudience:        strings.TrimSpace(stringOrDefault(values["CLOUD_TASKS_OIDC_AUDIENCE"], strings.TrimSpace(os.Getenv("CLOUD_TASKS_OIDC_AUDIENCE")))),
+		CloudTasksOIDCAllowedEmails:   splitCSV(cloudTasksAllowed),
+		DispatchServiceBaseURL:        strings.TrimRight(strings.TrimSpace(stringOrDefault(values["DISPATCH_SERVICE_URL"], strings.TrimSpace(os.Getenv("DISPATCH_SERVICE_URL")))), "/"),
+	}
+	if err := validateDispatchAuthConfig(cfg); err != nil {
+		return nil, err
+	}
+	return cfg, nil
 }
 
 func newFirestoreClient(ctx context.Context, cfg *serviceConfig) (*cloudfirestore.Client, error) {
@@ -1826,13 +1848,6 @@ func handleAssignmentExpiry(
 	httpClient *http.Client,
 	orderTokenSrc oauth2.TokenSource,
 ) {
-	if strings.TrimSpace(cfg.CloudTasksOIDCAudience) != "" {
-		if !verifyGoogleOidc(r, cfg.CloudTasksOIDCAudience) {
-			writeJSON(w, http.StatusUnauthorized, map[string]string{"error": "unauthorized"})
-			return
-		}
-	}
-
 	var payload struct {
 		StoreID      string `json:"storeId"`
 		AssignmentID string `json:"assignmentId"`
@@ -2205,22 +2220,6 @@ func writeJSON(w http.ResponseWriter, status int, payload interface{}) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(status)
 	_ = json.NewEncoder(w).Encode(payload)
-}
-
-func verifyGoogleOidc(r *http.Request, audience string) bool {
-	authHeader := r.Header.Get("Authorization")
-	if !strings.HasPrefix(authHeader, "Bearer ") {
-		return false
-	}
-	token := strings.TrimSpace(strings.TrimPrefix(authHeader, "Bearer "))
-	if token == "" {
-		return false
-	}
-	payload, err := idtoken.Validate(r.Context(), token, audience)
-	if err != nil || payload == nil {
-		return false
-	}
-	return true
 }
 
 func splitCSV(s string) []string {

@@ -19,12 +19,6 @@ func handleMarketplaceFinalize(
 	orderTokenSrc oauth2.TokenSource,
 	offerID string,
 ) {
-	if cfg.CloudTasksOIDCAudience != "" {
-		if ok := verifyGoogleOidc(r, cfg.CloudTasksOIDCAudience); !ok {
-			writeJSON(w, http.StatusUnauthorized, map[string]string{"error": "unauthorized"})
-			return
-		}
-	}
 	offerID = strings.TrimSpace(offerID)
 	if offerID == "" {
 		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "missing_offer_id"})
