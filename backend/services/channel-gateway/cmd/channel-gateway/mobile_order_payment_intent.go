@@ -37,11 +37,16 @@ func handleMobileOrderPaymentIntent(
 	r *http.Request,
 	cfg *serviceConfig,
 	firestoreClient *cloudfirestore.Client,
+	orderHTTPClient *http.Client,
 	paymentsHTTPClient *http.Client,
 	orderID string,
 ) {
 	if strings.TrimSpace(cfg.PaymentsServiceURL) == "" {
 		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "payments_service_not_configured"})
+		return
+	}
+	if strings.TrimSpace(cfg.OrderServiceURL) == "" {
+		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "order_service_not_configured"})
 		return
 	}
 	var payload mobileOrderPaymentIntentRequest
@@ -58,7 +63,7 @@ func handleMobileOrderPaymentIntent(
 	ctx, cancel := context.WithTimeout(r.Context(), 10*time.Second)
 	defer cancel()
 
-	session, err := loadSessionWithCustomer(ctx, cfg, firestoreClient, payload.SessionID)
+	session, err := loadSessionWithCustomerFn(ctx, cfg, firestoreClient, payload.SessionID)
 	if err != nil {
 		writeJSON(w, http.StatusNotFound, map[string]string{"error": "session_not_found"})
 		return
@@ -70,6 +75,10 @@ func handleMobileOrderPaymentIntent(
 	customerID := strings.TrimSpace(session.CustomerID)
 	if customerID == "" {
 		writeJSON(w, http.StatusConflict, map[string]string{"error": "customer_not_resolved"})
+		return
+	}
+	if _, err := authorizeSessionOrder(ctx, cfg, orderHTTPClient, session, orderID); err != nil {
+		writeWebAppOrderAccessError(w, err)
 		return
 	}
 

@@ -267,7 +267,7 @@ func main() {
 			writeJSON(w, http.StatusBadRequest, map[string]string{"error": "missing_order_id"})
 			return
 		}
-		handleMobileOrderPaymentIntent(w, r, cfg, firestoreClient, paymentsHTTPClient, orderID)
+		handleMobileOrderPaymentIntent(w, r, cfg, firestoreClient, orderHTTPClient, paymentsHTTPClient, orderID)
 	})
 	router.Post("/mobile/orders/{orderId}/pay-default", func(w http.ResponseWriter, r *http.Request) {
 		orderID := chi.URLParam(r, "orderId")
@@ -275,7 +275,7 @@ func main() {
 			writeJSON(w, http.StatusBadRequest, map[string]string{"error": "missing_order_id"})
 			return
 		}
-		handleMobileOrderPayDefault(w, r, cfg, firestoreClient, paymentsHTTPClient, orderID)
+		handleMobileOrderPayDefault(w, r, cfg, firestoreClient, orderHTTPClient, paymentsHTTPClient, orderID)
 	})
 	router.Post("/mobile/group-orders/{groupOrderId}/payment-intent", func(w http.ResponseWriter, r *http.Request) {
 		groupOrderID := chi.URLParam(r, "groupOrderId")
@@ -988,7 +988,7 @@ func handleWebAppOrderCreate(
 	ctx, cancel := context.WithTimeout(r.Context(), 18*time.Second)
 	defer cancel()
 
-	session, err := loadSessionWithCustomer(ctx, cfg, firestoreClient, payload.SessionID)
+	session, err := loadSessionWithCustomerFn(ctx, cfg, firestoreClient, payload.SessionID)
 	if err != nil {
 		if status.Code(err) == codes.NotFound {
 			writeJSON(w, http.StatusNotFound, map[string]string{"error": "session_not_found"})
@@ -999,12 +999,9 @@ func handleWebAppOrderCreate(
 	}
 	isMobile := strings.EqualFold(session.Channel, "mobile")
 
-	storeID := strings.TrimSpace(payload.StoreID)
-	if storeID == "" {
-		storeID = strings.TrimSpace(session.StoreID)
-	}
-	if storeID == "" {
-		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "missing_store"})
+	storeID, err := resolveSessionOrderStore(session, payload.StoreID)
+	if err != nil {
+		writeWebAppOrderAccessError(w, err)
 		return
 	}
 
