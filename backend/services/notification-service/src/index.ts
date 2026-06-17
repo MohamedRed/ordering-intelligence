@@ -19,6 +19,7 @@ import { requireFirebaseAdmin, requireFirebaseUser } from "./firebase_auth";
 import { initializeFirebaseApp } from "./firebase_init";
 import { requireGoogleOidc, requireGoogleOidcRequest } from "./internal_auth";
 import { NotificationChannels, type NotificationDeliveryChannel } from "./notification_channels";
+import { enqueueReadyEscalationTask } from "./ready_escalation_tasks";
 import {
   defaultMessageForStatus,
   DELIVERY_COMMS_RATE_LIMIT_DEFAULT,
@@ -763,7 +764,7 @@ async function handleOrderStatusComms(evt: OrderEvent): Promise<void> {
     if (comms?.ready_escalation_enabled) {
       const mins = Number(comms.ready_escalation_minutes ?? 5);
       const delayMs = Math.max(0, Math.min(60, Number.isFinite(mins) ? mins : 5)) * 60_000;
-      await enqueueReadyEscalationTask({ orderId: evt.id, storeId, runAtMs: Date.now() + delayMs });
+      await enqueueReadyEscalationTask(googleAuth, config, { orderId: evt.id, storeId, runAtMs: Date.now() + delayMs });
     }
   }
 
@@ -953,47 +954,4 @@ async function startElevenLabsOutboundCall(params: {
     }
   );
   console.log(JSON.stringify({ level: "info", event: "elevenlabs_outbound_call_started", to: params.toNumber, storeId: params.storeId }));
-}
-
-async function enqueueReadyEscalationTask(params: { orderId: string; storeId: string; runAtMs: number }): Promise<void> {
-  const projectId = String(config.CLOUD_TASKS_PROJECT_ID ?? config.FIREBASE_PROJECT_ID ?? "").trim();
-  const location = String(config.CLOUD_TASKS_LOCATION ?? "").trim();
-  const queue = String(config.CLOUD_TASKS_READY_ESCALATION_QUEUE ?? "").trim();
-  const targetBaseUrl = String(config.NOTIFICATION_SERVICE_URL ?? "").trim().replace(/\/+$/, "");
-  const oidcSa = String(config.CLOUD_TASKS_OIDC_SERVICE_ACCOUNT_EMAIL ?? "").trim();
-  const oidcAudience = String(config.CLOUD_TASKS_OIDC_AUDIENCE ?? targetBaseUrl).trim();
-  if (!projectId || !location || !queue || !targetBaseUrl || !oidcSa) return;
-
-  const runAtSeconds = Math.max(0, Math.floor(params.runAtMs / 1000));
-  const safeOrderId = params.orderId.replace(/[^A-Za-z0-9_-]/g, "_");
-  const taskName = `projects/${projectId}/locations/${location}/queues/${queue}/tasks/ready-escalation-${safeOrderId}`;
-  const url = `https://cloudtasks.googleapis.com/v2/projects/${encodeURIComponent(projectId)}/locations/${encodeURIComponent(location)}/queues/${encodeURIComponent(queue)}/tasks`;
-  const bodyJson = JSON.stringify({ orderId: params.orderId, storeId: params.storeId });
-  const bodyB64 = Buffer.from(bodyJson, "utf8").toString("base64");
-
-  const client = await googleAuth.getClient();
-  try {
-    await (client as any).request({
-      url,
-      method: "POST",
-      data: {
-        task: {
-          name: taskName,
-          scheduleTime: { seconds: runAtSeconds },
-          httpRequest: {
-            httpMethod: "POST",
-            url: `${targetBaseUrl}/tasks/ready-escalation`,
-            headers: { "Content-Type": "application/json" },
-            oidcToken: { serviceAccountEmail: oidcSa, audience: oidcAudience },
-            body: bodyB64
-          }
-        }
-      }
-    });
-  } catch (err: any) {
-    // 409 ALREADY_EXISTS is fine (idempotent).
-    const status = err?.response?.status;
-    if (status === 409) return;
-    console.warn(JSON.stringify({ level: "warn", event: "cloud_tasks_enqueue_failed", status, message: err?.message ?? String(err) }));
-  }
 }
