@@ -12,6 +12,7 @@ function makeRouteHarness(session: any) {
 
   const savedFiles: Array<{ key: string; buffer: Buffer; options: Record<string, unknown> }> = [];
   const downloadedKeys: string[] = [];
+  const events: string[] = [];
   const bucket = {
     name: 'menus-bucket',
     file: (key: string) => ({
@@ -48,6 +49,7 @@ function makeRouteHarness(session: any) {
   const sessions = {
     doc: (id: string) => ({
       update: async (payload: any) => {
+        events.push('session:update');
         sessionUpdates.push({ id, payload });
       },
     }),
@@ -57,6 +59,7 @@ function makeRouteHarness(session: any) {
   const pubsub = {
     topic: (topic: string) => ({
       publishMessage: async (message: any) => {
+        events.push('pubsub:publish');
         published.push({ topic, message });
       },
     }),
@@ -83,7 +86,7 @@ function makeRouteHarness(session: any) {
     },
   });
 
-  return { app, audits, batchWrites, downloadedKeys, menuDocs, published, savedFiles, sessionUpdates };
+  return { app, audits, batchWrites, downloadedKeys, events, menuDocs, published, savedFiles, sessionUpdates };
 }
 
 describe('menu ingestion onboarding routes', () => {
@@ -106,7 +109,7 @@ describe('menu ingestion onboarding routes', () => {
   });
 
   it('starts ingestion by copying flyers and publishing a menu job', async () => {
-    const { app, audits, downloadedKeys, menuDocs, published, savedFiles, sessionUpdates } = makeRouteHarness({
+    const { app, audits, downloadedKeys, events, menuDocs, published, savedFiles, sessionUpdates } = makeRouteHarness({
       flyers: ['https://storage.googleapis.com/menus-bucket/menu-flyers/menu.png'],
       tenant: { store_id: 'store-123' },
     });
@@ -132,6 +135,7 @@ describe('menu ingestion onboarding routes', () => {
       status: 'queued',
       fast_ready: false,
     });
+    expect(events.slice(0, 2)).toEqual(['session:update', 'pubsub:publish']);
     expect(audits[0]).toMatchObject({
       id: 'session-1',
       event: 'ingest_triggered',

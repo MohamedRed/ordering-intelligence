@@ -82,12 +82,13 @@ export function registerMenuIngestionRoutes(params: RegisterMenuIngestionRoutesP
         updatedAt: nowMs,
       });
 
-      await params.pubsub.topic(params.menuIngestTopic).publishMessage({ json: { jobId } });
-
       await params.sessions.doc(id).update({
         ingestion: { job_ids: [jobId], status: 'queued', fast_ready: false },
         updated_at: Timestamp.now(),
       });
+
+      await params.pubsub.topic(params.menuIngestTopic).publishMessage({ json: { jobId } });
+
       await params.audit(id, 'ingest_triggered', { jobId, restaurantId, fileCount: files.length });
       return res.json({ job_id: jobId });
     } catch (err: any) {
