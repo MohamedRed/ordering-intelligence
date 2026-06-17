@@ -69,10 +69,25 @@ export function getConfig(): PaymentsConfig {
   const corsOrigins = (process.env.CORS_ORIGINS || cfg.CORS_ORIGINS || "").toString();
   const internalAuthAudience = (process.env.INTERNAL_AUTH_AUDIENCE || cfg.INTERNAL_AUTH_AUDIENCE || "").toString();
   const internalAllowedEmails = (process.env.INTERNAL_ALLOWED_EMAILS || cfg.INTERNAL_ALLOWED_EMAILS || "").toString();
+  const stripeSecretKey = (process.env.STRIPE_SECRET_KEY || cfg.STRIPE_SECRET_KEY || "").toString();
+  const stripePublishableKey = (process.env.STRIPE_PUBLISHABLE_KEY || cfg.STRIPE_PUBLISHABLE_KEY || "").toString();
+  const stripeWebhookSecret = (process.env.STRIPE_WEBHOOK_SECRET || cfg.STRIPE_WEBHOOK_SECRET || "").toString();
   if (isProductionLike(environment)) {
     if (!internalAuthAudience.trim() || parseCsv(internalAllowedEmails).length === 0) {
       throw new Error(
         "INTERNAL_AUTH_AUDIENCE and INTERNAL_ALLOWED_EMAILS are required for payments-service in staging/production."
+      );
+    }
+    const missingStripeConfig = [
+      ["STRIPE_SECRET_KEY", stripeSecretKey],
+      ["STRIPE_PUBLISHABLE_KEY", stripePublishableKey],
+      ["STRIPE_WEBHOOK_SECRET", stripeWebhookSecret]
+    ]
+      .filter(([, value]) => !value.trim())
+      .map(([name]) => name);
+    if (missingStripeConfig.length) {
+      throw new Error(
+        `${missingStripeConfig.join(", ")} ${missingStripeConfig.length === 1 ? "is" : "are"} required for payments-service in staging/production.`
       );
     }
   }
@@ -82,9 +97,9 @@ export function getConfig(): PaymentsConfig {
     ENVIRONMENT: environment,
     CORS_ORIGINS: resolveCorsOrigins(corsOrigins, environment),
     FIREBASE_PROJECT_ID: (process.env.FIREBASE_PROJECT_ID || cfg.FIREBASE_PROJECT_ID || "").toString(),
-    STRIPE_SECRET_KEY: (process.env.STRIPE_SECRET_KEY || "").toString(),
-    STRIPE_PUBLISHABLE_KEY: (process.env.STRIPE_PUBLISHABLE_KEY || cfg.STRIPE_PUBLISHABLE_KEY || "").toString(),
-    STRIPE_WEBHOOK_SECRET: (process.env.STRIPE_WEBHOOK_SECRET || "").toString(),
+    STRIPE_SECRET_KEY: stripeSecretKey,
+    STRIPE_PUBLISHABLE_KEY: stripePublishableKey,
+    STRIPE_WEBHOOK_SECRET: stripeWebhookSecret,
     STRIPE_WEBHOOK_ALLOWED_EVENTS: (process.env.STRIPE_WEBHOOK_ALLOWED_EVENTS || cfg.STRIPE_WEBHOOK_ALLOWED_EVENTS || "").toString(),
     ORDER_SERVICE_URL: (process.env.ORDER_SERVICE_URL || cfg.ORDER_SERVICE_URL || "").toString(),
     NOTIFICATION_SERVICE_URL: (process.env.NOTIFICATION_SERVICE_URL || cfg.NOTIFICATION_SERVICE_URL || "").toString(),

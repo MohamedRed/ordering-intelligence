@@ -248,18 +248,18 @@
       "type": "string",
       "required": true,
       "sensitive": true,
-      "description": "Stripe secret key."
+      "description": "Stripe secret key. Required for payments-service runtime."
     },
     "STRIPE_PUBLISHABLE_KEY": {
       "type": "string",
       "required": false,
-      "description": "Stripe publishable key for client apps."
+      "description": "Stripe publishable key returned to client apps. Required in staging and production."
     },
     "STRIPE_WEBHOOK_SECRET": {
       "type": "string",
       "required": false,
       "sensitive": true,
-      "description": "Stripe webhook signing secret."
+      "description": "Stripe webhook signing secret. Required in staging and production."
     },
     "STRIPE_WEBHOOK_ALLOWED_EVENTS": {
       "type": "string",

@@ -1064,8 +1064,9 @@ resource "google_secret_manager_secret_iam_member" "onboarding_secret_access" {
 
 resource "google_secret_manager_secret_iam_member" "payments_service_secret_access" {
   for_each = {
-    stripe_secret_key     = google_secret_manager_secret.stripe_secret_key.secret_id
-    stripe_webhook_secret = google_secret_manager_secret.stripe_payments_webhook_secret.secret_id
+    stripe_secret_key      = google_secret_manager_secret.stripe_secret_key.secret_id
+    stripe_publishable_key = google_secret_manager_secret.stripe_publishable_key.secret_id
+    stripe_webhook_secret  = google_secret_manager_secret.stripe_payments_webhook_secret.secret_id
   }
   project   = var.project_id
   secret_id = each.value
@@ -1612,8 +1613,9 @@ module "payments_service" {
     STRIPE_WEBHOOK_ALLOWED_EVENTS = "checkout.session.completed,checkout.session.expired,payment_intent.succeeded,payment_intent.payment_failed,setup_intent.succeeded"
   }, lookup(local.cloud_run_config.payments_service, "env_overrides", {}))
   secret_env_vars = merge({
-    STRIPE_SECRET_KEY     = google_secret_manager_secret.stripe_secret_key.secret_id,
-    STRIPE_WEBHOOK_SECRET = google_secret_manager_secret.stripe_payments_webhook_secret.secret_id
+    STRIPE_SECRET_KEY      = google_secret_manager_secret.stripe_secret_key.secret_id,
+    STRIPE_PUBLISHABLE_KEY = google_secret_manager_secret.stripe_publishable_key.secret_id,
+    STRIPE_WEBHOOK_SECRET  = google_secret_manager_secret.stripe_payments_webhook_secret.secret_id
   }, lookup(local.cloud_run_config.payments_service, "secret_env_overrides", {}))
 
   depends_on = [

@@ -98,6 +98,46 @@ test("getConfig requires internal auth settings in production-like environments"
   );
 });
 
+test("getConfig requires Stripe runtime keys in production-like environments", () => {
+  withConfigEnv(
+    {
+      ENVIRONMENT: "production",
+      CORS_ORIGINS: "https://checkout.example.com",
+      FIREBASE_PROJECT_ID: "ordering-intelligence-test",
+      INTERNAL_AUTH_AUDIENCE: "https://payments.example.com",
+      INTERNAL_ALLOWED_EMAILS: "orders@example.iam.gserviceaccount.com",
+      STRIPE_SECRET_KEY: "sk_live_123",
+      ORDER_SERVICE_URL: "https://orders.example.com"
+    },
+    () => {
+      assert.throws(
+        () => getConfig(),
+        /STRIPE_PUBLISHABLE_KEY, STRIPE_WEBHOOK_SECRET are required/
+      );
+    }
+  );
+});
+
+test("getConfig accepts complete production-like payments config", () => {
+  withConfigEnv(
+    {
+      ENVIRONMENT: "staging",
+      CORS_ORIGINS: "https://checkout.example.com",
+      FIREBASE_PROJECT_ID: "ordering-intelligence-test",
+      INTERNAL_AUTH_AUDIENCE: "https://payments.example.com",
+      INTERNAL_ALLOWED_EMAILS: "orders@example.iam.gserviceaccount.com",
+      STRIPE_SECRET_KEY: "sk_live_123",
+      STRIPE_PUBLISHABLE_KEY: "pk_live_123",
+      STRIPE_WEBHOOK_SECRET: "whsec_live_123",
+      ORDER_SERVICE_URL: "https://orders.example.com"
+    },
+    () => {
+      assert.equal(getConfig().STRIPE_PUBLISHABLE_KEY, "pk_live_123");
+      assert.equal(getConfig().STRIPE_WEBHOOK_SECRET, "whsec_live_123");
+    }
+  );
+});
+
 test("buildCorsOptions allows configured origins and blocks unknown browser origins", async () => {
   const options = buildCorsOptions(["https://checkout.example.com"]);
   const origin = options.origin;

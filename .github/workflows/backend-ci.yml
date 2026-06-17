@@ -55,7 +55,7 @@ jobs:
           - name: payments-service
             path: backend/services/payments-service
             lint: 'false'
-            test: 'false'
+            test: 'true'
           - name: pos-export
             path: backend/services/pos-export
             lint: 'false'
