@@ -18,6 +18,7 @@ import {
   registerDeliveryPartnerStripeRoutes,
   upsertDeliveryPartnerStripeFromAccount,
 } from './delivery_partner_stripe.js';
+import { registerBusinessProfileRoutes } from './business_profile_routes.js';
 import { registerDeliveryPartnerComplianceRoutes } from './delivery_partner_compliance.js';
 import { registerMerchantStripeEmbedRoutes } from './merchant_stripe_embed.js';
 import {
@@ -435,6 +436,14 @@ registerMenuFlyerSessionRoutes({
   getSession,
   audit,
 });
+registerBusinessProfileRoutes({
+  app,
+  sessions: SESSIONS,
+  vertex,
+  prefillModel: PREFILL_MODEL,
+  getSession,
+  audit,
+});
 
 app.get('/healthz', (_req, res) => {
   res.json({ status: 'ok' });
@@ -526,67 +535,9 @@ app.post('/onboarding-sessions', async (req, res) => {
   }
 });
 
-// 2) AI prefill from menu flyers
-app.post('/onboarding-sessions/:id/prefill', async (req, res) => {
-  try {
-    const { id } = req.params;
-    const snap = await getSession(id, res);
-    if (!snap) return;
-    if (!vertex) return res.status(500).json({ error: 'vertex_not_configured' });
-    const flyers = snap.flyers ?? [];
-    if (flyers.length === 0) return res.status(400).json({ error: 'no_flyers' });
+// 2) Stripe endpoints (already defined below) are part of flow
 
-    const prompt = `
-You are extracting business profile and menu hints from image URLs (flyers).
-Return compact JSON with keys: business_name, address, phone, hours (string), categories (array of strings), notes.
-Keep null when unknown. Do not include any extra fields.
-Flyer URLs:
-${flyers.join('\n')}
-`;
-
-    const model = vertex.getGenerativeModel({ model: PREFILL_MODEL });
-    const result = await model.generateContent({
-      contents: [{ role: 'user', parts: [{ text: prompt }] }],
-      generationConfig: { temperature: 0.2, maxOutputTokens: 512 },
-    });
-    const text = result.response.candidates?.[0]?.content?.parts?.map((p) => p.text).join(' ') || '';
-    let parsed: any = { raw: text };
-    try {
-      const jsonMatch = text.match(/\\{[\\s\\S]*\\}/);
-      if (jsonMatch) parsed = JSON.parse(jsonMatch[0]);
-    } catch (_e) {
-      // fallback to raw text
-    }
-    const prefill = { model: PREFILL_MODEL, raw: text, parsed };
-    const ts = Timestamp.now();
-    await SESSIONS.doc(id).update({ prefill, status: 'prefill_ready', updated_at: ts });
-    await audit(id, 'prefill_generated');
-    res.json({ prefill });
-  } catch (err: any) {
-    console.error('prefill error', err);
-    res.status(500).json({ error: 'prefill_failed', message: err.message });
-  }
-});
-
-// 4) Business details
-app.patch('/onboarding-sessions/:id/business-details', async (req, res) => {
-  try {
-    const { id } = req.params;
-    const snap = await getSession(id, res);
-    if (!snap) return;
-    const ts = Timestamp.now();
-    await SESSIONS.doc(id).update({ business: req.body, updated_at: ts });
-    await audit(id, 'business_updated', req.body);
-    res.json({ ok: true });
-  } catch (err: any) {
-    console.error('business-details error', err);
-    res.status(500).json({ error: 'business_update_failed', message: err.message });
-  }
-});
-
-// 5) Stripe endpoints (already defined below) are part of flow
-
-// 6) Voice number provisioning
+// 3) Voice number provisioning
 app.post('/onboarding-sessions/:id/voice-number', async (req, res) => {
   try {
     const { id } = req.params;
