@@ -167,7 +167,7 @@ export class NotificationChannels {
       return;
     }
     if (!this.deps.twilioClient) {
-      return;
+      throw new Error("twilio client not configured for sms channel");
     }
     const phoneNumber = payload.target.phoneNumber ?? config.OPS_PHONE;
     if (!phoneNumber) {
@@ -199,7 +199,9 @@ export class NotificationChannels {
       console.log(JSON.stringify({ level: "info", event: "customer_sms_dry_run", to: params.to, from: params.from }));
       return;
     }
-    if (!this.deps.twilioClient) return;
+    if (!this.deps.twilioClient) {
+      throw new Error("twilio client not configured for customer sms");
+    }
     await this.deps.twilioClient.messages.create({
       to: params.to,
       from: params.from,
@@ -224,7 +226,7 @@ export class NotificationChannels {
       return;
     }
     if (!config.SENDGRID_API_KEY) {
-      return;
+      throw new Error("sendgrid api key not configured for email channel");
     }
     const email = payload.target.email ?? config.OPS_EMAIL;
     if (!email) {

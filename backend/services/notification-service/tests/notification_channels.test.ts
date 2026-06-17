@@ -153,4 +153,37 @@ describe("NotificationChannels", () => {
     expect(channels.metricsText()).toContain("notifications_dry_run 1");
     expect(channels.getCounters()).toMatchObject({ pushSent: 1, smsSent: 1, emailSent: 1 });
   });
+
+  it("fails sms delivery when Twilio is not configured", async () => {
+    const deps = makeChannels();
+    const channels = new NotificationChannels({
+      config,
+      dryRun: false,
+      messaging: deps.messaging,
+      mailClient: deps.mailClient
+    });
+
+    await expect(
+      channels.sendSmsNotification(makePayload({ target: { phoneNumber: "+15551234567" } }))
+    ).rejects.toThrow("twilio client not configured for sms channel");
+    await expect(
+      channels.sendCustomerSms({ to: "+15550000001", from: "+15550000002", body: "Ready" })
+    ).rejects.toThrow("twilio client not configured for customer sms");
+  });
+
+  it("fails email delivery when SendGrid is not configured", async () => {
+    const deps = makeChannels();
+    const channels = new NotificationChannels({
+      config: { ...config, SENDGRID_API_KEY: undefined },
+      dryRun: false,
+      messaging: deps.messaging,
+      twilioClient: deps.twilioClient,
+      mailClient: deps.mailClient
+    });
+
+    await expect(
+      channels.sendEmailNotification(makePayload({ target: { email: "customer@example.com" } }))
+    ).rejects.toThrow("sendgrid api key not configured for email channel");
+    expect(deps.mailClient.send).not.toHaveBeenCalled();
+  });
 });
