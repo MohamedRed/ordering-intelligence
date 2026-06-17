@@ -94,18 +94,15 @@ if (isStrictEnvironment()) {
 const googleIdTokenAudiences = csvValues(
   process.env.GOOGLE_ID_TOKEN_AUDIENCES ?? process.env.INTERNAL_AUTH_AUDIENCE,
 );
-const googleIdTokenAllowedEmails = csvValues(process.env.GOOGLE_ID_TOKEN_ALLOWED_EMAILS).map((email) =>
-  email.toLowerCase(),
-);
+const googleIdTokenAllowedEmails = csvValues(
+  process.env.GOOGLE_ID_TOKEN_ALLOWED_EMAILS ?? process.env.INTERNAL_ALLOWED_EMAILS,
+).map((email) => email.toLowerCase());
 const allowGoogleIdTokens = String(process.env.ALLOW_GOOGLE_ID_TOKENS || '').toLowerCase() === 'true';
-if (isStrictEnvironment() && allowGoogleIdTokens && !googleIdTokenAllowedEmails.length) {
-  throw new Error('GOOGLE_ID_TOKEN_ALLOWED_EMAILS is required when Google ID tokens are enabled in staging/production');
+if (allowGoogleIdTokens && !googleIdTokenAudiences.length) {
+  throw new Error('GOOGLE_ID_TOKEN_AUDIENCES or INTERNAL_AUTH_AUDIENCE is required when Google ID tokens are enabled');
 }
-
-function requestOrigin(req: express.Request): string {
-  const host = req.get('host') || '';
-  const forwardedProto = (req.get('x-forwarded-proto') || 'https').split(',')[0].trim();
-  return `${forwardedProto}://${host}`;
+if (allowGoogleIdTokens && !googleIdTokenAllowedEmails.length) {
+  throw new Error('GOOGLE_ID_TOKEN_ALLOWED_EMAILS or INTERNAL_ALLOWED_EMAILS is required when Google ID tokens are enabled');
 }
 
 function applyCors(req: express.Request, res: express.Response): boolean {
@@ -165,9 +162,7 @@ async function requireAuth(req: express.Request, res: express.Response, next: ex
         throw firebaseErr;
       }
 
-      const audiences = googleIdTokenAudiences.length ? googleIdTokenAudiences : [requestOrigin(req)];
-
-      const ticket = await googleOauth.verifyIdToken({ idToken: token, audience: audiences });
+      const ticket = await googleOauth.verifyIdToken({ idToken: token, audience: googleIdTokenAudiences });
       const payload = ticket.getPayload();
       const email = String(payload?.email || '').trim().toLowerCase();
 

@@ -319,6 +319,170 @@
       "description": "Path to service account JSON for Firestore access."
     }
   },
+  "menu-ingestion": {
+    "PORT": {
+      "type": "number",
+      "default": 8080,
+      "description": "HTTP port for the menu-ingestion service."
+    },
+    "ENVIRONMENT": {
+      "type": "string",
+      "default": "development",
+      "description": "Deployment environment identifier. Staging and production enforce explicit CORS and Google OIDC settings when enabled."
+    },
+    "MENU_BUCKET": {
+      "type": "string",
+      "required": false,
+      "description": "GCS bucket for menu page uploads. Either MENU_BUCKET or STORAGE_BUCKET_MENUS is required."
+    },
+    "STORAGE_BUCKET_MENUS": {
+      "type": "string",
+      "required": false,
+      "description": "Alternate GCS bucket env var for menu page uploads."
+    },
+    "MENU_INGEST_TOPIC": {
+      "type": "string",
+      "required": false,
+      "description": "Pub/Sub topic used to enqueue menu ingestion jobs. Either MENU_INGEST_TOPIC or PUBSUB_TOPIC_MENU_INGEST is required."
+    },
+    "PUBSUB_TOPIC_MENU_INGEST": {
+      "type": "string",
+      "required": false,
+      "description": "Alternate Pub/Sub topic env var for menu ingestion jobs."
+    },
+    "MENU_UPDATES_TOPIC": {
+      "type": "string",
+      "required": false,
+      "description": "Optional Pub/Sub topic notified after approved menus are published."
+    },
+    "PUBSUB_TOPIC_MENU_UPDATES": {
+      "type": "string",
+      "required": false,
+      "description": "Alternate Pub/Sub topic env var for approved menu update notifications."
+    },
+    "GOOGLE_CLOUD_PROJECT": {
+      "type": "string",
+      "required": false,
+      "description": "GCP project used for Firestore, Pub/Sub, GCS, and Vertex AI. Required unless VERTEX_PROJECT/GCP_PROJECT cover the runtime path."
+    },
+    "GCP_PROJECT": {
+      "type": "string",
+      "required": false,
+      "description": "Alternate GCP project identifier."
+    },
+    "VERTEX_PROJECT": {
+      "type": "string",
+      "required": false,
+      "description": "Vertex AI project for Gemini menu analysis and image generation."
+    },
+    "VERTEX_LOCATION": {
+      "type": "string",
+      "required": false,
+      "default": "global",
+      "description": "Vertex AI text/model region where applicable."
+    },
+    "IMAGE_REGION": {
+      "type": "string",
+      "required": false,
+      "default": "global",
+      "description": "Vertex AI image-generation region."
+    },
+    "COMPOSITE_MODEL": {
+      "type": "string",
+      "required": false,
+      "default": "gemini-3-pro-image-preview",
+      "description": "Gemini model used to generate composite menu-item images."
+    },
+    "ANALYSIS_MODEL": {
+      "type": "string",
+      "required": false,
+      "default": "gemini-3-pro-preview",
+      "description": "Gemini model used to extract structured menu JSON from uploaded menu page images."
+    },
+    "RENDER_MODEL": {
+      "type": "string",
+      "required": false,
+      "description": "Optional Gemini model override for thumbnail/image rendering."
+    },
+    "MENU_INGESTION_CORS_ORIGINS": {
+      "type": "string",
+      "required": false,
+      "description": "Comma-separated browser origins allowed to call menu-ingestion. Staging and production require explicit origins and disallow wildcards."
+    },
+    "CORS_ORIGINS": {
+      "type": "string",
+      "required": false,
+      "description": "Alternate comma-separated browser origin allowlist."
+    },
+    "ALLOW_GOOGLE_ID_TOKENS": {
+      "type": "string",
+      "required": false,
+      "default": "false",
+      "description": "Whether allowlisted Google OIDC ID tokens may authenticate Pub/Sub, Scheduler, CI, and internal ops calls."
+    },
+    "GOOGLE_ID_TOKEN_AUDIENCES": {
+      "type": "string",
+      "required": false,
+      "description": "Comma-separated accepted audiences for internal Google OIDC ID tokens. Required when Google ID tokens are enabled."
+    },
+    "INTERNAL_AUTH_AUDIENCE": {
+      "type": "string",
+      "required": false,
+      "description": "Alias for GOOGLE_ID_TOKEN_AUDIENCES."
+    },
+    "GOOGLE_ID_TOKEN_ALLOWED_EMAILS": {
+      "type": "string",
+      "required": false,
+      "description": "Comma-separated service-account email allowlist for internal Google OIDC ID tokens. Required when Google ID tokens are enabled."
+    },
+    "INTERNAL_ALLOWED_EMAILS": {
+      "type": "string",
+      "required": false,
+      "description": "Alias for GOOGLE_ID_TOKEN_ALLOWED_EMAILS."
+    },
+    "MENU_MAX_PAGES": {
+      "type": "number",
+      "required": false,
+      "default": 5,
+      "description": "Maximum pages accepted for a menu ingestion job."
+    },
+    "MENU_MAX_ITEMS_PER_PAGE": {
+      "type": "number",
+      "required": false,
+      "default": 40,
+      "description": "Maximum extracted menu items allowed per uploaded page."
+    },
+    "MENU_MAX_TOTAL_ITEMS": {
+      "type": "number",
+      "required": false,
+      "default": 120,
+      "description": "Maximum extracted menu items allowed per ingestion job."
+    },
+    "MENU_MIN_IMAGE_SHORT_EDGE": {
+      "type": "number",
+      "required": false,
+      "default": 600,
+      "description": "Minimum short edge in pixels for uploaded menu images."
+    },
+    "MENU_MIN_IMAGE_LONG_EDGE": {
+      "type": "number",
+      "required": false,
+      "default": 800,
+      "description": "Minimum long edge in pixels for uploaded menu images."
+    },
+    "MENU_MAX_IMAGE_PIXELS": {
+      "type": "number",
+      "required": false,
+      "default": 25000000,
+      "description": "Maximum total pixels allowed for uploaded menu images."
+    },
+    "MENU_MIN_LAPLACIAN_VARIANCE": {
+      "type": "number",
+      "required": false,
+      "default": 25,
+      "description": "Minimum blur score for uploaded menu images."
+    }
+  },
   "onboarding-service": {
     "PORT": {
       "type": "number",

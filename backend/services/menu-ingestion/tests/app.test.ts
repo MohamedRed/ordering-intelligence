@@ -70,6 +70,11 @@ const setupMocks = async () => {
   }));
 
   await jest.unstable_mockModule('google-auth-library', () => ({
+    OAuth2Client: class OAuth2Client {
+      verifyIdToken() {
+        return Promise.resolve({ getPayload: () => ({ email: 'menu-ingestion@example.test' }) });
+      }
+    },
     GoogleAuth: class GoogleAuth {
       constructor() {}
       getAccessToken() {
@@ -111,6 +116,41 @@ const resetDoc = () => {
   docGetMock.mockClear();
 };
 
+const googleOidcEnvKeys = [
+  'ALLOW_GOOGLE_ID_TOKENS',
+  'GOOGLE_ID_TOKEN_AUDIENCES',
+  'INTERNAL_AUTH_AUDIENCE',
+  'GOOGLE_ID_TOKEN_ALLOWED_EMAILS',
+  'INTERNAL_ALLOWED_EMAILS',
+];
+
+async function importAppWithGoogleOidcEnv(env: Record<string, string | undefined>) {
+  const previous = new Map(googleOidcEnvKeys.map((key) => [key, process.env[key]]));
+  for (const key of googleOidcEnvKeys) {
+    const value = env[key];
+    if (value == null) {
+      delete process.env[key];
+    } else {
+      process.env[key] = value;
+    }
+  }
+
+  jest.resetModules();
+  await setupMocks();
+  try {
+    return await import('../src/app');
+  } finally {
+    for (const [key, value] of previous.entries()) {
+      if (value == null) {
+        delete process.env[key];
+      } else {
+        process.env[key] = value;
+      }
+    }
+    jest.resetModules();
+  }
+}
+
 describe('app routers', () => {
   beforeEach(() => {
     resetDoc();
@@ -140,6 +180,36 @@ describe('app routers', () => {
       .set('Origin', 'https://evil.example.test')
       .expect(403);
     delete process.env.MENU_INGESTION_CORS_ORIGINS;
+  });
+});
+
+describe('Google OIDC startup validation', () => {
+  it('requires explicit audiences when Google ID tokens are enabled', async () => {
+    await expect(
+      importAppWithGoogleOidcEnv({
+        ALLOW_GOOGLE_ID_TOKENS: 'true',
+        GOOGLE_ID_TOKEN_ALLOWED_EMAILS: 'menu-ingestion@example.test',
+      }),
+    ).rejects.toThrow(/GOOGLE_ID_TOKEN_AUDIENCES or INTERNAL_AUTH_AUDIENCE/);
+  });
+
+  it('requires an explicit service account allowlist when Google ID tokens are enabled', async () => {
+    await expect(
+      importAppWithGoogleOidcEnv({
+        ALLOW_GOOGLE_ID_TOKENS: 'true',
+        GOOGLE_ID_TOKEN_AUDIENCES: 'https://menu-ingestion.example.test',
+      }),
+    ).rejects.toThrow(/GOOGLE_ID_TOKEN_ALLOWED_EMAILS or INTERNAL_ALLOWED_EMAILS/);
+  });
+
+  it('accepts shared internal auth aliases for Google ID token configuration', async () => {
+    await expect(
+      importAppWithGoogleOidcEnv({
+        ALLOW_GOOGLE_ID_TOKENS: 'true',
+        INTERNAL_AUTH_AUDIENCE: 'https://menu-ingestion.example.test',
+        INTERNAL_ALLOWED_EMAILS: 'menu-ingestion@example.test',
+      }),
+    ).resolves.toBeDefined();
   });
 });
 
