@@ -724,22 +724,7 @@ func main() {
 
 	// Menu endpoints
 	router.Get("/stores/{storeID}/menu", func(w http.ResponseWriter, r *http.Request) {
-		storeID := chi.URLParam(r, "storeID")
-		if storeID == "" {
-			writeJSON(w, http.StatusBadRequest, map[string]string{"error": "missing_store_id"})
-			return
-		}
-		menu, err := fetchMenu(ctx, firestoreClient, storeID)
-		if err != nil {
-			log.Printf("failed fetching menu: %v", err)
-			writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "fetch_failed"})
-			return
-		}
-		if menu == nil {
-			writeJSON(w, http.StatusOK, menuRecord{StoreID: storeID, Items: []menuItem{}, UpdatedAt: time.Now().UTC()})
-			return
-		}
-		writeJSON(w, http.StatusOK, menu)
+		handleMenuGet(ctx, firestoreClient, cfg, w, r)
 	})
 
 	// Agent-facing menu snapshot (public, read-only; auth optional depending on env).

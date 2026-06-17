@@ -72,10 +72,10 @@ const run = async () => {
   });
   assertOk('menu ingest', ingestRes, ingestData);
 
-  const { res: menuRes, data: menuData } = await fetchJson(`${orderBase}/stores/${encodeURIComponent(storeId)}/menu`, {
+  const { res: menuRes, data: menuData } = await fetchJson(`${orderBase}/stores/${encodeURIComponent(storeId)}/menu/snapshot`, {
     method: 'GET'
   });
-  assertOk('menu fetch', menuRes, menuData);
+  assertOk('menu snapshot fetch', menuRes, menuData);
   const items = Array.isArray(menuData?.items) ? menuData.items : [];
   const found = items.find((item) => item?.id === 'ci-menu-item');
   if (!found) {

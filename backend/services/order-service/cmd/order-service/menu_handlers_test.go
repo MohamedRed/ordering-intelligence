@@ -10,6 +10,31 @@ import (
 	"github.com/go-chi/chi/v5"
 )
 
+func TestHandleMenuGetRequiresStoreAccess(t *testing.T) {
+	router := chi.NewRouter()
+	cfg := &serviceConfig{RequireAuth: true}
+	router.Get("/stores/{storeID}/menu", func(w http.ResponseWriter, r *http.Request) {
+		handleMenuGet(context.Background(), nil, cfg, w, r)
+	})
+
+	req := httptest.NewRequest(http.MethodGet, "/stores/store-a/menu", nil)
+	req = req.WithContext(context.WithValue(req.Context(), authContextKey, authContext{
+		UID:      "business-user",
+		Role:     "manager",
+		StoreIDs: []string{"store-b"},
+	}))
+	rec := httptest.NewRecorder()
+
+	router.ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusForbidden {
+		t.Fatalf("expected 403 for out-of-scope store read, got %d body=%s", rec.Code, rec.Body.String())
+	}
+	if !strings.Contains(rec.Body.String(), "forbidden") {
+		t.Fatalf("expected forbidden error body, got %s", rec.Body.String())
+	}
+}
+
 func TestHandleMenuUpsertRequiresStoreAccess(t *testing.T) {
 	router := chi.NewRouter()
 	cfg := &serviceConfig{RequireAuth: true}

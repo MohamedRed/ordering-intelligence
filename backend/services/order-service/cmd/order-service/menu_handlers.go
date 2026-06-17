@@ -11,6 +11,35 @@ import (
 	"github.com/go-chi/chi/v5"
 )
 
+func handleMenuGet(
+	ctx context.Context,
+	firestoreClient *cloudfirestore.Client,
+	cfg *serviceConfig,
+	w http.ResponseWriter,
+	r *http.Request,
+) {
+	storeID := chi.URLParam(r, "storeID")
+	if storeID == "" {
+		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "missing_store_id"})
+		return
+	}
+	if cfg.RequireAuth && !canAccessStore(r.Context(), storeID) {
+		writeJSON(w, http.StatusForbidden, map[string]string{"error": "forbidden"})
+		return
+	}
+	menu, err := fetchMenu(ctx, firestoreClient, storeID)
+	if err != nil {
+		log.Printf("failed fetching menu: %v", err)
+		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "fetch_failed"})
+		return
+	}
+	if menu == nil {
+		writeJSON(w, http.StatusOK, menuRecord{StoreID: storeID, Items: []menuItem{}, UpdatedAt: time.Now().UTC()})
+		return
+	}
+	writeJSON(w, http.StatusOK, menu)
+}
+
 func handleMenuUpsert(
 	ctx context.Context,
 	firestoreClient *cloudfirestore.Client,
