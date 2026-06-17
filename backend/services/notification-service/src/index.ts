@@ -17,154 +17,31 @@ import axios from "axios";
 import { GoogleAuth } from "google-auth-library";
 import { buildNotificationCorsOptions, resolveNotificationCorsOrigins } from "./cors_policy";
 import { requireGoogleOidc, requireGoogleOidcRequest } from "./internal_auth";
-
-interface NotificationConfig {
-  PORT: number;
-  ENVIRONMENT: string;
-  CORS_ORIGINS?: string;
-  FIREBASE_PROJECT_ID: string;
-  FIREBASE_SERVICE_ACCOUNT: string;
-  TWILIO_ACCOUNT_SID?: string;
-  TWILIO_AUTH_TOKEN?: string;
-  TWILIO_MESSAGING_NUMBER?: string;
-  SENDGRID_API_KEY?: string;
-  SENDGRID_FROM_EMAIL?: string;
-  ALERT_TOPIC?: string;
-  OPS_PHONE?: string;
-  OPS_EMAIL?: string;
-  CUSTOMER_PROFILE_SERVICE_URL?: string;
-  ORDERS_EVENTS_OIDC_AUDIENCE?: string;
-  DISPATCH_EVENTS_OIDC_AUDIENCE?: string;
-  DELIVERIES_EVENTS_OIDC_AUDIENCE?: string;
-  EVENTS_OIDC_ALLOWED_EMAILS?: string;
-  INTERNAL_AUTH_AUDIENCE?: string;
-  INTERNAL_ALLOWED_EMAILS?: string;
-
-  ELEVENLABS_API_KEY?: string;
-  ELEVENLABS_API_BASE_URL?: string;
-
-  NOTIFICATIONS_DRY_RUN?: string;
-
-  NOTIFICATION_SERVICE_URL?: string;
-  CLOUD_TASKS_PROJECT_ID?: string;
-  CLOUD_TASKS_LOCATION?: string;
-  CLOUD_TASKS_READY_ESCALATION_QUEUE?: string;
-  CLOUD_TASKS_OIDC_SERVICE_ACCOUNT_EMAIL?: string;
-  CLOUD_TASKS_OIDC_AUDIENCE?: string;
-  CLOUD_TASKS_OIDC_ALLOWED_EMAILS?: string;
-}
-
-interface NotificationPayload {
-  title: string;
-  body: string;
-  data?: Record<string, string>;
-}
-
-interface NotifyRequest {
-  channel: Array<"push" | "sms" | "email">;
-  target: {
-    deviceTokens?: string[];
-    topic?: string;
-    phoneNumber?: string;
-    email?: string;
-  };
-  payload: NotificationPayload;
-}
+import {
+  defaultMessageForStatus,
+  DELIVERY_COMMS_RATE_LIMIT_DEFAULT,
+  normalizeDeliveryEvent,
+  normalizeDispatchEvent,
+  resolveTemplateFromComms,
+  safeDocId,
+  toMillis
+} from "./comms_helpers";
+import type {
+  DeliveryEvent,
+  DispatchEvent,
+  NotificationConfig,
+  NotifyMode,
+  NotifyRequest,
+  OrderCustomerComms,
+  OrderEvent,
+  OrdersEventEnvelope,
+  PubSubPushEnvelope,
+  StoreDeliveryComms,
+  StoreDoc,
+  StoreOrderComms
+} from "./types";
 
 const config = loadConfig("notification-service") as unknown as NotificationConfig;
-
-type NotifyMode = "auto" | "sms" | "call" | "none";
-
-type PubSubPushEnvelope = {
-  message?: { data?: string; messageId?: string };
-  subscription?: string;
-};
-
-type OrderStatusChange = {
-  previousStatus?: string;
-  newStatus?: string;
-  changedAt?: string;
-  changedBy?: string;
-  notifyMode?: NotifyMode;
-  note?: string;
-  templateId?: string;
-};
-
-type OrderEvent = {
-  id: string;
-  storeId: string;
-  status: string;
-  tenantId?: string;
-  customerId?: string;
-  callerId?: string;
-  customerName?: string;
-  totalCents?: number;
-  createdAt?: string;
-  statusChange?: OrderStatusChange;
-};
-
-type OrderCustomerComms = {
-  kind: "delay";
-  notifyMode?: NotifyMode;
-  note?: string;
-  templateId?: string;
-};
-
-type OrdersEventEnvelope =
-  | { kind: "order_customer_comms"; order: OrderEvent; comms: OrderCustomerComms; createdAt?: string }
-  | { kind: string; order: OrderEvent; [k: string]: unknown };
-
-type DispatchEvent = {
-  kind: string;
-  storeId: string;
-  orderId?: string;
-  assignmentId?: string;
-  offerId?: string;
-  driverId?: string;
-  routeId?: string;
-  createdAt?: string;
-  payload?: Record<string, unknown>;
-};
-
-type DeliveryEvent = {
-  kind: string;
-  storeId: string;
-  orderId?: string;
-  deliveryId?: string;
-  provider?: string;
-  status?: string;
-  createdAt?: string;
-  payload?: Record<string, unknown>;
-};
-
-type StoreOrderCommsTemplate = { id: string; label?: string; body?: string };
-type StoreOrderCommsStatus = {
-  default_channel?: "sms" | "call" | "none";
-  default_template_id?: string;
-  templates?: StoreOrderCommsTemplate[];
-};
-type StoreOrderComms = {
-  statuses?: Record<string, StoreOrderCommsStatus>;
-  ready_escalation_enabled?: boolean;
-  ready_escalation_minutes?: number;
-  ready_escalation_channel?: "call" | "sms" | "none";
-  rate_limit_per_hour?: number;
-  arriving_soon_enabled?: boolean;
-  arriving_soon_eta_threshold_minutes?: number;
-};
-type StoreDeliveryComms = StoreOrderComms;
-type StoreDoc = {
-  name?: string;
-  twilio_number?: string;
-  tenant_id?: string;
-  store_id?: string;
-  order_comms?: StoreOrderComms;
-  delivery_comms?: StoreDeliveryComms;
-  elevenlabs_agent_id?: string;
-  elevenlabs_agent_template_id?: string;
-  elevenlabs_phone_number_id?: string;
-  elevenlabs_variables?: Record<string, unknown>;
-};
 
 export const app = express();
 app.use(express.json());
@@ -829,108 +706,6 @@ async function fetchStore(storeId: string): Promise<StoreDoc | null> {
   const snap = await firestore.collection("stores").doc(storeId).get();
   if (!snap.exists) return null;
   return snap.data() as StoreDoc;
-}
-
-function resolveTemplateFromComms(
-  status: string,
-  comms?: StoreOrderComms | null,
-  templateId?: string
-): StoreOrderCommsTemplate | null {
-  const statuses = comms?.statuses ?? {};
-  const cfg = statuses[status] ?? statuses[String(status).toLowerCase()] ?? undefined;
-  const templates = cfg?.templates ?? [];
-  const explicit = String(templateId ?? "").trim();
-  if (explicit) {
-    const hit = templates.find((t) => String(t?.id ?? "").trim() === explicit);
-    if (hit) return hit;
-  }
-  const def = String(cfg?.default_template_id ?? "").trim();
-  if (def) {
-    const hit = templates.find((t) => String(t?.id ?? "").trim() === def);
-    if (hit) return hit;
-  }
-  return null;
-}
-
-function defaultMessageForStatus(status: string): string {
-  switch (status) {
-    case "confirmed":
-      return "Your order has been confirmed.";
-    case "ready":
-      return "Your order is ready for pickup.";
-    case "delivery_assigned":
-      return "Your delivery is being prepared. A driver has been assigned.";
-    case "picked_up":
-      return "Your order has been picked up and is on the way.";
-    case "out_for_delivery":
-      return "Your order is out for delivery.";
-    case "arriving_soon":
-      return "Your driver is nearby. Arriving soon.";
-    case "delivered":
-      return "Delivered. Enjoy!";
-    case "delivery_failed":
-      return "We couldn't complete the delivery. Please contact the store.";
-    case "completed":
-      return "Thanks — your order is marked completed.";
-    case "cancelled":
-      return "Your order was cancelled. Please contact the store if you have questions.";
-    case "delay":
-      return "Your order is running a bit late.";
-    case "pending":
-    default:
-      return "Your order status was updated.";
-  }
-}
-
-function normalizeDeliveryEvent(kind: string, status: string): string {
-  const raw = String(kind || status || "").trim().toLowerCase();
-  if (!raw) return "";
-  if (raw === "delivery_dispatched" || raw === "dispatched" || raw === "assigned" || raw === "delivery_assigned") {
-    return "delivery_assigned";
-  }
-  if (raw === "picked_up" || raw === "pickup_complete" || raw === "pickup") {
-    return "picked_up";
-  }
-  if (raw === "out_for_delivery" || raw === "en_route" || raw === "enroute" || raw === "in_transit") {
-    return "out_for_delivery";
-  }
-  if (raw === "arriving_soon" || raw === "approaching") {
-    return "arriving_soon";
-  }
-  if (raw === "delivered" || raw === "delivery_completed") {
-    return "delivered";
-  }
-  if (raw === "cancelled" || raw === "canceled" || raw === "failed" || raw === "delivery_failed") {
-    return "delivery_failed";
-  }
-  return "";
-}
-
-function normalizeDispatchEvent(kind: string): string {
-  const raw = kind.trim().toLowerCase();
-  if (raw === "driver_assigned") return "delivery_assigned";
-  if (raw === "out_for_delivery" || raw === "en_route" || raw === "enroute") return "out_for_delivery";
-  if (raw === "delivered") return "delivered";
-  if (raw === "delivery_failed" || raw === "failed" || raw === "assignment_expired") return "delivery_failed";
-  return "";
-}
-
-const DELIVERY_COMMS_RATE_LIMIT_DEFAULT = 3;
-
-function safeDocId(value: string): string {
-  return value.replace(/[^A-Za-z0-9_-]/g, "_").slice(0, 240);
-}
-
-function toMillis(value: any): number {
-  if (!value) return 0;
-  if (typeof value.toMillis === "function") return value.toMillis();
-  if (value instanceof Date) return value.getTime();
-  if (typeof value === "number") return value;
-  if (typeof value === "string") {
-    const ms = Date.parse(value);
-    return Number.isFinite(ms) ? ms : 0;
-  }
-  return 0;
 }
 
 async function shouldSendDeliveryComms(params: {
