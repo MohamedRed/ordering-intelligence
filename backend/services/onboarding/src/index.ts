@@ -27,8 +27,8 @@ import {
   phoneRouteDocIdFromToNumber,
 } from './phone_routes.js';
 import { buildCorsOptions, resolveCorsOrigins } from './cors_policy.js';
-import { validateMenuFlyerCount } from './menu_ingestion_limits.js';
 import { registerMenuFlyerUploadRoutes } from './menu_flyer_upload.js';
+import { registerMenuIngestionRoutes } from './menu_ingestion_routes.js';
 import {
   createOnboardingAuthMiddleware,
   resolveOnboardingAuthPolicy,
@@ -310,28 +310,6 @@ const resolveElevenLabsTemplateAgentId = (businessTypeRaw: string) => {
   return ELEVENLABS_TEMPLATE_FAST_FOOD_AGENT_ID;
 };
 
-function extractBucketKeyFromUrl(url: string): { bucket?: string; key?: string } {
-  try {
-    const u = new URL(url);
-    // https://storage.googleapis.com/<bucket>/<key>
-    if (u.hostname === 'storage.googleapis.com') {
-      const parts = u.pathname.split('/').filter(Boolean);
-      if (parts.length >= 2) {
-        return { bucket: parts[0], key: parts.slice(1).join('/') };
-      }
-    }
-    // https://<bucket>.storage.googleapis.com/<key>
-    if (u.hostname.endsWith('.storage.googleapis.com')) {
-      const b = u.hostname.split('.')[0];
-      const key = u.pathname.startsWith('/') ? u.pathname.slice(1) : u.pathname;
-      return { bucket: b, key: key || undefined };
-    }
-  } catch {
-    // ignore
-  }
-  return {};
-}
-
 const jsonParser = express.json();
 app.use((req, res, next) => {
   if (req.path === '/stripe/webhook' || req.path === '/ingest-pubsub' || req.path === '/') {
@@ -438,6 +416,18 @@ const getSession = async (id: string, res: express.Response) => {
   }
   return { id, ...(snap.data() as OnboardingSession) };
 };
+
+registerMenuIngestionRoutes({
+  app,
+  firestore,
+  sessions: SESSIONS,
+  pubsub,
+  bucket,
+  bucketName: BUCKET,
+  menuIngestTopic: MENU_INGEST_TOPIC,
+  getSession,
+  audit,
+});
 
 app.get('/healthz', (_req, res) => {
   res.json({ status: 'ok' });
@@ -571,7 +561,7 @@ app.delete('/onboarding-sessions/:id/menu-flyers', express.json(), async (req, r
   }
 });
 
-// 3) AI prefill (placeholder)
+// 3) AI prefill from menu flyers
 app.post('/onboarding-sessions/:id/prefill', async (req, res) => {
   try {
     const { id } = req.params;
@@ -631,7 +621,7 @@ app.patch('/onboarding-sessions/:id/business-details', async (req, res) => {
 
 // 5) Stripe endpoints (already defined below) are part of flow
 
-// 6) Twilio provisioning placeholder
+// 6) Voice number provisioning
 app.post('/onboarding-sessions/:id/voice-number', async (req, res) => {
   try {
     const { id } = req.params;
@@ -743,163 +733,7 @@ app.post('/onboarding-sessions/:id/voice-number', async (req, res) => {
   }
 });
 
-// 7) Menu ingestion trigger placeholder
-app.post('/onboarding-sessions/:id/ingest-menu', async (req, res) => {
-  try {
-    const { id } = req.params;
-    const snap = await getSession(id, res);
-    if (!snap) return;
-
-    // Backward-compat: default to full ingestion when mode isn't specified.
-    const modeRaw = (req.body?.mode ?? 'full') as unknown;
-    const mode = modeRaw === 'full' || modeRaw === 'menu_only' ? modeRaw : 'menu_only';
-
-    const flyers = (snap.flyers ?? []).filter(Boolean);
-    if (!flyers.length) {
-      return res.status(400).json({ error: 'no_flyers' });
-    }
-    const flyerLimitError = validateMenuFlyerCount(flyers.length);
-    if (flyerLimitError) {
-      return res.status(400).json({ error: 'too_many_flyers', message: flyerLimitError });
-    }
-
-    // menu-ingestion expects a Firestore doc in `menus_ingest` with ID=jobId, and a Pub/Sub message {jobId}.
-    const restaurantId =
-      (snap.tenant?.store_id || '').trim() || (snap.tenant?.tenant_id || '').trim() || `store_${id}`;
-    const jobId = uuidv4();
-    const nowMs = Date.now();
-    const files: string[] = [];
-
-    // Copy flyer objects into the menu-ingestion raw path layout.
-    for (let i = 0; i < flyers.length; i++) {
-      const dest = `menu-raw/${restaurantId}/${jobId}/page-${i + 1}.jpg`;
-      const srcUrl = flyers[i];
-      const parsed = extractBucketKeyFromUrl(srcUrl);
-
-      if (parsed.bucket === BUCKET && parsed.key) {
-        // Same-bucket: download & re-upload (keeps this robust even if URL is signed/has query params).
-        const [buf] = await storage.bucket(BUCKET).file(parsed.key).download();
-        await storage.bucket(BUCKET).file(dest).save(buf, { contentType: 'image/jpeg', resumable: false });
-      } else {
-        const resp = await fetch(srcUrl);
-        if (!resp.ok) {
-          throw new Error(`flyer_fetch_failed status=${resp.status}`);
-        }
-        const buf = Buffer.from(await resp.arrayBuffer());
-        await storage.bucket(BUCKET).file(dest).save(buf, { contentType: 'image/jpeg', resumable: false });
-      }
-      files.push(dest);
-    }
-
-    await firestore.collection('menus_ingest').doc(jobId).set({
-      jobId,
-      restaurantId,
-      status: 'queued',
-      pipelineMode: mode,
-      files,
-      createdAt: nowMs,
-      updatedAt: nowMs,
-    });
-
-    await pubsub.topic(MENU_INGEST_TOPIC).publishMessage({ json: { jobId } });
-
-    const ts = Timestamp.now();
-    await SESSIONS.doc(id).update({
-      ingestion: { job_ids: [jobId], status: 'queued', fast_ready: false },
-      updated_at: ts,
-    });
-    await audit(id, 'ingest_triggered', { jobId, restaurantId, fileCount: files.length });
-    res.json({ job_id: jobId });
-  } catch (err: any) {
-    console.error('ingest-menu error', err);
-    res.status(500).json({ error: 'ingest_failed', message: err.message });
-  }
-});
-
-// Resume image enrichment for the latest ingestion job (re-run the same jobId in full mode).
-app.post('/onboarding-sessions/:id/ingest-menu/resume-images', async (req, res) => {
-  try {
-    const { id } = req.params;
-    const snap = await getSession(id, res);
-    if (!snap) return;
-    const jobIds = snap.ingestion?.job_ids || [];
-    if (!jobIds.length) {
-      return res.status(400).json({ error: 'no_ingest_job' });
-    }
-
-    const jobId = jobIds[jobIds.length - 1] as string;
-    const nowMs = Date.now();
-
-    await firestore
-      .collection('menus_ingest')
-      .doc(jobId)
-      .set(
-        {
-          jobId,
-          status: 'queued',
-          pipelineMode: 'full',
-          resumeRequestedAt: nowMs,
-          progressStage: 'queued',
-          progressPercent: 0,
-          updatedAt: nowMs,
-        } as any,
-        { merge: true },
-      );
-
-    await pubsub.topic(MENU_INGEST_TOPIC).publishMessage({ json: { jobId } });
-
-    const ts = Timestamp.now();
-    // Do not clear fast_ready here; the FastIngestion draft still exists.
-    await SESSIONS.doc(id).update({
-      ingestion: { job_ids: jobIds, status: 'queued', fast_ready: snap.ingestion?.fast_ready ?? false },
-      updated_at: ts,
-    });
-    await audit(id, 'ingest_resume_images_triggered', { jobId });
-    res.json({ job_id: jobId });
-  } catch (err: any) {
-    console.error('ingest-menu resume-images error', err);
-    res.status(500).json({ error: 'ingest_resume_images_failed', message: err.message });
-  }
-});
-
-// Cancel ingestion jobs for a session (best-effort)
-app.post('/onboarding-sessions/:id/cancel-ingest', async (req, res) => {
-  try {
-    const { id } = req.params;
-    const snap = await getSession(id, res);
-    if (!snap) return;
-    const jobIds = snap.ingestion?.job_ids || [];
-    if (!jobIds.length) {
-      return res.json({ ok: true, canceled: 0 });
-    }
-    const now = Date.now();
-    const batch = firestore.batch();
-    for (const jid of jobIds) {
-      const ref = firestore.collection('menus_ingest').doc(jid);
-      batch.set(
-        ref,
-        {
-          status: 'canceled',
-          cancelRequestedAt: now,
-          progressStage: 'canceled',
-          progressPercent: 100,
-          updatedAt: now,
-        } as any,
-        { merge: true },
-      );
-    }
-    await batch.commit();
-    const ts = Timestamp.now();
-    await SESSIONS.doc(id).update({ ingestion: { job_ids: jobIds, status: 'canceled' }, updated_at: ts });
-    await audit(id, 'ingest_canceled', { jobIds });
-    res.json({ ok: true, canceled: jobIds.length });
-  } catch (err: any) {
-    console.error('cancel-ingest error', err);
-    res.status(500).json({ error: 'cancel_ingest_failed', message: err.message });
-  }
-});
-
-// 8) Create ElevenLabs agent (duplicate a template based on business type)
+// 7) Create ElevenLabs agent (duplicate a template based on business type)
 app.post('/onboarding-sessions/:id/create-agent', async (req, res) => {
   try {
     const { id } = req.params;
@@ -1066,7 +900,7 @@ app.all(['/ingest-pubsub', '/'], (req, res) => {
   });
 });
 
-// 8) Notifications placeholder
+// 8) Notification preferences
 app.post('/onboarding-sessions/:id/notifications', async (req, res) => {
   try {
     const { id } = req.params;
