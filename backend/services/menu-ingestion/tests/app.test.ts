@@ -213,21 +213,28 @@ describe('Google OIDC startup validation', () => {
   });
 });
 
-const makeIngestApp = (exists: boolean) => {
+const makeIngestApp = (
+  exists: boolean,
+  jobData: Record<string, unknown> = { jobId: '123', restaurantId: 'z', status: 'uploading' },
+) => {
+  const updateMock = jest.fn(async () => undefined);
+  const publishMessageMock = jest.fn(async () => undefined);
   const storage = {
     bucket: () => ({
       file: () => ({ getSignedUrl: async () => ['http://example'] }),
     }),
   } as any;
   const pubsub = {
-    topic: () => ({ publishMessage: async () => undefined }),
+    publishMessageMock,
+    topic: () => ({ publishMessage: publishMessageMock }),
   } as any;
   const firestore = {
+    updateMock,
     collection: () => ({
       doc: () => ({
-        get: async () => ({ exists, data: () => ({ jobId: '123', restaurantId: 'z' }) }),
+        get: async () => ({ exists, data: () => jobData }),
         set: async () => undefined,
-        update: async () => undefined,
+        update: updateMock,
       }),
     }),
   } as any;
@@ -243,12 +250,12 @@ const makeIngestApp = (exists: boolean) => {
   const server = express();
   server.use(express.json());
   server.use(ingestRouter(ctx));
-  return server;
+  return { server, firestore, pubsub };
 };
 
 describe('ingest router standalone', () => {
   it('returns urls for start request', async () => {
-    const server = makeIngestApp(false);
+    const { server } = makeIngestApp(false);
     const res = await supertest(server)
       .post('/ingest/start')
       .send({ restaurantId: 'foo', pageCount: 2 })
@@ -257,7 +264,7 @@ describe('ingest router standalone', () => {
   });
 
   it('rejects start requests above the page limit', async () => {
-    const server = makeIngestApp(false);
+    const { server } = makeIngestApp(false);
     const res = await supertest(server)
       .post('/ingest/start')
       .send({ restaurantId: 'foo', pageCount: 6 })
@@ -267,13 +274,45 @@ describe('ingest router standalone', () => {
   });
 
   it('submit 404 when job missing', async () => {
-    const server = makeIngestApp(false);
+    const { server } = makeIngestApp(false);
     await supertest(server).post('/ingest/submit').send({ jobId: 'foo' }).expect(404);
   });
 
   it('submit queued when job exists', async () => {
-    const server = makeIngestApp(true);
+    const { server, firestore, pubsub } = makeIngestApp(true);
     const res = await supertest(server).post('/ingest/submit').send({ jobId: 'foo' }).expect(200);
     expect(res.body.status).toBe('queued');
+    expect(firestore.updateMock).toHaveBeenCalledWith(expect.objectContaining({
+      status: 'queued',
+      progressStage: 'queued',
+      progressPercent: 0,
+    }));
+    expect(pubsub.publishMessageMock).toHaveBeenCalledWith({ json: { jobId: 'foo' } });
+  });
+
+  it('submit is idempotent for queued and processing jobs', async () => {
+    for (const status of ['queued', 'processing']) {
+      const { server, firestore, pubsub } = makeIngestApp(true, { jobId: 'foo', restaurantId: 'z', status });
+      const res = await supertest(server).post('/ingest/submit').send({ jobId: 'foo' }).expect(200);
+      expect(res.body).toEqual({ jobId: 'foo', status });
+      expect(firestore.updateMock).not.toHaveBeenCalled();
+      expect(pubsub.publishMessageMock).not.toHaveBeenCalled();
+    }
+  });
+
+  it('submit rejects terminal jobs', async () => {
+    const ready = makeIngestApp(true, { jobId: 'foo', restaurantId: 'z', status: 'ready' });
+    await supertest(ready.server)
+      .post('/ingest/submit')
+      .send({ jobId: 'foo' })
+      .expect(409)
+      .expect(({ body }) => expect(body.error).toBe('job_already_ready'));
+
+    const canceled = makeIngestApp(true, { jobId: 'foo', restaurantId: 'z', status: 'canceled' });
+    await supertest(canceled.server)
+      .post('/ingest/submit')
+      .send({ jobId: 'foo' })
+      .expect(409)
+      .expect(({ body }) => expect(body.error).toBe('job_canceled'));
   });
 });

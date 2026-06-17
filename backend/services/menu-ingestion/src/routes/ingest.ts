@@ -91,8 +91,24 @@ export function ingestRouter(ctx: AppContext) {
     const jobRef = firestore.collection('menus_ingest').doc(jobId);
     const snap = await jobRef.get();
     if (!snap.exists) return res.status(404).json({ error: 'job not found' });
+    const job = snap.data() as IngestJob;
+    const status = String(job.status ?? '').trim();
+    if (status === 'ready') {
+      return res.status(409).json({ error: 'job_already_ready' });
+    }
+    if (status === 'canceled' || job.cancelRequestedAt) {
+      return res.status(409).json({ error: 'job_canceled' });
+    }
+    if (status === 'queued' || status === 'processing') {
+      return res.json({ jobId, status });
+    }
 
-    await jobRef.update({ status: 'queued', updatedAt: Date.now() });
+    await jobRef.update({
+      status: 'queued',
+      progressStage: 'queued',
+      progressPercent: 0,
+      updatedAt: Date.now(),
+    });
     await pubsub.topic(topic).publishMessage({ json: { jobId } });
 
     res.json({ jobId, status: 'queued' });
