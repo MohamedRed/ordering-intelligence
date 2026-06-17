@@ -8,6 +8,7 @@ module.exports = {
   transform: {
     ...tsJestTransformCfg,
   },
+  coveragePathIgnorePatterns: ["/node_modules/", "/tests/support/"],
   collectCoverage: true,
   coverageThreshold: {
     global: {
