@@ -936,7 +936,7 @@
       "type": "string",
       "required": false,
       "sensitive": true,
-      "description": "Shared secret for validating mobile session start signatures."
+      "description": "Shared secret for validating mobile session start signatures. Required in staging and production."
     },
     "MOBILE_SESSION_MAX_SKEW_SECONDS": {
       "type": "number",

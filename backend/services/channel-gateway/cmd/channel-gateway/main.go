@@ -1234,7 +1234,7 @@ func fetchStoreMetadata(ctx context.Context, client *cloudfirestore.Client, stor
 func parseTelegramInitData(initData string, cfg *serviceConfig) (telegramInitContext, error) {
 	initData = strings.TrimSpace(initData)
 	if initData == "" {
-		if cfg != nil && strings.ToLower(cfg.Environment) != "production" {
+		if cfg != nil && !isStrictEnvironment(cfg.Environment) {
 			return telegramInitContext{
 				UserID:      "dev-user",
 				DisplayName: "Dev User",

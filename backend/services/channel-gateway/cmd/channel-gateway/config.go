@@ -29,7 +29,7 @@ func loadConfig() (*serviceConfig, error) {
 		return nil, err
 	}
 
-	return &serviceConfig{
+	cfg := &serviceConfig{
 		Port:        port,
 		Environment: stringOrDefault(values["ENVIRONMENT"], "development"),
 		ProjectID:   stringOrDefault(values["FIRESTORE_PROJECT_ID"], ""),
@@ -169,7 +169,40 @@ func loadConfig() (*serviceConfig, error) {
 			stringOrDefault(values["TYPESENSE_COLLECTION"], "stores"),
 		)),
 		CORSOrigins: corsOrigins,
-	}, nil
+	}
+	if err := validateConfig(cfg); err != nil {
+		return nil, err
+	}
+	return cfg, nil
+}
+
+func validateConfig(cfg *serviceConfig) error {
+	if !isStrictEnvironment(cfg.Environment) {
+		return nil
+	}
+	missing := []string{}
+	if strings.TrimSpace(cfg.TelegramBotToken) == "" {
+		missing = append(missing, "TELEGRAM_BOT_TOKEN")
+	}
+	if strings.TrimSpace(cfg.TelegramSecretToken) == "" {
+		missing = append(missing, "TELEGRAM_WEBHOOK_SECRET")
+	}
+	if strings.TrimSpace(cfg.MobileSessionSecret) == "" {
+		missing = append(missing, "MOBILE_SESSION_SHARED_SECRET")
+	}
+	if len(missing) > 0 {
+		return fmt.Errorf("channel-gateway config missing required values in %s: %s", cfg.Environment, strings.Join(missing, ", "))
+	}
+	return nil
+}
+
+func isStrictEnvironment(environment string) bool {
+	switch strings.ToLower(strings.TrimSpace(environment)) {
+	case "prod", "production", "staging":
+		return true
+	default:
+		return false
+	}
 }
 
 func newFirestoreClient(ctx context.Context, cfg *serviceConfig) (*cloudfirestore.Client, error) {

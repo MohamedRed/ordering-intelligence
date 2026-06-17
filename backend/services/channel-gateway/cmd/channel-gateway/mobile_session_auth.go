@@ -63,7 +63,7 @@ func parseMobileTimestamp(raw string) (time.Time, error) {
 func verifyMobileSessionAuth(cfg *serviceConfig, provider, subject string, auth mobileAuthContext) error {
 	secret := strings.TrimSpace(cfg.MobileSessionSecret)
 	if secret == "" {
-		if strings.ToLower(strings.TrimSpace(cfg.Environment)) == "production" {
+		if isStrictEnvironment(cfg.Environment) {
 			return errMobileAuthNotSupported
 		}
 		return nil
@@ -86,7 +86,7 @@ func verifyMobileSessionAuth(cfg *serviceConfig, provider, subject string, auth 
 func verifyMobileSessionIDAuth(cfg *serviceConfig, sessionID string, auth mobileAuthContext) error {
 	secret := strings.TrimSpace(cfg.MobileSessionSecret)
 	if secret == "" {
-		if strings.ToLower(strings.TrimSpace(cfg.Environment)) == "production" {
+		if isStrictEnvironment(cfg.Environment) {
 			return errMobileAuthNotSupported
 		}
 		return nil

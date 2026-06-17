@@ -936,6 +936,15 @@ resource "google_secret_manager_secret" "telegram_webhook_secret" {
   }
 }
 
+resource "google_secret_manager_secret" "mobile_session_shared_secret" {
+  project   = var.project_id
+  secret_id = "mobile-session-shared-secret"
+
+  replication {
+    auto {}
+  }
+}
+
 resource "google_secret_manager_secret" "discord_client_secret" {
   project   = var.project_id
   secret_id = "discord-client-secret"
@@ -1036,9 +1045,10 @@ resource "google_secret_manager_secret_iam_binding" "typesense_indexer_secret_ac
 
 resource "google_secret_manager_secret_iam_binding" "channel_gateway_secret_access" {
   for_each = {
-    telegram_webhook_secret  = google_secret_manager_secret.telegram_webhook_secret.secret_id
-    discord_client_secret    = google_secret_manager_secret.discord_client_secret.secret_id
-    typesense_search_api_key = google_secret_manager_secret.typesense_search_api_key.secret_id
+    telegram_webhook_secret      = google_secret_manager_secret.telegram_webhook_secret.secret_id
+    mobile_session_shared_secret = google_secret_manager_secret.mobile_session_shared_secret.secret_id
+    discord_client_secret        = google_secret_manager_secret.discord_client_secret.secret_id
+    typesense_search_api_key     = google_secret_manager_secret.typesense_search_api_key.secret_id
   }
   project   = var.project_id
   secret_id = each.value
@@ -1411,18 +1421,20 @@ module "channel_gateway" {
     CORS_ORIGINS                 = join(",", concat(var.channel_gateway_cors_origins, [local.service_urls.channel_gateway]))
   }, lookup(local.cloud_run_config.channel_gateway, "env_overrides", {}))
   secret_env_vars = merge({
-    ELEVENLABS_API_KEY       = google_secret_manager_secret.elevenlabs_api_key.secret_id
-    TELEGRAM_BOT_TOKEN       = google_secret_manager_secret.telegram_bot_token.secret_id
-    TELEGRAM_WEBHOOK_SECRET  = google_secret_manager_secret.telegram_webhook_secret.secret_id
-    DISCORD_CLIENT_SECRET    = google_secret_manager_secret.discord_client_secret.secret_id
-    DISCORD_BOT_TOKEN        = google_secret_manager_secret.discord_bot_token.secret_id
-    TYPESENSE_SEARCH_API_KEY = google_secret_manager_secret.typesense_search_api_key.secret_id
+    ELEVENLABS_API_KEY           = google_secret_manager_secret.elevenlabs_api_key.secret_id
+    TELEGRAM_BOT_TOKEN           = google_secret_manager_secret.telegram_bot_token.secret_id
+    TELEGRAM_WEBHOOK_SECRET      = google_secret_manager_secret.telegram_webhook_secret.secret_id
+    MOBILE_SESSION_SHARED_SECRET = google_secret_manager_secret.mobile_session_shared_secret.secret_id
+    DISCORD_CLIENT_SECRET        = google_secret_manager_secret.discord_client_secret.secret_id
+    DISCORD_BOT_TOKEN            = google_secret_manager_secret.discord_bot_token.secret_id
+    TYPESENSE_SEARCH_API_KEY     = google_secret_manager_secret.typesense_search_api_key.secret_id
   }, lookup(local.cloud_run_config.channel_gateway, "secret_env_overrides", {}))
 
   depends_on = [
     module.core,
     module.channel_gateway_sa,
     google_secret_manager_secret_iam_binding.channel_gateway_secret_access,
+    google_secret_manager_secret_iam_binding.telegram_bot_token_access,
     google_secret_manager_secret_iam_binding.discord_bot_token_access
   ]
 }

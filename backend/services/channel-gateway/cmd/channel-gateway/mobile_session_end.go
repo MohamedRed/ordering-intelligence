@@ -48,7 +48,7 @@ func handleMobileSessionEnd(
 			writeJSON(w, http.StatusUnauthorized, map[string]string{"error": "auth_missing"})
 			return
 		}
-		if strings.ToLower(strings.TrimSpace(cfg.Environment)) == "production" {
+		if isStrictEnvironment(cfg.Environment) {
 			writeJSON(w, http.StatusUnauthorized, map[string]string{"error": "auth_not_configured"})
 			return
 		}
