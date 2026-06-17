@@ -63,7 +63,7 @@ jobs:
           - name: voice-agent-config
             path: backend/libs/voice-agent-config
             lint: 'false'
-            test: 'false'
+            test: 'true'
           - name: voice-agent-worker
             path: backend/services/voice-agent-worker
             lint: 'false'
