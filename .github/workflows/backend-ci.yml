@@ -39,7 +39,7 @@ jobs:
           - name: channel-comms
             path: backend/services/channel-comms
             lint: 'false'
-            test: 'false'
+            test: 'true'
           - name: menu-ingestion
             path: backend/services/menu-ingestion
             lint: 'false'
