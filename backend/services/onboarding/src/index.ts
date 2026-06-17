@@ -20,6 +20,7 @@ import {
 import { registerBusinessProfileRoutes } from './business_profile_routes.js';
 import { registerDeliveryPartnerComplianceRoutes } from './delivery_partner_compliance.js';
 import { registerMerchantStripeEmbedRoutes } from './merchant_stripe_embed.js';
+import { registerFinalizeRoutes } from './finalize_routes.js';
 import {
   maskPhone,
   normalizePhoneNumberKey,
@@ -461,166 +462,24 @@ registerStripeConnectRoutes({
   audit,
   upsertDeliveryPartnerStripeFromAccount,
 });
+registerFinalizeRoutes({
+  app,
+  firestore,
+  sessions: SESSIONS,
+  onboardingTenants: TENANTS,
+  allowDemoSkipStripe: ALLOW_DEMO_SKIP_STRIPE,
+  demoSkipStripeFlag: DEMO_SKIP_STRIPE_FLAG,
+  getSession,
+  audit,
+  upsertPhoneNumberRoute,
+  maskPhone,
+});
 
 app.get('/healthz', (_req, res) => {
   res.json({ status: 'ok' });
 });
 
 // 2) Stripe endpoints (already defined below) are part of flow
-
-// 9) Finalize tenant (creates tenant/store drafts)
-app.post('/onboarding-sessions/:id/finalize', async (req, res) => {
-  try {
-    const { id } = req.params;
-    const snap = await getSession(id, res);
-    if (!snap) return;
-    // Readiness gate
-    const missing: string[] = [];
-    if (!snap.business?.name) missing.push('business.name');
-    if (!snap.flyers || snap.flyers.length === 0) missing.push('flyers');
-    if (!snap.twilio?.number) missing.push('twilio.number');
-    const tenantIdForFlags = (snap.tenant?.tenant_id || '').trim();
-    let demoSkipStripe = false;
-    if (ALLOW_DEMO_SKIP_STRIPE && tenantIdForFlags) {
-      try {
-        const tSnap = await firestore.collection('tenants').doc(tenantIdForFlags).get();
-        const flags = (tSnap.data() as any)?.featureFlags as Record<string, any> | undefined;
-        if (flags?.[DEMO_SKIP_STRIPE_FLAG] === true) {
-          demoSkipStripe = true;
-        }
-      } catch (err) {
-        // Best-effort; ignore and treat as not enabled.
-        console.warn('demo_skip_stripe flag read failed', err);
-      }
-    }
-    const stripeStatus = snap.stripe?.status || '';
-    if (!demoSkipStripe) {
-      if (!['active', 'pending_review', 'requirements_due', 'pending'].includes(stripeStatus)) {
-        missing.push('stripe_kyc');
-      }
-    }
-    const ingestStatus = snap.ingestion?.status || '';
-    if (!['succeeded', 'partial_ok'].includes(ingestStatus)) {
-      missing.push('ingestion');
-    }
-    if (!snap.agent?.template_agent_id && !snap.agent?.agent_id) {
-      missing.push('agent');
-    }
-    if (missing.length) {
-      return res.status(400).json({ error: 'not_ready', missing });
-    }
-
-    // Create tenant/store drafts
-    const tenantsCol = firestore.collection('tenants');
-    const storesCol = firestore.collection('stores');
-    const tenantId = snap.tenant?.tenant_id || `tenant_${id}`;
-    const storeId = snap.tenant?.store_id || `store_${id}`;
-    const ts = Timestamp.now();
-
-  const tenantPayload = {
-    name: snap.business?.name || 'Unnamed',
-    phone: snap.business?.phone || '',
-    address: snap.business?.address || '',
-    timezone: snap.business?.timezone || '',
-    stripe_account_id: snap.stripe?.account_id || '',
-    status: 'ready',
-    created_at: ts,
-    updated_at: ts,
-  };
-
-	  const storePayload = {
-	    store_id: storeId,
-	    tenant_id: tenantId,
-	    business_type: snap.business?.type || '',
-	    currency: snap.business?.currency || '',
-	    fuel_default_prepay_cents: snap.business?.fuel_default_prepay_cents || snap.business?.fuelDefaultPrepayCents || 0,
-	    menu_job_ids: snap.ingestion?.job_ids || [],
-	    elevenlabs_agent_template_id: snap.agent?.template_agent_id || '',
-	    elevenlabs_agent_mode: snap.agent?.template_agent_id ? 'shared_template' : (snap.agent?.agent_id ? 'per_tenant' : ''),
-	    // Backward compat: keep the older field if a per-tenant agent exists.
-	    ...(snap.agent?.agent_id ? { elevenlabs_agent_id: snap.agent?.agent_id || '' } : {}),
-	    elevenlabs_voice_id: snap.agent?.voice_id || '',
-	    elevenlabs_agent_branch_id: snap.agent?.branch_id || '',
-	    // Suggested runtime variables for ElevenLabs dynamic variables / tool path params.
-	    elevenlabs_variables: {
-	      tenantId,
-	      storeId,
-	      businessType: (snap.business?.type || '').trim(),
-	    },
-	    twilio_number: snap.twilio?.number || '',
-	    elevenlabs_phone_number_id: snap.twilio?.elevenlabs_phone_number_id || '',
-	    // Default order comms config (safe defaults: no customer comms until enabled).
-	    order_comms: {
-	      default_wait_minutes: 15,
-	      statuses: {
-	        pending: { default_channel: 'none', default_template_id: 'default', templates: [{ id: 'default', label: 'Default', body: 'Your order was received.' }] },
-	        confirmed: { default_channel: 'none', default_template_id: 'default', templates: [{ id: 'default', label: 'Default', body: 'Your order has been confirmed.' }] },
-	        ready: { default_channel: 'none', default_template_id: 'default', templates: [{ id: 'default', label: 'Default', body: 'Your order is ready for pickup.' }] },
-	        completed: { default_channel: 'none', default_template_id: 'default', templates: [{ id: 'default', label: 'Default', body: 'Thanks — your order is marked completed.' }] },
-	        cancelled: { default_channel: 'none', default_template_id: 'default', templates: [{ id: 'default', label: 'Default', body: 'Your order was cancelled. Please contact the store if you have questions.' }] },
-	        delay: { default_channel: 'none', default_template_id: 'default', templates: [{ id: 'default', label: 'Default', body: 'Your order is running a bit late.' }] },
-	      },
-	      ready_escalation_enabled: false,
-	      ready_escalation_minutes: 5,
-	      ready_escalation_channel: 'call',
-	    },
-	    created_at: ts,
-	    updated_at: ts,
-	  };
-
-    await tenantsCol.doc(tenantId).set(tenantPayload, { merge: true });
-    await storesCol.doc(storeId).set(storePayload, { merge: true });
-
-    // Update durable routing mapping with finalized tenant/store IDs (so runtime webhooks can route without onboarding state).
-    try {
-      await upsertPhoneNumberRoute({
-        onboardingSessionId: id,
-        toNumber: snap.twilio?.number || '',
-        elevenlabsPhoneNumberId: snap.twilio?.elevenlabs_phone_number_id || '',
-        twilioSid: snap.twilio?.sid || '',
-        tenantId,
-        storeId,
-        businessType: snap.business?.type || '',
-        routeStatus: 'ready',
-        source: 'onboarding_finalize',
-      });
-      await audit(id, 'phone_number_route_finalized', {
-        tenant_id: tenantId,
-        store_id: storeId,
-        to_number: maskPhone(snap.twilio?.number || ''),
-      });
-    } catch (err: any) {
-      console.error('phone_number_routes finalize upsert failed', err?.message ?? err);
-      await audit(id, 'phone_number_route_finalize_failed', { message: err?.message ?? String(err) });
-    }
-
-    await SESSIONS.doc(id).update({ status: 'ready', tenant: { tenant_id: tenantId, store_id: storeId }, updated_at: ts });
-    const auditPayload: Record<string, any> = {
-      tenant_id: tenantId,
-      store_id: storeId,
-    };
-    if (demoSkipStripe) {
-      auditPayload.demo_skip_stripe = true;
-    }
-    await audit(id, 'finalized', auditPayload);
-    // Mark tenant onboarding session as completed (so a new one can be created later).
-    if (tenantId) {
-      await TENANTS.doc(tenantId).set(
-        {
-          active_session_id: FieldValue.delete(),
-          last_session_id: id,
-          store_id: storeId,
-          updated_at: ts,
-        } as any,
-        { merge: true },
-      );
-    }
-    res.json({ status: 'ready', tenant_id: tenantId, store_id: storeId });
-  } catch (err: any) {
-    console.error('finalize error', err);
-    res.status(500).json({ error: 'finalize_failed', message: err.message });
-  }
-});
 
 app.use((err: Error, _req: express.Request, res: express.Response, _next: express.NextFunction) => {
   console.error(err);
