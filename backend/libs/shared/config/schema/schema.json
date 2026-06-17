@@ -484,6 +484,16 @@
       "sensitive": true,
       "description": "Optional alternate env var for the same webhook secret (fallback)."
     },
+    "INTERNAL_AUTH_AUDIENCE": {
+      "type": "string",
+      "required": false,
+      "description": "Expected audience for internal Google OIDC ID tokens on internal test endpoints. Required in staging and production."
+    },
+    "INTERNAL_ALLOWED_EMAILS": {
+      "type": "string",
+      "required": false,
+      "description": "Comma-separated allowlist for internal Google OIDC ID tokens on internal test endpoints. Required in staging and production."
+    },
     "CUSTOMER_PROFILE_SERVICE_URL": {
       "type": "string",
       "required": false,

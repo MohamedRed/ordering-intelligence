@@ -75,8 +75,21 @@ func loadConfig() (*serviceConfig, error) {
 }
 
 func validateConfig(cfg *serviceConfig) error {
-	if isStrictEnvironment(cfg.Environment) && strings.TrimSpace(cfg.Secret) == "" {
-		return fmt.Errorf("ELEVENLABS_CONVERSATION_INIT_SECRET is required in %s", cfg.Environment)
+	if !isStrictEnvironment(cfg.Environment) {
+		return nil
+	}
+	missing := []string{}
+	if strings.TrimSpace(cfg.Secret) == "" {
+		missing = append(missing, "ELEVENLABS_CONVERSATION_INIT_SECRET")
+	}
+	if strings.TrimSpace(cfg.InternalAuthAudience) == "" {
+		missing = append(missing, "INTERNAL_AUTH_AUDIENCE")
+	}
+	if len(cfg.InternalAllowedEmails) == 0 {
+		missing = append(missing, "INTERNAL_ALLOWED_EMAILS")
+	}
+	if len(missing) > 0 {
+		return fmt.Errorf("agent-webhooks config missing required values in %s: %s", cfg.Environment, strings.Join(missing, ", "))
 	}
 	return nil
 }

@@ -1374,6 +1374,10 @@ module "agent_webhooks" {
     RECOMMENDATION_SERVICE_URL       = local.service_urls.recommendation
     WAIT_TIME_SERVICE_URL            = local.service_urls.wait_time_service
     CUSTOMER_PERSONALIZATION_VERSION = "v1"
+    INTERNAL_AUTH_AUDIENCE           = local.service_urls.agent_webhooks
+    INTERNAL_ALLOWED_EMAILS = join(",", [
+      module.agent_tools_sa.email,
+    ])
   }, lookup(local.cloud_run_config.agent_webhooks, "env_overrides", {}))
   secret_env_vars = merge({
     ELEVENLABS_CONVERSATION_INIT_SECRET = google_secret_manager_secret.elevenlabs_conversation_init_secret.secret_id
