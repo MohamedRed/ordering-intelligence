@@ -5,9 +5,12 @@
   "private": true,
   "description": "LiveKit agent worker that loads voice presets with location-specific overrides.",
   "scripts": {
+    "build:voice-config": "test -d ../../libs/voice-agent-config/node_modules || npm --prefix ../../libs/voice-agent-config ci && npm --prefix ../../libs/voice-agent-config run build",
+    "prebuild": "npm run build:voice-config",
     "build": "tsc -p tsconfig.json",
     "start": "tsx src/index.ts",
     "start:prod": "node dist/index.js",
+    "pretest": "npm run build:voice-config",
     "test": "npx c8 -r text tsx --test src/runtime/__tests__/*.test.ts"
   },
   "dependencies": {
