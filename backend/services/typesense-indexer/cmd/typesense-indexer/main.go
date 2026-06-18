@@ -155,31 +155,31 @@ func (s *service) handleEvent(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := s.ensureCollection(ctx); err != nil {
-		log.Printf("typesense collection ensure failed: %v", err)
-		writeError(w, http.StatusInternalServerError, "typesense_collection_unavailable")
-		return
-	}
-
 	event, err := decodeCloudEvent(body)
 	if err != nil {
-		log.Printf("cloud event decode failed: %v", err)
-		writeError(w, http.StatusBadRequest, "invalid_event")
+		log.Printf("skipping malformed typesense indexer CloudEvent reason=invalid_event err=%v", err)
+		writeJSON(w, http.StatusOK, map[string]string{"status": "ignored_invalid_event", "reason": "invalid_event"})
 		return
 	}
 
 	fsEvent, err := decodeFirestoreEvent(event.Data)
 	if err != nil {
-		log.Printf("firestore event decode failed: %v", err)
-		writeError(w, http.StatusBadRequest, "invalid_firestore_event")
+		log.Printf("skipping malformed typesense indexer Firestore event reason=invalid_firestore_event err=%v", err)
+		writeJSON(w, http.StatusOK, map[string]string{"status": "ignored_invalid_event", "reason": "invalid_firestore_event"})
 		return
 	}
 
 	docName := firstNonEmpty(fsEvent.Value.Name, fsEvent.OldValue.Name, event.Subject)
 	collection, docID := parseDocPath(docName)
 	if collection == "" || docID == "" {
-		log.Printf("missing firestore document path in event")
+		log.Printf("skipping typesense indexer event with missing firestore document path")
 		w.WriteHeader(http.StatusNoContent)
+		return
+	}
+
+	if err := s.ensureCollection(ctx); err != nil {
+		log.Printf("typesense collection ensure failed: %v", err)
+		writeError(w, http.StatusInternalServerError, "typesense_collection_unavailable")
 		return
 	}
 
