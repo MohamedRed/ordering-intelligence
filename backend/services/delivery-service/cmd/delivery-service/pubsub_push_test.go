@@ -72,3 +72,35 @@ func TestHandleOrdersEventsAcknowledgesMalformedPubSubMessages(t *testing.T) {
 		t.Fatalf("expected response reason %q, got %s", pubsubDecodeMissingData, rec.Body.String())
 	}
 }
+
+func TestHandleOrdersEventsFailsClosedWhenOIDCAllowlistMissing(t *testing.T) {
+	req := httptest.NewRequest(http.MethodPost, "/tasks/orders-events", pubsubOrderBody(orderRecord{ID: "order-1", StoreID: "store-1"}))
+	rec := httptest.NewRecorder()
+
+	handleOrdersEvents(rec, req, nil, &serviceConfig{RequireAuth: true, OrdersEventsAudience: "https://delivery.example.com"}, nil, nil, nil)
+
+	if rec.Code != http.StatusInternalServerError {
+		t.Fatalf("expected status 500, got %d body=%s", rec.Code, rec.Body.String())
+	}
+	if !strings.Contains(rec.Body.String(), "pubsub_push_auth_misconfigured") {
+		t.Fatalf("expected auth misconfiguration response, got %s", rec.Body.String())
+	}
+}
+
+func TestHandleOrdersEventsRequiresBearerWhenOIDCHardened(t *testing.T) {
+	req := httptest.NewRequest(http.MethodPost, "/tasks/orders-events", pubsubOrderBody(orderRecord{ID: "order-1", StoreID: "store-1"}))
+	rec := httptest.NewRecorder()
+
+	handleOrdersEvents(rec, req, nil, &serviceConfig{
+		RequireAuth:               true,
+		OrdersEventsAudience:      "https://delivery.example.com",
+		OrdersEventsAllowedEmails: []string{"orders-events@test-project.iam.gserviceaccount.com"},
+	}, nil, nil, nil)
+
+	if rec.Code != http.StatusUnauthorized {
+		t.Fatalf("expected status 401, got %d body=%s", rec.Code, rec.Body.String())
+	}
+	if !strings.Contains(rec.Body.String(), "missing_auth") {
+		t.Fatalf("expected missing auth response, got %s", rec.Body.String())
+	}
+}

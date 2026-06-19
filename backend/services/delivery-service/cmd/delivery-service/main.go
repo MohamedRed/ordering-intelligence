@@ -64,23 +64,24 @@ type serviceConfig struct {
 	InternalAuthAudience  string
 	InternalAllowedEmails []string
 
-	OrderServiceURL        string
-	DispatchServiceURL     string
-	OrdersEventsAudience   string
-	DeliveriesEventsTopic  string
-	ProviderMode           string
-	UberDirectAPIKey       string
-	UberDirectClientID     string
-	UberDirectClientSecret string
-	UberDirectCustomerID   string
-	UberDirectAccessToken  string
-	UberDirectAuthURL      string
-	UberDirectAPIBaseURL   string
-	StuartAPIKey           string
-	StuartClientID         string
-	StuartClientSecret     string
-	StuartAccessToken      string
-	StuartAPIBaseURL       string
+	OrderServiceURL           string
+	DispatchServiceURL        string
+	OrdersEventsAudience      string
+	OrdersEventsAllowedEmails []string
+	DeliveriesEventsTopic     string
+	ProviderMode              string
+	UberDirectAPIKey          string
+	UberDirectClientID        string
+	UberDirectClientSecret    string
+	UberDirectCustomerID      string
+	UberDirectAccessToken     string
+	UberDirectAuthURL         string
+	UberDirectAPIBaseURL      string
+	StuartAPIKey              string
+	StuartClientID            string
+	StuartClientSecret        string
+	StuartAccessToken         string
+	StuartAPIBaseURL          string
 }
 
 type authContext struct {
@@ -350,33 +351,37 @@ func loadConfig() (*serviceConfig, error) {
 	}
 
 	cfg := &serviceConfig{
-		Port:                   port,
-		Environment:            environment,
-		FirestoreProjectID:     project,
-		CredentialsFile:        strings.TrimSpace(stringOrDefault(values["GOOGLE_APPLICATION_CREDENTIALS"], "")),
-		RequireAuth:            strings.TrimSpace(stringOrDefault(values["REQUIRE_AUTH"], strings.TrimSpace(os.Getenv("REQUIRE_AUTH")))) != "false",
-		CORSOrigins:            corsOrigins,
-		InternalAuthAudience:   strings.TrimSpace(stringOrDefault(values["INTERNAL_AUTH_AUDIENCE"], strings.TrimSpace(os.Getenv("INTERNAL_AUTH_AUDIENCE")))),
-		InternalAllowedEmails:  internalAllowedEmails,
-		OrderServiceURL:        strings.TrimSpace(stringOrDefault(values["ORDER_SERVICE_URL"], strings.TrimSpace(os.Getenv("ORDER_SERVICE_URL")))),
-		DispatchServiceURL:     strings.TrimSpace(stringOrDefault(values["DISPATCH_SERVICE_URL"], strings.TrimSpace(os.Getenv("DISPATCH_SERVICE_URL")))),
-		OrdersEventsAudience:   strings.TrimSpace(stringOrDefault(values["ORDERS_EVENTS_OIDC_AUDIENCE"], strings.TrimSpace(os.Getenv("ORDERS_EVENTS_OIDC_AUDIENCE")))),
-		DeliveriesEventsTopic:  strings.TrimSpace(stringOrDefault(values["DELIVERIES_EVENTS_TOPIC"], strings.TrimSpace(os.Getenv("DELIVERIES_EVENTS_TOPIC")))),
-		ProviderMode:           providerMode,
-		UberDirectAPIKey:       strings.TrimSpace(stringOrDefault(values["UBER_DIRECT_API_KEY"], strings.TrimSpace(os.Getenv("UBER_DIRECT_API_KEY")))),
-		UberDirectClientID:     strings.TrimSpace(stringOrDefault(values["UBER_DIRECT_CLIENT_ID"], strings.TrimSpace(os.Getenv("UBER_DIRECT_CLIENT_ID")))),
-		UberDirectClientSecret: strings.TrimSpace(stringOrDefault(values["UBER_DIRECT_CLIENT_SECRET"], strings.TrimSpace(os.Getenv("UBER_DIRECT_CLIENT_SECRET")))),
-		UberDirectCustomerID:   strings.TrimSpace(stringOrDefault(values["UBER_DIRECT_CUSTOMER_ID"], strings.TrimSpace(os.Getenv("UBER_DIRECT_CUSTOMER_ID")))),
-		UberDirectAccessToken:  strings.TrimSpace(stringOrDefault(values["UBER_DIRECT_ACCESS_TOKEN"], strings.TrimSpace(os.Getenv("UBER_DIRECT_ACCESS_TOKEN")))),
-		UberDirectAuthURL:      uberAuth,
-		UberDirectAPIBaseURL:   strings.TrimRight(uberBase, "/"),
-		StuartAPIKey:           strings.TrimSpace(stringOrDefault(values["STUART_API_KEY"], strings.TrimSpace(os.Getenv("STUART_API_KEY")))),
-		StuartClientID:         strings.TrimSpace(stringOrDefault(values["STUART_CLIENT_ID"], strings.TrimSpace(os.Getenv("STUART_CLIENT_ID")))),
-		StuartClientSecret:     strings.TrimSpace(stringOrDefault(values["STUART_CLIENT_SECRET"], strings.TrimSpace(os.Getenv("STUART_CLIENT_SECRET")))),
-		StuartAccessToken:      strings.TrimSpace(stringOrDefault(values["STUART_ACCESS_TOKEN"], strings.TrimSpace(os.Getenv("STUART_ACCESS_TOKEN")))),
-		StuartAPIBaseURL:       strings.TrimRight(stuartBase, "/"),
+		Port:                      port,
+		Environment:               environment,
+		FirestoreProjectID:        project,
+		CredentialsFile:           strings.TrimSpace(stringOrDefault(values["GOOGLE_APPLICATION_CREDENTIALS"], "")),
+		RequireAuth:               strings.TrimSpace(stringOrDefault(values["REQUIRE_AUTH"], strings.TrimSpace(os.Getenv("REQUIRE_AUTH")))) != "false",
+		CORSOrigins:               corsOrigins,
+		InternalAuthAudience:      strings.TrimSpace(stringOrDefault(values["INTERNAL_AUTH_AUDIENCE"], strings.TrimSpace(os.Getenv("INTERNAL_AUTH_AUDIENCE")))),
+		InternalAllowedEmails:     internalAllowedEmails,
+		OrderServiceURL:           strings.TrimSpace(stringOrDefault(values["ORDER_SERVICE_URL"], strings.TrimSpace(os.Getenv("ORDER_SERVICE_URL")))),
+		DispatchServiceURL:        strings.TrimSpace(stringOrDefault(values["DISPATCH_SERVICE_URL"], strings.TrimSpace(os.Getenv("DISPATCH_SERVICE_URL")))),
+		OrdersEventsAudience:      strings.TrimSpace(stringOrDefault(values["ORDERS_EVENTS_OIDC_AUDIENCE"], strings.TrimSpace(os.Getenv("ORDERS_EVENTS_OIDC_AUDIENCE")))),
+		OrdersEventsAllowedEmails: splitCSV(strings.TrimSpace(stringOrDefault(values["ORDERS_EVENTS_OIDC_ALLOWED_EMAILS"], strings.TrimSpace(os.Getenv("ORDERS_EVENTS_OIDC_ALLOWED_EMAILS"))))),
+		DeliveriesEventsTopic:     strings.TrimSpace(stringOrDefault(values["DELIVERIES_EVENTS_TOPIC"], strings.TrimSpace(os.Getenv("DELIVERIES_EVENTS_TOPIC")))),
+		ProviderMode:              providerMode,
+		UberDirectAPIKey:          strings.TrimSpace(stringOrDefault(values["UBER_DIRECT_API_KEY"], strings.TrimSpace(os.Getenv("UBER_DIRECT_API_KEY")))),
+		UberDirectClientID:        strings.TrimSpace(stringOrDefault(values["UBER_DIRECT_CLIENT_ID"], strings.TrimSpace(os.Getenv("UBER_DIRECT_CLIENT_ID")))),
+		UberDirectClientSecret:    strings.TrimSpace(stringOrDefault(values["UBER_DIRECT_CLIENT_SECRET"], strings.TrimSpace(os.Getenv("UBER_DIRECT_CLIENT_SECRET")))),
+		UberDirectCustomerID:      strings.TrimSpace(stringOrDefault(values["UBER_DIRECT_CUSTOMER_ID"], strings.TrimSpace(os.Getenv("UBER_DIRECT_CUSTOMER_ID")))),
+		UberDirectAccessToken:     strings.TrimSpace(stringOrDefault(values["UBER_DIRECT_ACCESS_TOKEN"], strings.TrimSpace(os.Getenv("UBER_DIRECT_ACCESS_TOKEN")))),
+		UberDirectAuthURL:         uberAuth,
+		UberDirectAPIBaseURL:      strings.TrimRight(uberBase, "/"),
+		StuartAPIKey:              strings.TrimSpace(stringOrDefault(values["STUART_API_KEY"], strings.TrimSpace(os.Getenv("STUART_API_KEY")))),
+		StuartClientID:            strings.TrimSpace(stringOrDefault(values["STUART_CLIENT_ID"], strings.TrimSpace(os.Getenv("STUART_CLIENT_ID")))),
+		StuartClientSecret:        strings.TrimSpace(stringOrDefault(values["STUART_CLIENT_SECRET"], strings.TrimSpace(os.Getenv("STUART_CLIENT_SECRET")))),
+		StuartAccessToken:         strings.TrimSpace(stringOrDefault(values["STUART_ACCESS_TOKEN"], strings.TrimSpace(os.Getenv("STUART_ACCESS_TOKEN")))),
+		StuartAPIBaseURL:          strings.TrimRight(stuartBase, "/"),
 	}
 	if err := validateDeliveryProviderConfig(cfg); err != nil {
+		return nil, err
+	}
+	if err := validateDeliveryAuthConfig(cfg); err != nil {
 		return nil, err
 	}
 	return cfg, nil
@@ -1596,10 +1601,14 @@ func handleOrdersEvents(
 	httpClient *http.Client,
 	orderTokenSrc oauth2.TokenSource,
 ) {
-	if cfg.OrdersEventsAudience != "" {
-		ok := verifyGoogleOidc(r, cfg.OrdersEventsAudience)
+	if cfg.RequireAuth {
+		if strings.TrimSpace(cfg.OrdersEventsAudience) == "" || len(cfg.OrdersEventsAllowedEmails) == 0 {
+			writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "pubsub_push_auth_misconfigured"})
+			return
+		}
+		ok, reason := verifyGoogleOidc(r, cfg.OrdersEventsAudience, cfg.OrdersEventsAllowedEmails)
 		if !ok {
-			writeJSON(w, http.StatusUnauthorized, map[string]string{"error": "unauthorized"})
+			writeJSON(w, http.StatusUnauthorized, map[string]string{"error": reason})
 			return
 		}
 	}
@@ -2115,20 +2124,37 @@ func patchOrderDelivery(ctx context.Context, httpClient *http.Client, tokenSrc o
 	return nil
 }
 
-func verifyGoogleOidc(r *http.Request, audience string) bool {
+func verifyGoogleOidc(r *http.Request, audience string, allowedEmails []string) (bool, string) {
 	authHeader := r.Header.Get("Authorization")
 	if !strings.HasPrefix(authHeader, "Bearer ") {
-		return false
+		return false, "missing_auth"
 	}
 	token := strings.TrimSpace(strings.TrimPrefix(authHeader, "Bearer "))
 	if token == "" {
-		return false
+		return false, "missing_auth"
 	}
 	payload, err := idtoken.Validate(r.Context(), token, audience)
 	if err != nil || payload == nil {
+		return false, "unauthorized"
+	}
+	email, _ := payload.Claims["email"].(string)
+	if !emailAllowed(email, allowedEmails) {
+		return false, "unauthorized"
+	}
+	return true, ""
+}
+
+func emailAllowed(email string, allowedEmails []string) bool {
+	email = strings.TrimSpace(email)
+	if email == "" || len(allowedEmails) == 0 {
 		return false
 	}
-	return true
+	for _, allowed := range allowedEmails {
+		if strings.EqualFold(strings.TrimSpace(allowed), email) {
+			return true
+		}
+	}
+	return false
 }
 
 func splitCSV(value string) []string {
