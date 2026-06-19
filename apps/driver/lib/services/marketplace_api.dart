@@ -112,14 +112,17 @@ class MarketplaceDispatchApi implements LocationPoster {
     String? storeId,
   }) async {
     final token = await _token();
+    final payload = <String, dynamic>{'status': status};
+    if (offerId != null) {
+      payload['offerId'] = offerId;
+    }
+    if (storeId != null) {
+      payload['storeId'] = storeId;
+    }
     final resp = await _client.post(
       _uri('/v1/marketplace/orders/$orderId/status'),
       headers: _headers(token),
-      body: jsonEncode({
-        'status': status,
-        if (offerId != null) 'offerId': offerId,
-        if (storeId != null) 'storeId': storeId,
-      }),
+      body: jsonEncode(payload),
     );
     if (resp.statusCode != 200) {
       throw Exception('Status update failed: ${resp.statusCode} ${resp.body}');

@@ -82,6 +82,11 @@ jobs:
       - name: Coverage gate
         if: matrix.coverage_threshold != '0'
         run: |
-          pct=$(lcov --summary coverage/lcov.info 2>/dev/null | awk '/lines/ {print $4}' | sed 's/%//')
+          pct=$(lcov --summary coverage/lcov.info 2>/dev/null | awk '/lines[.]*:/ {gsub("%", "", $2); print $2; exit}')
+          if [ -z "$pct" ]; then
+            echo "Unable to parse line coverage from coverage/lcov.info"
+            lcov --summary coverage/lcov.info
+            exit 1
+          fi
           echo "coverage=$pct%"
           awk -v total="$pct" -v threshold="${{ matrix.coverage_threshold }}" 'BEGIN { if (total+0 < threshold+0) { exit 1 } }'

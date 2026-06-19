@@ -61,15 +61,20 @@ class DeliveryPartnerOnboardingApi {
     String? phone,
   }) async {
     final delivererId = await _delivererId();
+    final payload = <String, dynamic>{'delivererId': delivererId};
+    if (country != null) {
+      payload['country'] = country;
+    }
+    if (email != null) {
+      payload['email'] = email;
+    }
+    if (phone != null) {
+      payload['phone'] = phone;
+    }
     final resp = await _client.post(
       _uri('/delivery-partners/stripe/account'),
       headers: {'Content-Type': 'application/json'},
-      body: jsonEncode({
-        'delivererId': delivererId,
-        if (country != null) 'country': country,
-        if (email != null) 'email': email,
-        if (phone != null) 'phone': phone,
-      }),
+      body: jsonEncode(payload),
     );
     if (resp.statusCode != 200 && resp.statusCode != 201) {
       throw Exception('Stripe account failed: ${resp.statusCode} ${resp.body}');
@@ -81,14 +86,17 @@ class DeliveryPartnerOnboardingApi {
     String? country,
   }) async {
     final delivererId = await _delivererId();
+    final payload = <String, dynamic>{
+      'delivererId': delivererId,
+      'vehicleType': vehicleType,
+    };
+    if (country != null) {
+      payload['country'] = country;
+    }
     final resp = await _client.post(
       _uri('/delivery-partners/compliance/start'),
       headers: {'Content-Type': 'application/json'},
-      body: jsonEncode({
-        'delivererId': delivererId,
-        'vehicleType': vehicleType,
-        if (country != null) 'country': country,
-      }),
+      body: jsonEncode(payload),
     );
     if (resp.statusCode != 200 && resp.statusCode != 201) {
       throw Exception(
