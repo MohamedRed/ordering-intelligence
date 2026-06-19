@@ -30,7 +30,7 @@ concurrency:
 
 jobs:
   terraform:
-    runs-on: [self-hosted, linux, x64, liive-dev]
+    runs-on: ubuntu-latest
     env:
       TF_IN_AUTOMATION: 'true'
     steps:

@@ -27,7 +27,7 @@ concurrency:
 jobs:
   node-packages:
     name: Node.js (${{ matrix.name }})
-    runs-on: [self-hosted, linux, x64, liive-dev]
+    runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
@@ -95,7 +95,7 @@ jobs:
 
   python-packages:
     name: Python shared config
-    runs-on: [self-hosted, linux, x64, liive-dev]
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -115,7 +115,7 @@ jobs:
 
   go-modules:
     name: Go (${{ matrix.name }})
-    runs-on: [self-hosted, linux, x64, liive-dev]
+    runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:

@@ -18,7 +18,7 @@ on:
 
 jobs:
   twilio-plan:
-    runs-on: [self-hosted, linux, x64, liive-dev]
+    runs-on: ubuntu-latest
     if: github.event_name == 'pull_request' || github.event_name == 'workflow_dispatch'
     defaults:
       run:
@@ -42,7 +42,7 @@ jobs:
         run: terraform plan -input=false
 
   livekit:
-    runs-on: [self-hosted, linux, x64, liive-dev]
+    runs-on: ubuntu-latest
     if: github.event_name == 'workflow_dispatch'
     needs: twilio-plan
     env:

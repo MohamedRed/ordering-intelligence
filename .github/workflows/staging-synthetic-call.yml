@@ -10,7 +10,7 @@ on:
 
 jobs:
   staging-call:
-    runs-on: [self-hosted, linux, x64, liive-dev]
+    runs-on: ubuntu-latest
     environment: staging
     steps:
       - uses: actions/checkout@v4
