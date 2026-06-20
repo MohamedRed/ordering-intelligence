@@ -26,14 +26,7 @@ jobs:
         run: |
           set -euo pipefail
           gcloud services enable cloudbilling.googleapis.com --project=liive-dev --quiet
-          mapfile -t ACCOUNTS < <(gcloud billing accounts list --filter='open=true' --format='value(name)')
-          if [ "${#ACCOUNTS[@]}" -eq 0 ]; then
-            echo "No open billing accounts are visible to this principal." >&2
-            exit 2
-          fi
-          ACCOUNT_NAME="${ACCOUNTS[$((${#ACCOUNTS[@]} - 1))]}"
-          ACCOUNT_ID="${ACCOUNT_NAME##*/}"
-          echo "::add-mask::$ACCOUNT_NAME"
+          ACCOUNT_ID="013632-2013D4-83320F"
           echo "::add-mask::$ACCOUNT_ID"
           gcloud billing projects link liive-dev --billing-account="$ACCOUNT_ID"
           gcloud billing projects describe liive-dev --format='value(billingEnabled)'
