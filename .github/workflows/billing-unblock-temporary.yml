@@ -25,6 +25,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
+          gcloud services enable cloudbilling.googleapis.com --project=liive-dev --quiet
           mapfile -t ACCOUNTS < <(gcloud billing accounts list --filter='open=true' --format='value(name)')
           if [ "${#ACCOUNTS[@]}" -eq 0 ]; then
             echo "No open billing accounts are visible to this principal." >&2
