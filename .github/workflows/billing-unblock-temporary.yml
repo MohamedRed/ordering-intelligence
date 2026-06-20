@@ -25,7 +25,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          mapfile -t ACCOUNTS < <(gcloud beta billing accounts list --filter='open=true' --format='value(name)')
+          mapfile -t ACCOUNTS < <(gcloud billing accounts list --filter='open=true' --format='value(name)')
           if [ "${#ACCOUNTS[@]}" -eq 0 ]; then
             echo "No open billing accounts are visible to this principal." >&2
             exit 2
@@ -34,9 +34,9 @@ jobs:
           ACCOUNT_ID="${ACCOUNT_NAME##*/}"
           echo "::add-mask::$ACCOUNT_NAME"
           echo "::add-mask::$ACCOUNT_ID"
-          gcloud beta billing projects link liive-dev --billing-account="$ACCOUNT_ID"
-          gcloud beta billing projects describe liive-dev --format='value(billingEnabled)'
-          ENABLED="$(gcloud beta billing projects describe liive-dev --format='value(billingEnabled)')"
+          gcloud billing projects link liive-dev --billing-account="$ACCOUNT_ID"
+          gcloud billing projects describe liive-dev --format='value(billingEnabled)'
+          ENABLED="$(gcloud billing projects describe liive-dev --format='value(billingEnabled)')"
           if [ "$ENABLED" != "True" ] && [ "$ENABLED" != "true" ]; then
             echo "Billing did not verify as enabled for liive-dev." >&2
             exit 3
