@@ -77,7 +77,7 @@ def main():
     project = args.project or (
         subprocess.getoutput("printenv FIRESTORE_PROJECT_ID").strip()
         or subprocess.getoutput("printenv GOOGLE_CLOUD_PROJECT").strip()
-        or "liive-dev"
+        or "ordering-intelligence-dev"
     )
     base_url = f"https://firestore.googleapis.com/v1/projects/{project}/databases/(default)/documents"
     token = _access_token()

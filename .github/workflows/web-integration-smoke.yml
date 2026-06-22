@@ -12,12 +12,12 @@ concurrency:
 jobs:
   api-tests:
     needs: ui-tests
-    runs-on: [self-hosted, linux, x64, liive-dev]
+    runs-on: [self-hosted, linux, x64, ordering-intelligence-dev]
     permissions:
       id-token: write
       contents: read
     env:
-      FIREBASE_PROJECT_ID: liive-dev
+      FIREBASE_PROJECT_ID: ordering-intelligence-dev
       FIRESTORE_SUFFIX: ci
       CHANNEL_GATEWAY_BASE_URL: ${{ secrets.CHANNEL_GATEWAY_BASE_URL_LIIVE_DEV }}
       CONSUMER_APP_URL: ${{ needs.ui-tests.outputs.consumer_url }}
@@ -31,7 +31,7 @@ jobs:
       DELIVERY_SERVICE_BASE_URL: https://dev-delivery-service.liive.app
       PAYMENTS_SERVICE_BASE_URL: https://dev-payments-service.liive.app
       NOTIFICATION_SERVICE_BASE_URL: https://dev-notification-service.liive.app
-      GCLOUD_IMPERSONATE_SERVICE_ACCOUNT: github-ci-dev@liive-dev.iam.gserviceaccount.com
+      GCLOUD_IMPERSONATE_SERVICE_ACCOUNT: github-ci-dev@ordering-intelligence-dev.iam.gserviceaccount.com
       AGENT_WEBHOOKS_BASE_URL: https://dev-agent-webhooks.liive.app
       INTERNAL_DELIVERER_ID: ${{ secrets.GCP_SERVICE_ACCOUNT_LIIVE_DEV }}
     steps:
@@ -45,10 +45,17 @@ jobs:
         with:
           python-version: '3.11'
 
+      - name: Validate dev GCP configuration
+        run: |
+          if [ -z "${{ vars.GCP_DEV_PROJECT_NUMBER }}" ]; then
+            echo "::error::Set GitHub repository variable GCP_DEV_PROJECT_NUMBER to the numeric project number for ordering-intelligence-dev."
+            exit 1
+          fi
+
       - uses: google-github-actions/auth@v2
         with:
-          workload_identity_provider: projects/878404493774/locations/global/workloadIdentityPools/github-actions-pool/providers/github-actions-provider
-          service_account: github-ci-dev@liive-dev.iam.gserviceaccount.com
+          workload_identity_provider: projects/${{ vars.GCP_DEV_PROJECT_NUMBER }}/locations/global/workloadIdentityPools/github-actions-pool/providers/github-actions-provider
+          service_account: ${{ env.GCLOUD_IMPERSONATE_SERVICE_ACCOUNT }}
           export_environment_variables: true
 
       - uses: google-github-actions/setup-gcloud@v2
@@ -153,7 +160,7 @@ jobs:
         run: node tests/integration/voice_conversation_init.mjs
 
   ui-tests:
-    runs-on: [self-hosted, linux, x64, liive-dev]
+    runs-on: [self-hosted, linux, x64, ordering-intelligence-dev]
     permissions:
       id-token: write
       contents: read
@@ -165,7 +172,7 @@ jobs:
     env:
       HOME: /home/actions-runner
       PARALLEL_BUILDS: 2
-      FIREBASE_PROJECT_ID: liive-dev
+      FIREBASE_PROJECT_ID: ordering-intelligence-dev
       FIRESTORE_SUFFIX: ci
       CHANNEL_GATEWAY_BASE_URL: ${{ secrets.CHANNEL_GATEWAY_BASE_URL_LIIVE_DEV }}
       ONBOARDING_BASE_URL: https://dev-onboarding-service.liive.app
@@ -178,6 +185,7 @@ jobs:
       HOSTING_CHANNEL_ID: ci-main
       HOSTING_CHANNEL_TTL: 7d
       INTERNAL_DELIVERER_ID: ${{ secrets.GCP_SERVICE_ACCOUNT_LIIVE_DEV }}
+      GCLOUD_IMPERSONATE_SERVICE_ACCOUNT: github-ci-dev@ordering-intelligence-dev.iam.gserviceaccount.com
     steps:
       - uses: actions/checkout@v4
 
@@ -189,10 +197,17 @@ jobs:
         with:
           python-version: '3.11'
 
+      - name: Validate dev GCP configuration
+        run: |
+          if [ -z "${{ vars.GCP_DEV_PROJECT_NUMBER }}" ]; then
+            echo "::error::Set GitHub repository variable GCP_DEV_PROJECT_NUMBER to the numeric project number for ordering-intelligence-dev."
+            exit 1
+          fi
+
       - uses: google-github-actions/auth@v2
         with:
-          workload_identity_provider: projects/878404493774/locations/global/workloadIdentityPools/github-actions-pool/providers/github-actions-provider
-          service_account: github-ci-dev@liive-dev.iam.gserviceaccount.com
+          workload_identity_provider: projects/${{ vars.GCP_DEV_PROJECT_NUMBER }}/locations/global/workloadIdentityPools/github-actions-pool/providers/github-actions-provider
+          service_account: ${{ env.GCLOUD_IMPERSONATE_SERVICE_ACCOUNT }}
           export_environment_variables: true
 
       - uses: google-github-actions/setup-gcloud@v2
@@ -239,7 +254,6 @@ jobs:
           flutter-version: '3.38.5'
           channel: 'stable'
           cache: true
-          cache-dependency-path: apps/**/pubspec.lock
 
       - name: Trust Flutter SDK directory
         run: git config --global --add safe.directory "$FLUTTER_ROOT"
@@ -256,7 +270,7 @@ jobs:
         run: |
           set -euo pipefail
           existing_sites="$(firebase hosting:sites:list --project "$FIREBASE_PROJECT_ID" --json | jq -r '.result.sites[].name' | xargs -n1 basename || true)"
-          for site in liive-dev-admin liive-dev-business liive-dev-driver liive-dev-consumer; do
+          for site in ordering-intelligence-dev-admin ordering-intelligence-dev-business ordering-intelligence-dev-driver ordering-intelligence-dev-consumer; do
             if echo "$existing_sites" | grep -Eq "^${site}$"; then
               echo "Hosting site $site already exists."
               continue
@@ -280,10 +294,10 @@ jobs:
             --keep 0 \
             --prefix "" \
             --retain "$HOSTING_CHANNEL_ID" \
-            liive-dev-admin \
-            liive-dev-business \
-            liive-dev-driver \
-            liive-dev-consumer
+            ordering-intelligence-dev-admin \
+            ordering-intelligence-dev-business \
+            ordering-intelligence-dev-driver \
+            ordering-intelligence-dev-consumer
 
       - name: Deploy preview channels
         id: deploy_channels
@@ -291,10 +305,10 @@ jobs:
           set -euo pipefail
           if [ -z "${APPS_TO_BUILD:-}" ]; then
             echo "No apps to deploy; using existing web.app URLs."
-            echo "admin_url=https://liive-dev-admin.web.app" >> "$GITHUB_OUTPUT"
-            echo "business_url=https://liive-dev-business.web.app" >> "$GITHUB_OUTPUT"
-            echo "driver_url=https://liive-dev-driver.web.app" >> "$GITHUB_OUTPUT"
-            echo "consumer_url=https://liive-dev-consumer.web.app" >> "$GITHUB_OUTPUT"
+            echo "admin_url=https://ordering-intelligence-dev-admin.web.app" >> "$GITHUB_OUTPUT"
+            echo "business_url=https://ordering-intelligence-dev-business.web.app" >> "$GITHUB_OUTPUT"
+            echo "driver_url=https://ordering-intelligence-dev-driver.web.app" >> "$GITHUB_OUTPUT"
+            echo "consumer_url=https://ordering-intelligence-dev-consumer.web.app" >> "$GITHUB_OUTPUT"
             exit 0
           fi
 
@@ -335,7 +349,7 @@ jobs:
               exit 1
             fi
           else
-            ADMIN_URL="https://liive-dev-admin.web.app"
+            ADMIN_URL="https://ordering-intelligence-dev-admin.web.app"
           fi
 
           if echo "$APPS_TO_BUILD" | grep -Eq '(^| )business( |$)'; then
@@ -347,7 +361,7 @@ jobs:
               exit 1
             fi
           else
-            BUSINESS_URL="https://liive-dev-business.web.app"
+            BUSINESS_URL="https://ordering-intelligence-dev-business.web.app"
           fi
 
           if echo "$APPS_TO_BUILD" | grep -Eq '(^| )driver( |$)'; then
@@ -359,7 +373,7 @@ jobs:
               exit 1
             fi
           else
-            DRIVER_URL="https://liive-dev-driver.web.app"
+            DRIVER_URL="https://ordering-intelligence-dev-driver.web.app"
           fi
 
           if echo "$APPS_TO_BUILD" | grep -Eq '(^| )consumer( |$)'; then
@@ -371,7 +385,7 @@ jobs:
               exit 1
             fi
           else
-            CONSUMER_URL="https://liive-dev-consumer.web.app"
+            CONSUMER_URL="https://ordering-intelligence-dev-consumer.web.app"
           fi
 
           echo "ADMIN_APP_URL=$ADMIN_URL" >> "$GITHUB_ENV"

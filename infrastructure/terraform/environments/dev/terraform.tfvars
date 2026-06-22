@@ -1,4 +1,4 @@
-project_id                       = "liive-dev"
+project_id                       = "ordering-intelligence-dev"
 region                           = "europe-west1"
 firestore_location               = "europe-west1"
 billing_account                  = "01F039-B3AA01-B0E817"
@@ -23,11 +23,5 @@ cloud_run_overrides = {
       OPS_EMAIL               = "ops-dev@ordering-intelligence.test"
       TWILIO_MESSAGING_NUMBER = "+13292120971"
     }
-  }
-  dispatch_service = {
-    image = "europe-west1-docker.pkg.dev/liive-dev/services/dispatch-service:64b0d87a"
-  }
-  onboarding_service = {
-    image = "europe-west1-docker.pkg.dev/liive-dev/services/onboarding-service:c976d7ac"
   }
 }

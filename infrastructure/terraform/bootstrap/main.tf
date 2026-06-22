@@ -24,14 +24,8 @@ resource "google_project" "this" {
   name            = var.project_name
   org_id          = local.parent_org_id
   folder_id       = local.parent_folder
-  billing_account = null # linked via google_billing_project
-  labels          = local.labels
-}
-
-# Link billing once the project exists.
-resource "google_billing_project" "link" {
-  project         = google_project.this.project_id
   billing_account = var.billing_account
+  labels          = local.labels
 }
 
 # Enable only the APIs needed for the main stack to proceed.
@@ -41,5 +35,5 @@ resource "google_project_service" "bootstrap_services" {
   project            = google_project.this.project_id
   service            = each.value
   disable_on_destroy = false
-  depends_on         = [google_billing_project.link]
+  depends_on         = [google_project.this]
 }

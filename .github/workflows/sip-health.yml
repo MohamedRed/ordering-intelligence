@@ -16,7 +16,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 20
     env:
-      RUN_HEALTH_CALL: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.run_call == 'false' ? 'false' : 'true' }}
+      RUN_HEALTH_CALL: "${{ github.event.inputs.run_call != 'false' && 'true' || 'false' }}"
     strategy:
       fail-fast: false
       matrix:

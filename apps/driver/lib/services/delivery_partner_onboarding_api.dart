@@ -8,7 +8,7 @@ import '../models/delivery_partner_stripe_status.dart';
 
 const onboardingBaseUrl = String.fromEnvironment(
   'ONBOARDING_SERVICE_URL',
-  defaultValue: 'https://onboarding-service-878404493774.europe-west1.run.app',
+  defaultValue: 'https://dev-onboarding-service.liive.app',
 );
 
 class DeliveryPartnerOnboardingApi {

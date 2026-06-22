@@ -1,9 +1,9 @@
 locals {
   firebase_hosting_sites = {
-    admin    = "liive-dev-admin"
-    business = "liive-dev-business"
-    driver   = "liive-dev-driver"
-    consumer = "liive-dev-consumer"
+    admin    = "ordering-intelligence-dev-admin"
+    business = "ordering-intelligence-dev-business"
+    driver   = "ordering-intelligence-dev-driver"
+    consumer = "ordering-intelligence-dev-consumer"
   }
 }
 

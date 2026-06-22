@@ -2,7 +2,7 @@ locals {
   github_runner_repo  = "MohamedRed/ordering-intelligence"
   github_runner_zone  = "${var.region}-b"
   github_runner_name  = "github-runner-${var.environment_name}"
-  github_runner_label = "liive-${var.environment_name}"
+  github_runner_label = var.project_id
 }
 
 resource "google_secret_manager_secret" "github_actions_runner_pat" {

@@ -1,6 +1,6 @@
 {
   "hosting": {
-    "site": "liive-dev-consumer",
+    "site": "ordering-intelligence-dev-consumer",
     "public": "build/web",
     "ignore": [
       "firebase.json",

@@ -1,0 +1,6 @@
+self-hosted-runner:
+  labels:
+    - ordering-intelligence-dev
+
+config-variables:
+  - GCP_DEV_PROJECT_NUMBER

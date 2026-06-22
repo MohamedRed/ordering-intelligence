@@ -1,6 +1,6 @@
 {
   "hosting": {
-    "site": "liive-dev-driver",
+    "site": "ordering-intelligence-dev-driver",
     "public": "build/web",
     "ignore": [
       "firebase.json",
